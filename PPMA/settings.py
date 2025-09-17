@@ -11,7 +11,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import firebase_admin
 from firebase_admin import credentials
+import dj_database_url
 from pathlib import Path
+
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -142,20 +144,14 @@ WSGI_APPLICATION = 'PPMA.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ppms',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': '127.0.0.1',
-        'PORT': '3307',
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            'charset': 'utf8mb4',
-            'use_unicode': True,
-        },
-        'TIME_ZONE': 'Asia/Manila',  # Add this line
-    }
+    "default": dj_database_url.config(
+        default=os.getenv(
+            "DATABASE_URL",
+            "postgres://ppms_user:PLWzUtw8ZACB2VGcCNwMUxWK7oGve8vS@dpg-d353u6m3jp1c73eo5rpg-a:5432/PPMS"
+        ),
+        conn_max_age=600,
+        ssl_require=True,
+    )
 }
 
 
@@ -237,4 +233,5 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # ✅ Extra safety
+
 SESSION_SAVE_EVERY_REQUEST = True
