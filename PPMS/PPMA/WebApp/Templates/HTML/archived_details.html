@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Preschooler Details</title>
+  <link rel="stylesheet" href="{% static 'css/preschooler_data.css' %}" />
+  <script src="{% static 'Javascript/preschooler_data.js' %}" defer></script>
+</head>
+<body>
+
+<div class="preschooler-details">
+  <div class="preschooler-header">
+    <div class="photo-placeholder">Photo</div>
+
+    <div class="child-info-section">
+      <p><strong class="child-name">Juan Dela Cruz</strong></p>
+      <p class="child-age">Age: 4</p>
+      <p class="child-barangay">Barangay: Anabu II-D</p>
+      <p class="child-gender">Gender: Male</p>
+      <p class="child-birth">Birth Date: Jan 15, 2020</p>
+      <p class="child-weight">Weight: 14.5 kg</p>
+      <p class="child-height">Height: 90 cm</p>
+    </div>
+
+    <div class="child-info-section">
+      <p class="weight-for-age">Weight-for-Age: -2.0</p>
+      <p class="height-for-age">Height-for-Age: -2.1</p>
+      <p class="weight-height-for-age">Weight-Height-for-Age: 1.6</p>
+      <p class="bmi">BMI: 17.9</p>
+      <p class="immunization-status">Status: Updated</p>
+      <button class="btn view-vaccine-card" onclick="openVaccineCardModal()">View Vaccine Card</button>
+    </div>
+  </div>
+
+  <h4>Immunization Schedule</h4>
+  <table class="info-table">
+    <tr><th>Vaccine Name</th><th>Doses</th><th>Required Doses</th><th>Immunization Date</th><th>Next Vaccine Schedule</th></tr>
+    <tr><td>Hepatitis B</td><td>1</td><td>3</td><td>01/02/2025</td><td>03/02/2025</td></tr>
+  </table>
+
+  <h4>Immunization History</h4>
+  <table class="info-table">
+    <tr><th>Vaccine Name</th><th>Doses</th><th>Required Doses</th><th>Immunization Date</th></tr>
+    <tr><td>BCG</td><td>1</td><td>1</td><td>06/10/2025</td></tr>
+  </table>
+
+  <h4>Nutritional Status History</h4>
+  <table class="info-table">
+    <tr>
+      <th>Date Measured</th><th>Temperature</th><th>Height (cm)</th><th>Weight (kg)</th>
+      <th>BMI</th><th>BMI Category</th>
+      <th>Weight for Age</th><th>Height for Age</th><th>Weight for Height for Age</th>
+    </tr>
+    <tr>
+      <td>06/2025</td><td>36.5</td><td class="child-height2">90</td><td class="child-weight2">14.5</td>
+      <td class="bmi2">17.9</td><td>Normal</td><td>-2.0</td><td>-2.1</td><td>1.6</td>
+    </tr>
+  </table>
+</div>
+
+<!-- Vaccine Card Modal -->
+<div id="vaccineCardModal" class="modal-overlay"> <!--initial di mauupdate yung sa petsa ng bakuna, need maglagay ng button for update record bago lang maeedit yung record-->
+  <div class="modal-card">
+    <button class="close-modal" onclick="closeVaccineCardModal()">×</button>
+
+    <h2>Child Immunization Record</h2>
+
+    <div class="modal-info-grid">
+      <div><label>Child’s name:</label></div>
+      <div><label>Date of birth:</label></div>
+
+      <div><label>Place of birth:</label></div>
+      <div><label>Mother’s name:</label></div>
+      <div><label>Father’s name:</label></div>
+
+      <div><label>Address:</label></div>
+
+      <div><label>Birth weight:</label></div>
+      <div><label>Birth height:</label></div>
+      <div class="gender-select">
+        <label>Sex:</label></div>
+    </div>
+
+    <table class="vaccine-table">
+      <thead>
+        <tr>
+          <th>Bakuna</th>
+          <th>Doses</th>
+          <th>Petsa ng bakuna<br>(MM/DD/YY)</th>
+          <th>Supplemental Immunization Activity (SIA)</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>BCG Vaccine</td>
+          <td>1<br>At birth</td>
+          <td>1. <input type="text" /></td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+        <tr>
+          <td>Hepatitis B Vaccine</td>
+          <td>1<br>At birth</td>
+          <td>1. <input type="text" /></td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+        <tr>
+    <td>Pentavalent Vaccine (DPT-Hep B-HIB)</td>
+    <td>3<br>1½, 2½, 3½ months</td>
+    <td>
+     <div>1. <input type="text" /></div>
+     <div>2. <input type="text" /></div>
+     <div>3. <input type="text" /></div>
+    </td>
+    <td><input type="text" /></td>
+    <td><input type="text" /></td>
+        <tr>
+          <td>Oral Polio Vaccine (OPV)</td>
+           <td>3<br>1½, 2½, 3½ months</td>
+    <td>
+      <div>1. <input type="text" /></div>
+      <div>2. <input type="text" /></div>
+      <div>3. <input type="text" /></div>
+    </td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+        <tr>
+          <td>Inactivated Polio Vaccine (IPV)</td>
+          <td>1<br>3½ months</td>
+          <td>1. <input type="text" /> 
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+        <tr>
+          <td>Pneumococcal Conjugate Vaccine (PCV)</td>
+         <td>3<br>1½, 2½, 3½ months</td>
+    <td>
+      <div>1. <input type="text" /></div>
+      <div>2. <input type="text" /></div>
+      <div>3. <input type="text" /></div>
+    </td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+        <tr>
+          <td>Measles, Mumps, Rubella Vaccine (MMR)</td>
+          <td>2<br>9 & 12 months</td>
+          <td>
+            <div>1. <input type="text" /></div>
+            <div>2. <input type="text" /></div>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+        <tr>
+          <td>SCHOOL AGED CHILDREN</td> <!-- SCHOOL AGED CHILDREN -->
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Measles, Mumps, Rubella Vaccine (MMR)</td>
+          <td>1<br>Grade 1</td>
+          <td>1. <input type="text" /> </td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+        <tr>
+          <td>Measles, Mumps, Rubella Vaccine (MMR)</td>
+          <td>1 or 2<br>Grade 7</td>
+          <td>
+            <div>1. <input type="text" /></div>
+            <div>2. <input type="text" /></div>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+        <tr>
+          <td>Tetanus Diphtheria (TD)</td>
+          <td>2<br>Grade 1 & 7</td>
+          <td>
+            <div>1. <input type="text" /></div>
+            <div>2. <input type="text" /></div>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+        <tr>
+          <td>Human Papillomavirus Vaccine</td>
+          <td>2<br>Grade 4 FEMALE & 14 years old</td>
+          <td>
+            <div>1. <input type="text" /></div>
+            <div>1. <input type="text" /></div>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="modal-note">
+      Sa column ng <strong>Petsa ng bakuna</strong>, isulat ang petsa ng pagbibigay ng bakuna ayon sa kung pang-ilang dose ito.
+      Sa column ng <strong>Remarks</strong>, isulat ang petsa ng pagbaklas para sa susunod na dose,
+      o anumang mahalagang impormasyon na maaaring makaapekto sa pagbabakuna ng bata.
+    </p>
+  </div>
+</div>
+
+
+</body>
+</html>

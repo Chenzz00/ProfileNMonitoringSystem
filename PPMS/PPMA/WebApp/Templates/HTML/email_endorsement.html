@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <title>Email Endorsement</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+      padding: 20px;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      font-size: 14px;
+      font-weight: 400;
+      background: url('{% static "media/loginbg.png" %}') center/cover no-repeat fixed;
+    }
+
+    .topbar {
+      position: relative;
+      height: 100px;
+      background-color: rgba(30, 30, 47, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin: 0 auto 30px auto;
+      max-width: 1100px;
+    }
+
+    .logo-title {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      font-weight: 600;
+      color: white;
+      white-space: nowrap;
+      margin-left: 20px;
+    }
+
+    .rtn-btn {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 56px;
+      height: 56px;
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+    }
+
+    .rtn-btn:before,
+    .rtn-btn:after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      inset: 7px;
+    }
+
+    .rtn-btn:before {
+      border: 4px solid #f0eeef;
+      transition: opacity 0.4s, transform 0.5s;
+    }
+
+    .rtn-btn:after {
+      border: 4px solid #96daf0;
+      transform: scale(1.3);
+      opacity: 0;
+      transition: opacity 0.4s, transform 0.5s;
+    }
+
+    .rtn-btn:hover:before {
+      opacity: 0;
+      transform: scale(0.7);
+    }
+
+    .rtn-btn:hover:after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .button-box {
+      display: flex;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .button-elem {
+      display: block;
+      width: 20px;
+      height: 20px;
+      margin: 17px 18px 0 18px;
+      transform: rotate(180deg);
+      fill: #f0eeef;
+    }
+
+    .main-container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-bottom: 25px;
+      font-weight: 400;
+      color: #333;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-family: 'Poppins', sans-serif;
+      text-align: center;
+    }
+
+    form {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    label {
+      display: block;
+      font-weight: 400;
+      margin-bottom: 8px;
+      margin-top: 20px;
+      color: #333;
+      font-size: 14px;
+    }
+
+    label:first-of-type {
+      margin-top: 0;
+    }
+
+    input[type="email"],
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 8px;
+      border: 1px solid #e6e6e6;
+      font-size: 14px;
+      font-family: 'Poppins', sans-serif;
+      background-color: white;
+      color: #333;
+      font-weight: 400;
+      transition: all 0.3s ease;
+    }
+
+    input[type="email"]:focus,
+    input[type="text"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #5bdab3;
+      box-shadow: 0 0 0 3px rgba(91, 218, 179, 0.15);
+    }
+
+    input[readonly] {
+      background-color: #f8f9fa;
+      cursor: not-allowed;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .btn {
+      display: inline-block;
+      background-color: #5bdab3;
+      color: #1e1e2f;
+      padding: 14px 20px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
+      margin-top: 20px;
+    }
+
+    .btn:hover {
+      background-color: #1565c0;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    }
+
+    /* Tablet Responsive */
+    @media (max-width: 1024px) {
+      .container {
+        margin: 0 10px;
+        padding: 25px;
+      }
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+
+      .topbar {
+        height: 70px;
+        margin-bottom: 20px;
+      }
+
+      .rtn-btn {
+        width: 45px;
+        height: 45px;
+        left: 15px;
+      }
+
+      .rtn-btn:before,
+      .rtn-btn:after {
+        inset: 6px;
+      }
+
+      .button-elem {
+        width: 18px;
+        height: 18px;
+        margin: 13px 13px 0 13px;
+      }
+      
+      .logo-title {
+        font-size: 16px;
+        padding: 0 80px;
+        text-align: center;
+      }
+      
+      .container {
+        padding: 20px;
+        margin: 0;
+      }
+
+      h2 {
+        font-size: 16px;
+        margin-bottom: 20px;
+      }
+    }
+
+    /* Small Mobile */
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+
+      .topbar {
+        height: 60px;
+        margin-bottom: 15px;
+      }
+
+      .logo-title {
+        font-size: 14px;
+        padding: 0 70px;
+      }
+
+      .container {
+        padding: 15px;
+      }
+
+      h2 {
+        font-size: 14px;
+      }
+    }
+
+    /* Extra Small Mobile */
+    @media (max-width: 375px) {
+      .container {
+        padding: 12px;
+      }
+    }
+
+    /* Landscape orientation on mobile */
+    @media (max-width: 768px) and (orientation: landscape) {
+      .topbar {
+        height: 60px;
+        margin-bottom: 15px;
+      }
+
+      .logo-title {
+        font-size: 14px;
+      }
+
+      .container {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <button class="rtn-btn" onclick="location.href='/dashboard'"> 
+      <div class="button-box">
+        <span class="button-elem">
+          <svg viewBox="0 0 46 40" xmlns="http://www.w3.org/2000/svg">
+            <path d="M46 20.038c0-.7-.3-1.5-.8-2.1l-16-17c-1.1-1-3.2-1.4-4.4-.3-1.2 1.1-1.2 3.3 0 4.4l11.3 11.9H3c-1.7 0-3 1.3-3 3s1.3 3 3 3h33.1l-11.3 11.9c-1 1-1.2 3.3 0 4.4 1.2 1.1 3.3.8 4.4-.3l16-17c.5-.5.8-1.1.8-1.9z"></path>
+        </svg>
+      </span>
+    </div>
+  </button>
+  <div class="logo-title">PPMS CLUSTER 4 IMUS CITY ({{ account.barangay.name|upper }})</div>
+</div>
+
+<div class="main-container">
+  <div class="container">
+    <h2>Email Endorsement to Parent</h2>
+    <form method="POST" action="{% url 'email_endorsement' %}">
+      {% csrf_token %}
+      
+      <label for="from_email">From:</label>
+      <input type="email" id="from_email" name="from_email" value="{{ from_email }}" readonly>
+
+      <label for="to_email">To:</label>
+      <select id="to_email" name="to_email" required>
+        <option value="" disabled selected>Select Parent</option>
+        {% for parent in parents %}
+            <option value="{{ parent.email }}">{{ parent.full_name }} - {{ parent.email }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="subject">Subject:</label>
+      <input type="text" id="subject" name="subject" value="Vaccination Endorsement" required>
+
+      <label for="message">Message:</label>
+      <textarea id="message" name="message" rows="8" placeholder="Write the endorsement details..." required>
+Dear Parent,
+
+This is to endorse your child to receive their required immunization at another barangay due to unavailability in your current health center.
+
+Kindly proceed to [Insert Barangay Name] at your earliest convenience.
+
+Thank you,
+{{ account.full_name }}
+      </textarea>
+
+      <button type="submit" class="btn">Send Email</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>
