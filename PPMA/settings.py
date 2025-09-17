@@ -191,6 +191,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'ppms.cluster4imus@gmail.com'
 EMAIL_HOST_PASSWORD = 'aaoy txgi vfra cule'  # app password
 DEFAULT_FROM_EMAIL = 'ppms.cluster4imus@gmail.com'
+EMAIL_TIMEOUT = 20
 
 # =======================
 # Channels (WebSockets)
@@ -212,6 +213,7 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
+
 
 
 
