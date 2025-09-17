@@ -9,7 +9,6 @@ from firebase_admin import credentials
 from pathlib import Path
 import os
 import dj_database_url  # ✅ For Render Postgres support
-import logging
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,18 +42,9 @@ FIREBASE_INITIALIZED = initialize_firebase()
 # =======================
 # Security / Debug
 # =======================
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-$70!pna@gl9&(&!oske)1zkadl!s)us61jxgqd=(prrf4*2fga')
-
-# Production vs Development settings
-if os.environ.get("RENDER"):
-    DEBUG = False  # Temporarily set to True for debugging
-    ALLOWED_HOSTS = [
-        'ppms-website.onrender.com',
-        '.onrender.com',
-    ]
-else:
-    DEBUG = True
-    ALLOWED_HOSTS = ['*']
+SECRET_KEY = 'django-insecure-$70!pna@gl9&(&!oske)1zkadl!s)us61jxgqd=(prrf4*2fga'
+DEBUG = True
+ALLOWED_HOSTS = ['*']
 
 # =======================
 # Applications
@@ -79,7 +69,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # must be first
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # For static files on Render
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -97,9 +86,9 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "http://192.168.0.121:8000",
-    "https://ppms-website.onrender.com",
-    "https://*.onrender.com",
+    "https://ppms-website.onrender.com",  
 ]
+
 
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -183,17 +172,9 @@ USE_I18N = True
 USE_TZ = True
 
 # =======================
-# Static / Media Files
+# Static / Media
 # =======================
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-STATICFILES_DIRS = [
-    BASE_DIR / 'WebApp' / 'static',
-]
-
-# Static file serving for production
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATIC_URL = 'static/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -201,61 +182,28 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # =======================
-# Email Configuration (Updated for Render)
+# Email
 # =======================
-if os.environ.get("RENDER"):
-    # Production email settings
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_USE_SSL = False
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-    DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_HOST_USER', 'ppms.cluster4imus@gmail.com')
-    EMAIL_TIMEOUT = 30
-    
-    # Email logging for debugging
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    
-else:
-    # Development email settings
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_USE_SSL = False
-    EMAIL_HOST_USER = 'ppms.cluster4imus@gmail.com'
-    EMAIL_HOST_PASSWORD = 'aaoy txgi vfra cule'  # Replace with app password
-    DEFAULT_FROM_EMAIL = 'ppms.cluster4imus@gmail.com'
-    EMAIL_TIMEOUT = 30
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'ppms.cluster4imus@gmail.com'
+EMAIL_HOST_PASSWORD = 'aaoy txgi vfra cule'  # app password
+DEFAULT_FROM_EMAIL = 'ppms.cluster4imus@gmail.com'
+EMAIL_TIMEOUT = 20
 
 # =======================
 # Channels (WebSockets)
 # =======================
-if os.environ.get("RENDER"):
-    # Production Redis configuration (you'll need to set up Redis on Render)
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels_redis.core.RedisChannelLayer",
-            "CONFIG": {
-                "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
-            },
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
         },
-    }
-else:
-    # Development Redis configuration
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels_redis.core.RedisChannelLayer",
-            "CONFIG": {
-                "hosts": [("127.0.0.1", 6379)],
-            },
-        },
-    }
+    },
+}
 
 # =======================
 # Sessions
@@ -265,52 +213,3 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
-
-# =======================
-# Security Settings (Production)
-# =======================
-if os.environ.get("RENDER"):
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_REDIRECT_EXEMPT = []
-    # SECURE_SSL_REDIRECT = True  # ❌ Comment this out - Render handles HTTPS
-    # SESSION_COOKIE_SECURE = True  # ❌ Comment this out for now
-    # CSRF_COOKIE_SECURE = True  # ❌ Comment this out for now
-    SECURE_HSTS_PRELOAD = True
-    
-    # Trust Render's proxy headers
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    USE_TZ = True
-
-# =======================
-# Logging Configuration
-# =======================
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-    },
-    'loggers': {
-        'django.core.mail': {
-            'handlers': ['console'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': True,
-        },
-    },
-}
