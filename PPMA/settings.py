@@ -124,7 +124,7 @@ ROOT_URLCONF = 'PPMA.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'WebApp' / 'templates'],
+        'DIRS': [BASE_DIR / 'WebApp' / 'Templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -236,6 +236,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 # ✅ Extra safety
 
 SESSION_SAVE_EVERY_REQUEST = True
+
 
 
 
