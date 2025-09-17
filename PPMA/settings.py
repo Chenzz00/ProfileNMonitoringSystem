@@ -47,7 +47,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-$70!pna@gl9&(&!oske)1
 
 # Production vs Development settings
 if os.environ.get("RENDER"):
-    DEBUG = False
+    DEBUG = False  # Temporarily set to True for debugging
     ALLOWED_HOSTS = [
         'ppms-website.onrender.com',
         '.onrender.com',
@@ -275,10 +275,14 @@ if os.environ.get("RENDER"):
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_REDIRECT_EXEMPT = []
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+    # SECURE_SSL_REDIRECT = True  # ❌ Comment this out - Render handles HTTPS
+    # SESSION_COOKIE_SECURE = True  # ❌ Comment this out for now
+    # CSRF_COOKIE_SECURE = True  # ❌ Comment this out for now
     SECURE_HSTS_PRELOAD = True
+    
+    # Trust Render's proxy headers
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    USE_TZ = True
 
 # =======================
 # Logging Configuration
