@@ -100,5 +100,7 @@ xhtml2pdf==0.2.16
 zopfli==0.2.3.post1
 dj-database-url
 whitenoise==6.5.0
+sendgrid==6.15.0
+
 
 
