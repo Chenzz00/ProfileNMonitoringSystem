@@ -4805,28 +4805,24 @@ def reportTemplate(request):
     # Default behavior - just render the template for preview
     return render(request, 'HTML/reportTemplate.html')
 
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
 # ========================
 # Helper: Async Email Send
 # ========================
 def send_async_email(subject, text_message, html_message, recipient):
-    """Send email asynchronously via SendGrid"""
     def _send():
-        message = Mail(
-            from_email=os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@ppms.com'),
-            to_emails=recipient,
-            subject=subject,
-            plain_text_content=text_message,
-            html_content=html_message
-        )
         try:
-            sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-            response = sg.send(message)
-            logger.info(f"Email sent to {recipient}, status: {response.status_code}")
+            email_msg = EmailMultiAlternatives(
+                subject=subject,
+                body=text_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[recipient]
+            )
+            email_msg.attach_alternative(html_message, "text/html")
+            email_msg.send()
+            print(f"[INFO] Email successfully sent to {recipient}")
         except Exception as e:
-            logger.error(f"SendGrid email failed to {recipient}: {e}", exc_info=True)
-
+            print(f"[ERROR] Async email send failed: {e}")
+    
     threading.Thread(target=_send).start()
 
 
@@ -9402,6 +9398,7 @@ def test_push_notification(request):
             'success': False,
             'error': str(e)
         })
+
 
 
 
