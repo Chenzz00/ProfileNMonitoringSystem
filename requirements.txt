@@ -99,4 +99,6 @@ webencodings==0.5.1
 xhtml2pdf==0.2.16
 zopfli==0.2.3.post1
 dj-database-url
+whitenoise==6.5.0
+
 
