@@ -13,28 +13,38 @@ import dj_database_url  # ✅ For Render Postgres support
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# =======================
-# Firebase configuration
-# =======================
-FIREBASE_KEY_PATH = BASE_DIR / "PPMA" / "firebase-key.json"
-
 def initialize_firebase():
     """Initialize Firebase Admin SDK if not already initialized."""
     if not firebase_admin._apps:
         try:
-            if FIREBASE_KEY_PATH.exists():
-                cred = credentials.Certificate(str(FIREBASE_KEY_PATH))
+            # Check if we're in production (environment variable exists)
+            firebase_credentials = os.environ.get('FIREBASE_CREDENTIALS_JSON')
+            
+            if firebase_credentials:
+                # Production: Use environment variable
+                print("Using Firebase credentials from environment variable")
+                cred_dict = json.loads(firebase_credentials)
+                cred = credentials.Certificate(cred_dict)
                 firebase_admin.initialize_app(cred)
-                print("✅ Firebase initialized successfully")
+                print("Firebase initialized successfully (production)")
                 return True
             else:
-                print(f"⚠️ Firebase key not found at: {FIREBASE_KEY_PATH}")
-                return False
+                # Development: Use local file
+                FIREBASE_KEY_PATH = BASE_DIR / "PPMA" / "firebase-key.json"
+                if FIREBASE_KEY_PATH.exists():
+                    cred = credentials.Certificate(str(FIREBASE_KEY_PATH))
+                    firebase_admin.initialize_app(cred)
+                    print("Firebase initialized successfully (development)")
+                    return True
+                else:
+                    print(f"Firebase key not found at: {FIREBASE_KEY_PATH}")
+                    print("For production, set FIREBASE_CREDENTIALS_JSON environment variable")
+                    return False
         except Exception as e:
-            print(f"❌ Firebase initialization failed: {e}")
+            print(f"Firebase initialization failed: {e}")
             return False
     else:
-        print("ℹ️ Firebase already initialized")
+        print("Firebase already initialized")
         return True
 
 FIREBASE_INITIALIZED = initialize_firebase()
@@ -213,4 +223,5 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
+
 
