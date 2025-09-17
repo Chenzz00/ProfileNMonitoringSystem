@@ -81,12 +81,14 @@ MIDDLEWARE = [
 # CORS (for mobile app)
 # =======================
 CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = [
+CSRF_TRUSTED_ORIGINS = [
     "http://10.0.2.2:8000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "http://192.168.0.121:8000",
+    "https://ppms-website.onrender.com",  
 ]
+
 
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -210,3 +212,4 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
+
