@@ -146,7 +146,7 @@ WSGI_APPLICATION = 'PPMA.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "PPMS",
+        "NAME": "ppms",  # must match exactly what Render shows
         "USER": "ppms_user",
         "PASSWORD": "PLWzUtw8ZACB2VGcCNwMUxWK7oGve8vS",
         "HOST": "dpg-d353u6m3jp1c73eo5rpg-a",
@@ -235,4 +235,5 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 # ✅ Extra safety
 
 SESSION_SAVE_EVERY_REQUEST = True
+
 
