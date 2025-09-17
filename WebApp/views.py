@@ -561,21 +561,7 @@ def get_esp32_data_simple(request):
     }
 
 
-def send_async_email(subject, text_message, html_message, recipient):
-    def _send():
-        try:
-            email_msg = EmailMultiAlternatives(
-                subject=subject,
-                body=text_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[recipient]
-            )
-            email_msg.attach_alternative(html_message, "text/html")
-            email_msg.send()
-        except Exception as e:
-            print(f"[ERROR] Async email send failed: {e}")
 
-    threading.Thread(target=_send).start()
 
 @login_required
 def email_endorsement(request):
@@ -4820,128 +4806,142 @@ def reportTemplate(request):
     return render(request, 'HTML/reportTemplate.html')
 
 
+# ========================
+# Helper: Async Email Send
+# ========================
+def send_async_email(subject, text_message, html_message, recipient):
+    def _send():
+        try:
+            email_msg = EmailMultiAlternatives(
+                subject=subject,
+                body=text_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[recipient]
+            )
+            email_msg.attach_alternative(html_message, "text/html")
+            email_msg.send()
+            print(f"[INFO] Email successfully sent to {recipient}")
+        except Exception as e:
+            print(f"[ERROR] Async email send failed: {e}")
+
+    threading.Thread(target=_send).start()
+
+
+# ============================
+# Forgot Password View (OTP)
+# ============================
 def forgot_password(request):
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
-        
-        # Validate email
+
+        # Validate email field
         if not email:
             messages.error(request, 'Email address is required.')
             return render(request, 'HTML/forgot_password.html')
-        
+
         try:
             validate_email(email)
         except ValidationError:
             messages.error(request, 'Please enter a valid email address.')
             return render(request, 'HTML/forgot_password.html')
-        
+
         # Check if user exists
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             messages.error(request, 'No account found with this email address.')
             return render(request, 'HTML/forgot_password.html')
-        
-        # Delete existing OTPs
+
+        # Delete existing OTPs for this user
         PasswordResetOTP.objects.filter(user=user, is_used=False).delete()
-        
-        # Create new OTP
+
+        # Create a new OTP
         otp_instance = PasswordResetOTP.objects.create(user=user)
-        
+
         # Compose email
         subject = '🔐 Password Reset OTP - PPMS Cluster 4'
 
         text_message = f"""
-        Hello {user.first_name or user.username},
+Hello {user.first_name or user.username},
 
-        You requested a password reset. Your OTP code is: {otp_instance.otp_code}
+You requested a password reset. Your OTP code is: {otp_instance.otp_code}
 
-        This code will expire in 10 minutes.
+This code will expire in 10 minutes.
 
-        If you didn't request this, please ignore this email.
-        """
+If you didn't request this, please ignore this email.
+"""
 
         html_message = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <style>
-            body {{
-              font-family: Arial, sans-serif;
-              background-color: #f9f9f9;
-              padding: 20px;
-              color: #333;
-            }}
-            .container {{
-              background-color: #fff;
-              padding: 20px;
-              border-radius: 10px;
-              max-width: 600px;
-              margin: auto;
-              box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            }}
-            .header {{
-              background-color: #007bff;
-              padding: 10px 20px;
-              border-radius: 10px 10px 0 0;
-              color: white;
-              text-align: center;
-            }}
-            .otp {{
-              font-size: 28px;
-              font-weight: bold;
-              color: #007bff;
-              text-align: center;
-              margin: 30px 0;
-            }}
-            .footer {{
-              font-size: 12px;
-              text-align: center;
-              color: #777;
-              margin-top: 30px;
-            }}
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h2>PPMS Cluster 4 – Password Reset</h2>
-            </div>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {{
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+      color: #333;
+    }}
+    .container {{
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }}
+    .header {{
+      background-color: #007bff;
+      padding: 10px 20px;
+      border-radius: 10px 10px 0 0;
+      color: white;
+      text-align: center;
+    }}
+    .otp {{
+      font-size: 28px;
+      font-weight: bold;
+      color: #007bff;
+      text-align: center;
+      margin: 30px 0;
+    }}
+    .footer {{
+      font-size: 12px;
+      text-align: center;
+      color: #777;
+      margin-top: 30px;
+    }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>PPMS Cluster 4 – Password Reset</h2>
+    </div>
 
-            <p>Hello <strong>{user.first_name or user.username}</strong>,</p>
+    <p>Hello <strong>{user.first_name or user.username}</strong>,</p>
 
-            <p>You requested to reset your password. Please use the following OTP:</p>
+    <p>You requested to reset your password. Please use the following OTP:</p>
 
-            <div class="otp">{otp_instance.otp_code}</div>
+    <div class="otp">{otp_instance.otp_code}</div>
 
-            <p>This OTP is valid for <strong>10 minutes</strong>.</p>
+    <p>This OTP is valid for <strong>10 minutes</strong>.</p>
 
-            <p>If you did not make this request, you can safely ignore this email.</p>
+    <p>If you did not make this request, you can safely ignore this email.</p>
 
-            <div class="footer">
-              &copy; 2025 PPMS Cluster 4 Imus City
-            </div>
-          </div>
-        </body>
-        </html>
-        """
+    <div class="footer">
+      &copy; 2025 PPMS Cluster 4 Imus City
+    </div>
+  </div>
+</body>
+</html>
+"""
 
-        try:
-            email_msg = EmailMultiAlternatives(
-                subject=subject,
-                body=text_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[email]
-            )
-            email_msg.attach_alternative(html_message, "text/html")
-            email_msg.send()
+        # ✅ Send email asynchronously
+        send_async_email(subject, text_message, html_message, email)
 
-            messages.success(request, 'OTP sent to your email address.')
-            return redirect('verify_otp', user_id=user.id)
-        except Exception as e:
-            print(f"[ERROR] Email send failed: {e}")
-            messages.error(request, 'Failed to send email. Please try again.')
+        messages.success(request, 'OTP sent to your email address.')
+        return redirect('verify_otp', user_id=user.id)
 
     return render(request, 'HTML/forgot_password.html')
 
@@ -4966,24 +4966,49 @@ def admin_registered_parents(request):
         'user_role': user_role
     })
 
+# ============================
+# Verify OTP View
+# ============================
 def verify_otp(request, user_id):
     user = get_object_or_404(User, id=user_id)
 
-    # ✅ If resend is requested, generate a new OTP
+    # ✅ Resend OTP
     if request.method == 'GET' and request.GET.get('resend') == '1':
-        # Mark any previous OTPs as used
+        # Mark old OTPs as used
         PasswordResetOTP.objects.filter(user=user, is_used=False).update(is_used=True)
 
-        # Generate and save new OTP
+        # Generate new OTP
         new_otp = get_random_string(length=6, allowed_chars='0123456789')
-        PasswordResetOTP.objects.create(user=user, otp_code=new_otp)
+        otp_instance = PasswordResetOTP.objects.create(user=user, otp_code=new_otp)
 
-        # (Optional) Send the OTP to user's email here
-        # send_mail(...)
+        # Send new OTP email asynchronously
+        subject = "🔐 New OTP for Password Reset - PPMS Cluster 4"
+        text_message = f"""
+Hello {user.first_name or user.username},
 
+You requested a new OTP. Your code is: {otp_instance.otp_code}
+
+This code will expire in 10 minutes.
+"""
+        html_message = f"""
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif;">
+  <div style="max-width:600px;margin:auto;padding:20px;border:1px solid #ddd;border-radius:8px;">
+    <h2 style="background:#007bff;color:white;padding:10px;border-radius:8px 8px 0 0;">New OTP - PPMS Cluster 4</h2>
+    <p>Hello <strong>{user.first_name or user.username}</strong>,</p>
+    <p>You requested a new OTP. Please use this code:</p>
+    <div style="font-size:24px;font-weight:bold;color:#007bff;text-align:center;margin:20px 0;">{otp_instance.otp_code}</div>
+    <p>This code will expire in <strong>10 minutes</strong>.</p>
+    <p>If you didn’t request this, please ignore this email.</p>
+  </div>
+</body>
+</html>
+"""
+        send_async_email(subject, text_message, html_message, user.email)
         messages.success(request, 'A new OTP has been sent to your email.')
 
-    # Existing POST logic
+    # ✅ Verify OTP submission
     if request.method == 'POST':
         otp_code = request.POST.get('otp_code', '').strip()
 
@@ -5017,52 +5042,55 @@ def verify_otp(request, user_id):
 
     return render(request, 'HTML/verify_otp.html', {'user': user})
 
+
+# ============================
+# Reset Password View
+# ============================
 def reset_password(request, user_id):
     user = get_object_or_404(User, id=user_id)
-    
-    # Check if there's a recent used OTP for this user
+
+    # Check if there’s a recent valid OTP (used within last 15 minutes)
     recent_otp = PasswordResetOTP.objects.filter(
         user=user,
         is_used=True,
         created_at__gte=timezone.now() - timezone.timedelta(minutes=15)
     ).first()
-    
+
     if not recent_otp:
         messages.error(request, 'Session expired. Please start the process again.')
         return redirect('forgot_password')
-    
+
     if request.method == 'POST':
         password1 = request.POST.get('password1', '')
         password2 = request.POST.get('password2', '')
-        
+
         # Validate passwords
         if not password1 or not password2:
             messages.error(request, 'Both password fields are required.')
             return render(request, 'HTML/reset_password.html', {'user': user})
-        
+
         if password1 != password2:
             messages.error(request, 'Passwords do not match.')
             return render(request, 'HTML/reset_password.html', {'user': user})
-        
+
         if len(password1) < 8:
             messages.error(request, 'Password must be at least 8 characters long.')
             return render(request, 'HTML/reset_password.html', {'user': user})
-        
-        # Additional password validation (optional)
+
         try:
             validate_password(password1, user)
         except ValidationError as e:
             for error in e.messages:
                 messages.error(request, error)
             return render(request, 'HTML/reset_password.html', {'user': user})
-        
-        # Set new password
+
+        # ✅ Save new password
         user.set_password(password1)
         user.save()
-        
+
         messages.success(request, 'Password reset successfully. You can now login with your new password.')
-        return redirect('login')  # Replace with your login URL name
-    
+        return redirect('login')  # Update with your login URL name
+
     return render(request, 'HTML/reset_password.html', {'user': user})
 def remove_bns(request, account_id):
     if request.method == 'POST':
@@ -9371,6 +9399,7 @@ def test_push_notification(request):
             'success': False,
             'error': str(e)
         })
+
 
 
 
