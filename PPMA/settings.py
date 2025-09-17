@@ -140,7 +140,7 @@ WSGI_APPLICATION = 'PPMA.wsgi.application'
 if os.environ.get("RENDER"):  # ✅ Running on Render
     DATABASES = {
         "default": dj_database_url.config(
-            default="postgresql://user:password@hostname:5432/dbname",  # fallback if DATABASE_URL missing
+            default="postgresql://ppms_user:PLWzUtw8ZACB2VGcCNwMUxWK7oGve8vS@dpg-d353u6m3jp1c73eo5rpg-a:5432/ppms", 
             conn_max_age=600,
             ssl_require=True
         )
@@ -152,6 +152,7 @@ else:  # ✅ Local development uses SQLite
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+
 # =======================
 # Password validation
 # =======================
@@ -211,6 +212,7 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
+
 
 
 
