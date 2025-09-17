@@ -560,6 +560,23 @@ def get_esp32_data_simple(request):
         ]
     }
 
+
+def send_async_email(subject, text_message, html_message, recipient):
+    def _send():
+        try:
+            email_msg = EmailMultiAlternatives(
+                subject=subject,
+                body=text_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[recipient]
+            )
+            email_msg.attach_alternative(html_message, "text/html")
+            email_msg.send()
+        except Exception as e:
+            print(f"[ERROR] Async email send failed: {e}")
+
+    threading.Thread(target=_send).start()
+
 @login_required
 def email_endorsement(request):
     """Email endorsement view with proper barangay filtering"""
@@ -9354,5 +9371,6 @@ def test_push_notification(request):
             'success': False,
             'error': str(e)
         })
+
 
 
