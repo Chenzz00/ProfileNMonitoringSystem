@@ -1449,9 +1449,10 @@ def login(request):
         announcements = Announcement.objects.filter(
             is_active=True
         ).order_by('-created_at')[:5]
-    except Exception as e:
+    except Exception:
         announcements = []
 
+    # ⬇️ Always render login page here, outside the except
     return render(request, 'HTML/login.html', {
         'announcements': announcements,
     })
@@ -9353,4 +9354,5 @@ def test_push_notification(request):
             'success': False,
             'error': str(e)
         })
+
 
