@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PPMS Cluster 4 Imus City - Admin Dashboard</title>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
+  <link rel="icon" type="image/png" href="{% static 'media/logo.png' %}">
+</head>
+<body>
+    <div class="background-image"></div>
+  <!-- Sidebar Overlay for Mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Left Sidebar Navigation -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1 class="sidebar-title">PPMS Admin</h1>
+    </div>
+    
+    <nav class="nav-menu">
+      <div class="nav-item">
+        <button class="nav-link active" onclick="location.href='/admin-dashboard/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+          </svg>
+          Dashboard
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/add-barangay/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+          </svg>
+          Add Barangay
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/registered-barangays/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+          </svg>
+          Barangay List
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/registered-preschoolers/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+          </svg>
+          Preschoolers
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/admin-registered-parents/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+          </svg>
+          Parents
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/registered_bhw/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+          </svg>
+          Health Workers
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/registered_bns/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+          </svg>
+          Nutritional Scholars
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/registered_midwife/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+          </svg>
+          Midwives
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/registered_nurse/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+          </svg>
+          Nurses
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/validate/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          Account Validation
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/admin-logs/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+          </svg>
+          Activity Logs
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="confirmGeneratePDF()">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+          Generate Report
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/manage-announcements/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zM9 8a1 1 0 012 0v4a1 1 0 11-2 0V8zM11 8a1 1 0 012 0v4a1 1 0 11-2 0V8z" clip-rule="evenodd"/>
+          </svg>
+          Announcements
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <button class="mobile-toggle" id="mobileToggle">☰</button>
+        <div class="greeting">Hello, Admin</div>
+      </div>
+      <div class="top-icons">
+        <!-- Notification -->
+        <div class="notif-dropdown">
+          <button class="icon-btn" id="notifBtn" style="position: relative;">
+            <img src="{% static 'media/notification.png' %}" alt="Notifications" style="width: 2.5rem; height: 2.5rem;">
+            <span id="notifDot"></span>
+          </button>
+
+          <div class="dropdown" id="notifMenu" style="max-height: 400px; overflow-y: auto; width: 320px; min-width: 280px;">
+            {% if notifications %}
+              {% for notif in notifications %}
+                {% if notif.type == 'account' %}
+                  <a href="/validate/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}" style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; align-items: center;">
+                      <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      <span class="notif-text">New {{ notif.user_role }} account named <strong>{{ notif.full_name }}</strong> requesting for validation.</span>
+                    </div>
+                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
+                  </a>
+                {% elif notif.type == 'preschooler' %}
+                  <a href="/registered-preschoolers/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}" style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; align-items: center;">
+                      {% if notif.bhw_image %}
+                        <img src="{{ notif.bhw_image }}" alt="BHW Profile" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      {% else %}
+                        <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      {% endif %}
+                      <span class="notif-text">
+                        New preschooler is being registered.<br>
+                        Name: <strong>{{ notif.full_name }}</strong>
+                      </span>
+                    </div>
+                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
+                  </a>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <div class="dropdown-item">No notifications available.</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Profile -->
+        <div class="profile-dropdown">
+          <button class="icon-btn" id="profileBtn" style="padding: 0; border: none; background: none;">
+            {% if account.profile_photo and account.profile_photo.image %}
+              <img src="{{ account.profile_photo.image.url }}" alt="Profile" style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover;">
+            {% else %}
+              <img src="{% static 'media/default-profile.jpg' %}" alt="Default Profile" style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover;">
+            {% endif %}
+          </button>
+          <div class="dropdown" id="profileMenu">
+            <a href="#" id="logoutLink">Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+      <div class="info-cards">
+        <div class="card"><h4>Total Registered Preschooler</h4><p>{{ total_preschoolers }}</p></div>
+        <div class="card"><h4>Total Vaccinated</h4><p>{{ total_vaccinated }}</p></div>
+        <div class="card"><h4>Total Health Workers</h4><p>{{ health_worker_count }}</p></div>
+      </div>
+
+      <div class="charts">
+        <!-- Pie Chart Container -->
+        <div class="chart-container pie-container">
+          <div class="pie-chart-wrapper">
+            <canvas id="pieChart"></canvas>
+          </div>
+          <div class="custom-legend" id="customLegend">
+            <!-- Legend items will be populated by JavaScript for mobile -->
+          </div>
+        </div>
+        
+        <!-- Simple Vaccination Trend Line Chart -->
+        <div class="chart-container">
+          <canvas id="vaccinationTrendChart"></canvas>
+        </div>
+      </div>
+
+      <div class="table-section" id="report-section">
+        <h3>Barangay Nutritional Status Summary</h3>
+        <div class="chart-container">
+          <canvas id="barangayChart"></canvas>
+        </div>
+      </div>
+
+      <!-- JSON Data for Charts -->
+      {{ nutritional_data|json_script:"nutritional-data" }}
+      {{ vaccination_trend_data|json_script:"vaccination-trend-data" }}
+      {{ barangay_chart_data|json_script:"barangay-chart-data" }}
+    </div>
+  </div>      
+
+<!-- JS Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const notifBtn = document.getElementById("notifBtn");
+  const notifMenu = document.getElementById("notifMenu");
+  const profileBtn = document.getElementById("profileBtn");
+  const profileMenu = document.getElementById("profileMenu");
+  const notifDot = document.getElementById("notifDot");
+  const mobileToggle = document.getElementById("mobileToggle");
+  const sidebar = document.getElementById("sidebar");
+  const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+  // Mobile sidebar toggle
+  if (mobileToggle) {
+    mobileToggle.addEventListener("click", () => {
+      sidebar.classList.toggle("open");
+      sidebarOverlay.classList.toggle("active");
+    });
+    sidebarOverlay.addEventListener("click", () => {
+      sidebar.classList.remove("open");
+      sidebarOverlay.classList.remove("active");
+    });
+  }
+
+  // Notification red dot
+  const latestNotifTimestampStr = "{{ latest_notif_timestamp }}";
+  const latestNotifTimestamp = latestNotifTimestampStr ? new Date(latestNotifTimestampStr) : null;
+  let lastReadTimestampStr = localStorage.getItem('lastReadNotifTimestamp');
+  let lastReadTimestamp = lastReadTimestampStr ? new Date(lastReadTimestampStr) : null;
+  if (latestNotifTimestamp && (!lastReadTimestamp || latestNotifTimestamp > lastReadTimestamp)) {
+    notifDot.style.display = "inline-block";
+  }
+
+  if (notifBtn && notifMenu) {
+    notifBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      notifMenu.style.display = notifMenu.style.display === "block" ? "none" : "block";
+      profileMenu.style.display = "none";
+      notifDot.style.display = "none";
+      if (latestNotifTimestamp) localStorage.setItem('lastReadNotifTimestamp', latestNotifTimestamp.toISOString());
+    });
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".notif-dropdown")) notifMenu.style.display = "none";
+    });
+  }
+
+  if (profileBtn && profileMenu) {
+    profileBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      profileMenu.style.display = profileMenu.style.display === "flex" ? "none" : "flex";
+      notifMenu.style.display = "none";
+    });
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".profile-dropdown")) profileMenu.style.display = "none";
+    });
+  }
+
+  // Logout confirmation
+  const logoutLink = document.getElementById("logoutLink");
+  if (logoutLink) {
+    logoutLink.addEventListener("click", function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Are you sure you want to logout?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, logout',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) window.location.href = "/logout/";
+      });
+    });
+  }
+
+  // Initialize Charts
+  try {
+    // ✅ Pie Chart
+    const pieEl = document.getElementById('pieChart');
+    const customLegendEl = document.getElementById('customLegend');
+    
+    if (pieEl) {
+      const nutritionalData = JSON.parse(document.getElementById('nutritional-data').textContent || '{}');
+      const colors = ['#f44336', '#ff9800', '#4caf50', '#2196f3', '#9c27b0'];
+
+      const isMobile = () => window.innerWidth <= 768;
+
+      const createChart = () => {
+        const mobile = isMobile();
+        const chart = new Chart(pieEl.getContext('2d'), {
+          type: 'pie',
+          data: {
+            labels: nutritionalData.labels || [],
+            datasets: [{
+              data: nutritionalData.values || [],
+              backgroundColor: colors,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: !mobile, position: 'bottom' },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.parsed || 0;
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                    return `${label}: ${value} (${percentage}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        if (mobile && customLegendEl && nutritionalData.labels && nutritionalData.values) {
+          createCustomLegend(nutritionalData.labels, colors, nutritionalData.values, customLegendEl);
+        }
+        return chart;
+      };
+
+      let pieChart = createChart();
+
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          const mobile = isMobile();
+          pieChart.options.plugins.legend.display = !mobile;
+          pieChart.update();
+          if (mobile && customLegendEl && nutritionalData.labels && nutritionalData.values) {
+            createCustomLegend(nutritionalData.labels, colors, nutritionalData.values, customLegendEl);
+          } else if (!mobile && customLegendEl) {
+            customLegendEl.innerHTML = '';
+          }
+        }, 250);
+      });
+    }
+
+    // Simple Vaccination Trend Line Chart
+    const vaccinationTrendEl = document.getElementById('vaccinationTrendChart');
+    if (vaccinationTrendEl) {
+      const vaccinationTrendData = JSON.parse(document.getElementById('vaccination-trend-data').textContent || '{}');
+      
+      new Chart(vaccinationTrendEl.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: vaccinationTrendData.labels || [],
+          datasets: [{
+            label: 'Registered Preschoolers',
+            data: vaccinationTrendData.registered || [],
+            borderColor: '#3498db',
+            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+            borderWidth: 2,
+            pointRadius: 4,
+            tension: 0.3
+          }, {
+            label: 'Vaccinations Given',
+            data: vaccinationTrendData.vaccinated || [],
+            borderColor: '#27ae60',
+            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+            borderWidth: 2,
+            pointRadius: 4,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Monthly Vaccination Trend',
+              font: { size: 14, weight: 'bold' }
+            },
+            legend: { 
+              display: true, 
+              position: 'bottom'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { 
+                display: true, 
+                text: 'Count'
+              }
+            },
+            x: {
+              title: { 
+                display: true, 
+                text: 'Months'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Barangay Nutritional Status Bar Chart
+    const barangayChartEl = document.getElementById('barangayChart');
+    if (barangayChartEl) {
+      const barangayDataElement = document.getElementById('barangay-chart-data');
+      
+      if (barangayDataElement) {
+        const barangayData = JSON.parse(barangayDataElement.textContent || '{}');
+        
+        // Check if we have data
+        if (barangayData.barangays && barangayData.barangays.length > 0) {
+          new Chart(barangayChartEl.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: barangayData.barangays || [],
+              datasets: [{
+                label: 'Severely Wasted',
+                data: barangayData.severely_wasted || [],
+                backgroundColor: '#f44336'
+              }, {
+                label: 'Wasted',
+                data: barangayData.wasted || [],
+                backgroundColor: '#ff9800'
+              }, {
+                label: 'Normal',
+                data: barangayData.normal || [],
+                backgroundColor: '#4caf50'
+              }, {
+                label: 'Risk of Overweight',
+                data: barangayData.risk_overweight || [],
+                backgroundColor: '#2196f3'
+              }, {
+                label: 'Overweight',
+                data: barangayData.overweight || [],
+                backgroundColor: '#9c27b0'
+              }, {
+                label: 'Obese',
+                data: barangayData.obese || [],
+                backgroundColor: '#795548'
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                title: {
+                  display: true,
+                  text: 'Nutritional Status by Barangay',
+                  font: { size: 16, weight: 'bold' }
+                },
+                legend: {
+                  display: true,
+                  position: 'top'
+                }
+              },
+              scales: {
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Barangays'
+                  }
+                },
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: 'Number of Preschoolers'
+                  }
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+
+  } catch (error) {
+    console.error('Error initializing charts:', error);
+  }
+
+  // Notification item click handler
+  document.querySelectorAll('.notif-item').forEach(item => {
+    item.addEventListener('click', function (e) {
+      e.preventDefault();
+      const notifId = this.getAttribute('data-id');
+      const notifType = this.getAttribute('data-type');
+      const targetUrl = this.getAttribute('href');
+      const notifText = this.querySelector('.notif-text');
+
+      fetch('/mark-notif-read/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: notifId, type: notifType }),
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status && notifText) notifText.style.fontWeight = 'normal';
+        window.location.href = targetUrl;
+      })
+      .catch(() => window.location.href = targetUrl);
+    });
+  });
+
+  // Set active nav item
+  const currentPath = window.location.pathname;
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.classList.remove('active');
+    const onclick = link.getAttribute('onclick');
+    if (onclick && onclick.includes(currentPath)) link.classList.add('active');
+  });
+});
+
+// Custom legend function
+function createCustomLegend(labels, colors, values, container) {
+  const total = values.reduce((a, b) => a + b, 0);
+  container.innerHTML = labels.map((label, index) => {
+    const value = values[index] || 0;
+    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+    return `
+      <div class="legend-item">
+        <div class="legend-color-box" style="background-color: ${colors[index]}"></div>
+        <div class="legend-text">
+          ${label}<br><small>${value} (${percentage}%)</small>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <title>Register Preschooler</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+      padding: 20px;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      font-size: 14px;
+      font-weight: 400;
+      background: url('{% static "media/loginbg.png" %}') center/cover no-repeat fixed;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: relative;
+      height: 100px;
+      background-color: rgba(30, 30, 47, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+
+    .logo-title {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      font-weight: 600;
+      color: white;
+      white-space: nowrap;
+      margin-left: 20px;
+    }
+
+    .rtn-btn {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 56px;
+      height: 56px;
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+    }
+
+    .rtn-btn:before,
+    .rtn-btn:after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      inset: 7px;
+    }
+
+    .rtn-btn:before {
+      border: 4px solid #f0eeef;
+      transition: opacity 0.4s, transform 0.5s;
+    }
+
+    .rtn-btn:after {
+      border: 4px solid #96daf0;
+      transform: scale(1.3);
+      opacity: 0;
+      transition: opacity 0.4s, transform 0.5s;
+    }
+
+    .rtn-btn:hover:before {
+      opacity: 0;
+      transform: scale(0.7);
+    }
+
+    .rtn-btn:hover:after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .button-box {
+      display: flex;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .button-elem {
+      display: block;
+      width: 20px;
+      height: 20px;
+      margin: 17px 18px 0 18px;
+      transform: rotate(180deg);
+      fill: #f0eeef;
+    }
+
+    .main-content {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    h2 {
+      font-size: 18px;
+      font-weight: 400;
+      color: #333;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+    }
+
+    .search-bar input {
+      padding: 8px 12px 8px 40px;
+      font-size: 14px;
+      border-radius: 8px;
+      border: 1px solid #e6e6e6;
+      width: 220px;
+      font-family: 'Poppins', sans-serif;
+      color: #333;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      background-color: white;
+    }
+
+    .search-bar input:focus {
+      outline: none;
+      border-color: #5bdab3;
+      box-shadow: 0 0 0 3px rgba(91, 218, 179, 0.15);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #999;
+      pointer-events: none;
+      font-size: 16px;
+      z-index: 1;
+    }
+
+    .clear-search {
+      position: absolute;
+      right: 100px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #999;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 2px;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      display: none;
+      z-index: 1;
+    }
+
+    .clear-search:hover {
+      background-color: #f0f0f0;
+      color: #666;
+    }
+
+    .clear-search.show {
+      display: flex;
+    }
+
+    .search-bar button {
+      padding: 8px 16px;
+      font-size: 14px;
+      background-color: #5bdab3;
+      color: #1e1e2f;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
+    }
+
+    .search-bar button:hover {
+      background-color: #1565c0;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    }
+
+    /* Table Container - Always visible with horizontal scroll */
+    .table-container {
+      overflow-x: auto;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      /* Smooth scrolling for better mobile experience */
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: #5bdab3 #f0f0f0;
+    }
+
+    /* Custom scrollbar for webkit browsers */
+    .table-container::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+      background: #5bdab3;
+      border-radius: 4px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb:hover {
+      background: #1565c0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      min-width: 700px; /* Ensures table maintains minimum width */
+    }
+
+    table th,
+    table td {
+      border: 1px solid #e6e6e6;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 14px;
+      color: #333;
+      font-weight: 400;
+      background-color: white;
+      white-space: nowrap; /* Prevents text wrapping in cells */
+    }
+
+    table th {
+      background-color: #f8f9fa;
+      font-weight: 500;
+      border-bottom: 2px solid #e6e6e6;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    table tr:hover td {
+      background-color: #f8f9fa;
+    }
+
+    .parent-row {
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .parent-row.selected {
+      background-color: #e8f4fd;
+    }
+
+    .parent-row.hidden {
+      display: none;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+      font-style: italic;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    .btn {
+      display: inline-block;
+      background-color: #5bdab3;
+      color: #1e1e2f;
+      padding: 8px 16px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
+      margin: 0 5px;
+    }
+
+    .btn:hover {
+      background-color: #1565c0;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999999;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+    }
+
+    .modal.show {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      width: 600px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-content h3 {
+      font-size: 16px;
+      font-weight: 400;
+      color: #333;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 400;
+      margin-bottom: 8px;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 8px;
+      border: 1px solid #e6e6e6;
+      font-size: 14px;
+      font-family: 'Poppins', sans-serif;
+      background-color: white;
+      color: #333;
+      font-weight: 400;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #5bdab3;
+      box-shadow: 0 0 0 3px rgba(91, 218, 179, 0.15);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 15px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .close-button {
+      float: right;
+      font-weight: bold;
+      font-size: 20px;
+      cursor: pointer;
+      color: #333;
+      transition: color 0.2s ease;
+    }
+
+    .close-button:hover {
+      color: #666;
+    }
+
+    .birth-info-section {
+      border-top: 2px solid #f0f0f0;
+      padding-top: 20px;
+      margin-top: 20px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #5bdab3;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .pagination-section {
+      text-align: center;
+      margin-top: 20px;
+      color: #333;
+      font-size: 14px;
+      font-weight: 400;
+      font-family: 'Poppins', sans-serif;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 20px;
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
+    }
+
+    .pagination-section span {
+      margin: 0 15px;
+      color: #666;
+    }
+
+    .pagination-section .btn {
+      margin: 0 5px;
+      padding: 12px 20px;
+      font-size: 14px;
+    }
+
+    /* Age limit notice */
+    .age-notice {
+      background: rgba(91, 218, 179, 0.1);
+      border: 1px solid #5bdab3;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 15px;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .age-notice .notice-title {
+      font-weight: 600;
+      color: #5bdab3;
+      margin-bottom: 5px;
+    }
+
+    /* Mobile-specific adjustments */
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+
+      .topbar {
+        height: 70px;
+        margin-bottom: 20px;
+      }
+
+      .rtn-btn {
+        width: 45px;
+        height: 45px;
+        left: 15px;
+      }
+
+      .rtn-btn:before,
+      .rtn-btn:after {
+        inset: 6px;
+      }
+
+      .button-elem {
+        width: 18px;
+        height: 18px;
+        margin: 13px 13px 0 13px;
+      }
+      
+      .logo-title {
+        font-size: 16px;
+        padding: 0 80px;
+        text-align: center;
+      }
+      
+      .main-content {
+        padding: 20px;
+        margin: 0;
+      }
+
+      h2 {
+        font-size: 16px;
+        margin-bottom: 15px;
+      }
+
+      .header-bar {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+      }
+      
+      .search-bar {
+        width: 100%;
+        justify-content: stretch;
+      }
+      
+      .search-bar input {
+        flex: 1;
+        min-width: 0;
+        width: auto;
+      }
+
+      .clear-search {
+        right: 85px;
+      }
+
+      .modal-content {
+        width: 95vw;
+        padding: 20px;
+        margin: 10px;
+      }
+
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .pagination-section {
+        font-size: 13px;
+        padding: 15px;
+      }
+
+      .pagination-section span {
+        font-size: 13px;
+        margin: 0 10px;
+      }
+
+      /* Mobile table adjustments */
+      table th,
+      table td {
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+
+      .topbar {
+        height: 60px;
+        margin-bottom: 15px;
+      }
+
+      .logo-title {
+        font-size: 14px;
+        padding: 0 70px;
+      }
+
+      .main-content {
+        padding: 15px;
+      }
+
+      h2 {
+        font-size: 14px;
+      }
+
+      .search-bar input {
+        font-size: 13px;
+        padding: 10px 8px 10px 35px;
+      }
+
+      .search-bar button {
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+
+      .modal-content {
+        padding: 15px;
+        width: 98vw;
+        margin: 5px;
+      }
+
+      .modal-content h3 {
+        font-size: 14px;
+      }
+
+      .form-group input,
+      .form-group select {
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+
+      .form-group label {
+        font-size: 13px;
+      }
+
+      /* Further mobile table adjustments */
+      table th,
+      table td {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      table {
+        min-width: 600px;
+      }
+    }
+
+    @media (max-width: 375px) {
+      .main-content {
+        padding: 12px;
+      }
+
+      .search-bar {
+        gap: 6px;
+      }
+
+      .search-bar input {
+        padding: 8px 6px 8px 30px;
+        font-size: 12px;
+      }
+
+      .search-bar button {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      .clear-search {
+        right: 75px;
+        width: 20px;
+        height: 20px;
+        font-size: 16px;
+      }
+
+      /* Ultra-small screen table adjustments */
+      table th,
+      table td {
+        padding: 6px 8px;
+        font-size: 11px;
+      }
+
+      table {
+        min-width: 550px;
+      }
+    }
+
+    @media (max-width: 320px) {
+      .modal-content {
+        padding: 12px;
+        width: 99vw;
+        margin: 2px;
+      }
+
+      .form-group input,
+      .form-group select {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      .btn {
+        padding: 10px 14px;
+        font-size: 13px;
+      }
+
+      table {
+        min-width: 500px;
+      }
+
+      table th,
+      table td {
+        padding: 5px 6px;
+        font-size: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <button class="rtn-btn" onclick="location.href='/dashboard'"> 
+        <div class="button-box">
+          <span class="button-elem">
+            <svg viewBox="0 0 46 40" xmlns="http://www.w3.org/2000/svg">
+              <path d="M46 20.038c0-.7-.3-1.5-.8-2.1l-16-17c-1.1-1-3.2-1.4-4.4-.3-1.2 1.1-1.2 3.3 0 4.4l11.3 11.9H3c-1.7 0-3 1.3-3 3s1.3 3 3 3h33.1l-11.3 11.9c-1 1-1.2 3.3 0 4.4 1.2 1.1 3.3.8 4.4-.3l16-17c.5-.5.8-1.1.8-1.9z"></path>
+            </svg>
+          </span>
+        </div>
+      </button>
+      <div class="logo-title">PPMS CLUSTER 4 IMUS CITY ({{ account.barangay.name|upper }})</div>
+    </div>
+
+    <div class="main-content">
+      <div class="header-bar">
+        <h2>Register Preschooler</h2>
+        <div class="search-bar">
+          <div class="search-icon"></div>
+          <input type="text" id="parentSearch" placeholder="Search parent name..." />
+          <button type="button" class="clear-search" id="clearSearch" title="Clear search">×</button>
+          <button id="searchBtn" type="button">Search</button>
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Parent</th>
+              <th>No. of Registered Preschooler</th>
+              <th>Birthdate</th>
+              <th>Age</th>
+              <th>Address</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for parent in parents %}
+            <tr class="parent-row" data-parent="{{ parent.full_name }}" data-id="{{ parent.parent_id }}">
+              <td>{{ parent.full_name }}</td>
+              <td>{{ parent.registered_preschoolers.count }}</td>
+              <td>{{ parent.birthdate|date:"F j, Y" }}</td>
+              <td>{% if parent.computed_age is not None %}{{ parent.computed_age }}{% else %}N/A{% endif %}</td>
+              <td>{{ parent.address }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No parent accounts found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- No results message -->
+      <div id="noResults" class="no-results" style="display: none;">
+        <p>No parents found matching your search.</p>
+        <small>Try adjusting your search terms or clear the search to see all parents.</small>
+      </div>
+    </div>
+
+    <div class="pagination-section">
+      {% if parents.has_previous %}
+        <a href="?page={{ parents.previous_page_number }}" class="btn">Previous</a>
+      {% endif %}
+      <span>Page {{ parents.number }} of {{ parents.paginator.num_pages }}</span>
+      {% if parents.has_next %}
+        <a href="?page={{ parents.next_page_number }}" class="btn">Next</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="registerModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <h3>Register Preschooler for <span id="modalParentName"></span></h3>
+      
+      <form id="registerForm">
+        {% csrf_token %}
+        <input type="hidden" id="hidden_parent_name" name="parent_name" />
+        <input type="hidden" id="hidden_parent_id" name="parent_id" />
+        
+        <!-- Basic Information -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" id="child_last_name" name="last_name" required>
+          </div>
+          <div class="form-group">
+            <label>First Name</label>
+            <input type="text" id="child_first_name" name="first_name" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Birthdate</label>
+            <input type="date" id="child_birthdate" name="birthdate" required>
+          </div>
+          <div class="form-group">
+            <label>Sex</label>
+            <select id="child_gender" name="gender" required>
+              <option value="" disabled selected>Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Birth Information Section -->
+        <div class="birth-info-section">
+          <div class="section-title">Birth Information</div>
+          
+          <div class="form-group">
+            <label>Place of Birth</label>
+            <input type="text" id="place_of_birth" name="place_of_birth" placeholder="e.g., Imus General Hospital, Cavite">
+          </div>
+
+          <div class="form-group">
+            <label>Time of Birth</label>
+            <input type="time" id="time_of_birth" name="time_of_birth">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Birth Weight (kg)</label>
+              <input type="number" id="birth_weight" name="birth_weight" step="0.01" min="0" placeholder="e.g., 3.2">
+            </div>
+            <div class="form-group">
+              <label>Birth Length (cm)</label>
+              <input type="number" id="birth_length" name="birth_length" step="0.1" min="0" placeholder="e.g., 48.5">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Type of Birth</label>
+              <select id="type_of_birth" name="type_of_birth">
+                <option value="" disabled selected>Select Type</option>
+                <option value="Normal">Normal</option>
+                <option value="CS">Cesarean Section (CS)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Place of Delivery</label>
+              <select id="place_of_delivery" name="place_of_delivery">
+                <option value="" disabled selected>Select Place</option>
+                <option value="Home">Home</option>
+                <option value="Lying-in">Lying-in</option>
+                <option value="Hospital">Hospital</option>
+                <option value="Others">Others</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">Register Preschooler</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("registerModal");
+    const closeButton = document.querySelector(".close-button");
+    const modalParentName = document.getElementById("modalParentName");
+    const hiddenParentInput = document.getElementById("hidden_parent_name");
+    const hiddenParentIdInput = document.getElementById("hidden_parent_id");
+    const form = document.getElementById("registerForm");
+    const birthdateInput = document.getElementById("child_birthdate");
+    const searchInput = document.getElementById("parentSearch");
+    const clearButton = document.getElementById("clearSearch");
+    const searchButton = document.getElementById("searchBtn");
+    const noResults = document.getElementById("noResults");
+
+    // Calculate date constraints for 0-59 months age range
+    const today = new Date();
+    
+    // Maximum date is today
+    const maxBirthDate = new Date();
+    
+    // Minimum date is 59 months ago
+    const minBirthDate = new Date();
+    minBirthDate.setMonth(minBirthDate.getMonth() - 59);
+    
+    // Set date constraints
+    birthdateInput.min = minBirthDate.toISOString().split("T")[0];
+    birthdateInput.max = maxBirthDate.toISOString().split("T")[0];
+
+    // Function to calculate age in months
+    function calculateAgeInMonths(birthDate, referenceDate = new Date()) {
+      let ageInMonths = (referenceDate.getFullYear() - birthDate.getFullYear()) * 12 + 
+                        (referenceDate.getMonth() - birthDate.getMonth());
+      
+      if (referenceDate.getDate() < birthDate.getDate()) {
+        ageInMonths -= 1;
+      }
+      return ageInMonths;
+    }
+
+    // Real-time birthdate validation
+    birthdateInput.addEventListener('change', function() {
+      const selectedDate = new Date(this.value);
+      const ageInMonths = calculateAgeInMonths(selectedDate);
+      
+      if (ageInMonths < 0) {
+        Swal.fire({
+          title: 'Invalid Birthdate',
+          text: 'Birthdate cannot be in the future.',
+          icon: 'warning'
+        });
+        this.value = '';
+        return;
+      }
+      
+      if (ageInMonths > 59) {
+        const years = Math.floor(ageInMonths / 12);
+        const months = ageInMonths % 12;
+        Swal.fire({
+          title: 'Child Too Old',
+          text: `This child is ${ageInMonths} months old (${years} years, ${months} months). Only children aged 0-59 months (0-4 years, 11 months) can be registered as preschoolers.`,
+          icon: 'warning'
+        });
+        this.value = '';
+        return;
+      }
+
+      // Optional: Show age information for valid dates
+      if (ageInMonths >= 0 && ageInMonths <= 59) {
+        const years = Math.floor(ageInMonths / 12);
+        const months = ageInMonths % 12;
+        console.log(`Valid age: ${ageInMonths} months (${years} years, ${months} months)`);
+      }
+    });
+
+    let selectedRow = null;
+    let selectedParentName = "";
+    let selectedParentId = "";
+
+    // Real-time search functionality
+    function performSearch() {
+      const keyword = searchInput.value.trim().toLowerCase();
+      let hasVisibleResults = false;
+
+      // Search table rows
+      document.querySelectorAll(".parent-row").forEach(row => {
+        if (row.querySelector('td')) { // Skip empty message rows
+          const name = row.getAttribute("data-parent").toLowerCase();
+          const address = row.cells[4].textContent.toLowerCase(); // Also search address
+          const matches = name.includes(keyword) || address.includes(keyword);
+          
+          if (matches || keyword === '') {
+            row.classList.remove('hidden');
+            row.style.display = '';
+            hasVisibleResults = true;
+          } else {
+            row.classList.add('hidden');
+            row.style.display = 'none';
+          }
+        }
+      });
+
+      // Show/hide no results message
+      if (keyword && !hasVisibleResults) {
+        noResults.style.display = 'block';
+      } else {
+        noResults.style.display = 'none';
+      }
+
+      // Show/hide clear button
+      if (keyword) {
+        clearButton.classList.add('show');
+      } else {
+        clearButton.classList.remove('show');
+      }
+    }
+
+    // Real-time search as user types
+    searchInput.addEventListener('input', performSearch);
+    
+    // Clear search functionality
+    clearButton.addEventListener('click', function() {
+      searchInput.value = '';
+      performSearch();
+      searchInput.focus();
+    });
+
+    // Allow clearing search with Escape key
+    searchInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        searchInput.value = '';
+        performSearch();
+      }
+    });
+
+    // Search button functionality
+    searchButton.addEventListener("click", function () {
+      performSearch();
+    });
+
+    // Table row selection
+    document.querySelectorAll(".parent-row").forEach((row) => {
+      row.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (selectedRow) selectedRow.classList.remove("selected");
+        selectedRow = this;
+        selectedRow.classList.add("selected");
+        selectedParentName = this.getAttribute("data-parent");
+        selectedParentId = this.getAttribute("data-id");
+
+        openModal();
+      });
+    });
+
+    function openModal() {
+      modalParentName.textContent = selectedParentName;
+      hiddenParentInput.value = selectedParentName;
+      hiddenParentIdInput.value = selectedParentId;
+
+      modal.classList.add("show");
+      modal.style.display = "flex";
+    }
+
+    closeButton.onclick = () => {
+      modal.classList.remove("show");
+      setTimeout(() => {
+        modal.style.display = "none";
+      }, 100);
+    };
+
+    window.onclick = (e) => {
+      if (e.target === modal) {
+        modal.classList.remove("show");
+        setTimeout(() => {
+          modal.style.display = "none";
+        }, 100);
+      }
+    };
+
+    function validateNameInput(inputElement) {
+      inputElement.addEventListener("input", function () {
+        let value = this.value.replace(/[^A-Za-z\s]/g, "").replace(/\s+/g, " ").trimStart();
+        this.value = value;
+      });
+    }
+
+    function validateTextInput(inputElement) {
+      inputElement.addEventListener("input", function () {
+        // Updated to include numbers (0-9) in addition to letters, spaces, commas, periods, and hyphens
+        let value = this.value.replace(/[^A-Za-z0-9\s,.-]/g, "").replace(/\s+/g, " ").trimStart();
+        this.value = value;
+      });
+    }
+
+    validateNameInput(document.getElementById("child_first_name"));
+    validateNameInput(document.getElementById("child_last_name"));
+    validateTextInput(document.getElementById("place_of_birth"));
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+      const firstName = document.getElementById("child_first_name").value.trim();
+      const lastName = document.getElementById("child_last_name").value.trim();
+      const birthdate = document.getElementById("child_birthdate").value;
+      const gender = document.getElementById("child_gender").value;
+      const parentId = hiddenParentIdInput.value;
+
+      // Required field validation
+      if (!nameRegex.test(firstName)) {
+        return Swal.fire('Invalid Input', 'First name must only contain letters and spaces.', 'warning');
+      }
+      if (!nameRegex.test(lastName)) {
+        return Swal.fire('Invalid Input', 'Last name must only contain letters and spaces.', 'warning');
+      }
+      if (!birthdate) {
+        return Swal.fire('Missing Birthdate', 'Please enter a birthdate.', 'warning');
+      }
+      if (!gender) {
+        return Swal.fire('Missing Gender', 'Please select a gender.', 'warning');
+      }
+
+      // Additional age validation before submission
+      const selectedBirthDate = new Date(birthdate);
+      const ageInMonths = calculateAgeInMonths(selectedBirthDate);
+
+      if (ageInMonths < 0) {
+        return Swal.fire('Invalid Birthdate', 'Birthdate cannot be in the future.', 'warning');
+      }
+
+      if (ageInMonths > 59) {
+        const years = Math.floor(ageInMonths / 12);
+        const months = ageInMonths % 12;
+        return Swal.fire({
+          title: 'Child Too Old',
+          text: `This child is ${ageInMonths} months old (${years} years, ${months} months). Only children aged 0-59 months (0-4 years, 11 months) can be registered as preschoolers.`,
+          icon: 'warning'
+        });
+      }
+
+      // Optional field validation
+      const birthWeight = document.getElementById("birth_weight").value;
+      const birthLength = document.getElementById("birth_length").value;
+
+      if (birthWeight && parseFloat(birthWeight) < 0) {
+        return Swal.fire('Invalid Birth Weight', 'Birth weight cannot be negative.', 'warning');
+      }
+
+      if (birthLength && parseFloat(birthLength) < 0) {
+        return Swal.fire('Invalid Birth Length', 'Birth length cannot be negative.', 'warning');
+      }
+
+      const data = {
+        parent_id: parentId,
+        first_name: firstName,
+        last_name: lastName,
+        birthdate: birthdate,
+        gender: gender,
+        place_of_birth: document.getElementById("place_of_birth").value.trim(),
+        birth_weight: birthWeight,
+        birth_length: birthLength,
+        time_of_birth: document.getElementById("time_of_birth").value,
+        type_of_birth: document.getElementById("type_of_birth").value,
+        place_of_delivery: document.getElementById("place_of_delivery").value,
+        csrfmiddlewaretoken: document.querySelector('[name=csrfmiddlewaretoken]').value
+      };
+
+      try {
+        const response = await fetch("{% url 'register_preschooler_entry' %}", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams(data)
+        });
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+          form.reset();
+          modal.classList.remove("show");
+          setTimeout(() => {
+            modal.style.display = "none";
+          }, 100);
+
+          const ageMonths = result.data.age_months || 0;
+          const years = Math.floor(ageMonths / 12);
+          const months = ageMonths % 12;
+
+          Swal.fire({
+            title: 'Registered!',
+            text: `Preschooler ${result.data.name} has been registered successfully.`,
+            icon: 'success',
+            confirmButtonText: 'OK'
+          }).then(() => {
+            location.reload();
+          });
+        } else {
+          Swal.fire('Error', result.message || 'Registration failed.', 'error');
+        }
+      } catch (error) {
+        Swal.fire('Server Error', error.toString(), 'error');
+      }
+    });
+
+    // Add scroll hint visibility control for mobile
+    function handleScrollHint() {
+      const tableContainer = document.querySelector('.table-container');
+      const scrollHint = document.querySelector('.scroll-hint');
+      
+      if (window.innerWidth <= 768 && scrollHint) {
+        const isScrollable = tableContainer.scrollWidth > tableContainer.clientWidth;
+        scrollHint.style.display = isScrollable ? 'block' : 'none';
+        
+        // Hide hint after user scrolls
+        let hasScrolled = false;
+        tableContainer.addEventListener('scroll', function() {
+          if (!hasScrolled) {
+            hasScrolled = true;
+            scrollHint.style.opacity = '0.3';
+            setTimeout(() => {
+              scrollHint.style.display = 'none';
+            }, 2000);
+          }
+        });
+      }
+    }
+
+    // Call on load and resize
+    handleScrollHint();
+    window.addEventListener('resize', handleScrollHint);
+  });
+</script>
+
+</body>
+</html>

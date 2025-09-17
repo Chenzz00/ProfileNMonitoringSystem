@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PPMS Cluster 4 Imus City - Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      font-size: 14px;
+      font-weight: 400;
+      background: #f8f9fa;
+    }
+
+    .background-image {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background-image: url('{% static "media/loginbg.png" %}');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 280px;
+      height: 100vh;
+      background: linear-gradient(180deg, #1e1e2f 0%, #2a2a3e 100%);
+      z-index: 1000;
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar-header {
+      padding: 25px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+    }
+
+    .sidebar-title {
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+
+    .nav-menu {
+      padding: 20px 0;
+    }
+
+    .nav-item {
+      margin: 0;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 16px 25px;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      border: none;
+      background: none;
+      width: 100%;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .nav-link:hover {
+      background: rgba(91, 218, 179, 0.1);
+      color: #5bdab3;
+      padding-left: 30px;
+    }
+
+    .nav-link.active {
+      background: rgba(91, 218, 179, 0.2);
+      color: #5bdab3;
+      border-right: 3px solid #5bdab3;
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      margin-right: 12px;
+      opacity: 0.8;
+    }
+
+    .nav-link:hover .nav-icon {
+      opacity: 1;
+    }
+
+    /* Main Content Area */
+    .main-content {
+      margin-left: 280px;
+      min-height: 100vh;
+      transition: margin-left 0.3s ease;
+    }
+
+    .topbar {
+      background-color: rgba(30, 30, 47, 0.95);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .top-icons {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .greeting {
+      font-size: 20px;
+      font-weight: 500;
+      color: #fff;
+      margin: 0;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      animation: shake 500ms ease-in-out;
+      color: #5bdab3;
+    }
+
+    @keyframes shake {
+      0% { rotate: 0deg }
+      25% { rotate: 25deg }
+      50% { rotate: -25deg }
+      75% { rotate: 25deg }
+      100% { rotate: 10deg }
+    }
+
+    .content-wrapper {
+      padding: 30px;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 350px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      border: 1px solid #e0e4e7;
+    }
+
+    h2 {
+      font-size: 18px !important;
+      margin-bottom: 25px;
+      font-weight: 400 !important;
+      color: #333 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 2px !important;
+      font-family: 'Poppins', sans-serif !important;
+    }
+
+    .summary-boxes {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin: 30px 0;
+    }
+
+    .box {
+      background-color: #f4f6f8;
+      border: 1px solid #e0e4e7;
+      border-radius: 12px;
+      padding: 25px;
+      width: 200px;
+      height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      text-decoration: none;
+      color: #333;
+      font-size: 14px;
+      font-weight: 400;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+    }
+
+    .box:hover {
+      background-color: #1565c0;
+      color: white;
+      border-color: #1565c0;
+      cursor: pointer;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(21, 101, 192, 0.3);
+    }
+
+    .section-title {
+      margin-top: 40px !important;
+      margin-bottom: 20px !important;
+      font-size: 18px !important;
+      font-weight: 600 !important;
+      color: #1e1e2f !important;
+      text-transform: uppercase !important;
+      letter-spacing: 2px !important;
+      font-family: 'Poppins', sans-serif !important;
+      text-align: center;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e0e4e7;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e0e4e7;
+    }
+
+    table th, table td {
+      border: 1px solid #e6e6e6;
+      padding: 12px 16px;
+      text-align: left;
+    }
+
+    table th {
+      background-color: #f8f9fa;
+      color: #333;
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    table td {
+      background-color: white;
+      color: #333;
+      font-weight: 400;
+    }
+
+    table tr:hover td {
+      background-color: #f8f9fa;
+    }
+
+    /* Mobile Hamburger */
+    .mobile-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 5px;
+    }
+
+    /* Notification Dropdown */
+    .notif-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    
+    #notifMenu {
+      display: none;
+      position: absolute;
+      right: -10px;
+      top: calc(100% + 8px);
+      background-color: #fff;
+      min-width: 320px;
+      max-width: 350px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      z-index: 1000;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #e0e4e7;
+    }
+
+    #notifMenu .dropdown-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #333;
+      text-decoration: none;
+      display: block;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      transition: background-color 0.2s ease;
+    }
+
+    #notifMenu .dropdown-item:hover {
+      background-color: #f8f9fa;
+    }
+
+    #notifDot {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 10px;
+      height: 10px;
+      background-color: #ff4444;
+      border-radius: 50%;
+      display: none;
+      border: 2px solid #1e1e2f;
+    }
+
+    .profile-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background-color: white;
+      border: 1px solid #e0e4e7;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      min-width: 150px;
+      z-index: 1000;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .dropdown a {
+      padding: 12px 16px;
+      text-decoration: none;
+      color: #1a1a1a;
+      display: block;
+      font-size: 14px;
+      transition: background-color 0.2s ease;
+    }
+
+    .dropdown a:hover {
+      background-color: #f0f8ff;
+      color: #1565c0;
+    }
+
+    .right-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      height: 100%;
+    }
+
+    .announcements-container, .chart-container {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(224, 228, 231, 0.8);
+    }
+
+    .announcements-container {
+      flex: 1;
+    }
+
+    .chart-container {
+      min-height: 430px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .announcements-title, .chart-title {
+      font-size: 18px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 20px;
+      color: #1e1e2f;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 2px solid #5bdab3;
+      padding-bottom: 10px;
+    }
+
+    .slideshow-container {
+      position: relative;
+      max-width: 100%;
+      margin: auto;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .slide {
+      display: none;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      border-left: 4px solid #5bdab3;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      min-height: 180px;
+    }
+
+    .slide.active {
+      display: block;
+      animation: slideIn 0.5s ease-in-out;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .slide:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .slide-content {
+      padding: 20px;
+    }
+
+    .announcement-image {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .announcement-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e1e2f;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .announcement-content {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .announcement-date {
+      font-size: 12px;
+      color: #999;
+      font-style: italic;
+    }
+
+    .slide-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 15px;
+      padding: 10px 0;
+    }
+
+    .nav-btn {
+      background: #5bdab3;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.3s ease;
+      min-width: 70px;
+    }
+
+    .nav-btn:hover {
+      background: #4bc79f;
+      transform: translateY(-1px);
+    }
+
+    .nav-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .slide-indicators {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin: 0 10px;
+    }
+
+    .indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ddd;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .indicator.active {
+      background: #5bdab3;
+      transform: scale(1.2);
+    }
+
+    .no-announcements {
+      text-align: center;
+      color: #666;
+      font-size: 16px;
+      padding: 40px 20px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      border: 2px dashed #ddd;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 200px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+    }
+
+    .chart-legend {
+      margin-top: 15px;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      font-size: 11px;
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .announcement-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 10000;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 20px;
+      max-width: 90vw;
+      max-height: 90vh;
+      width: 600px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes modalSlideIn {
+      from { opacity: 0; transform: translate(-50%, -60%); scale: 0.9; }
+      to { opacity: 1; transform: translate(-50%, -50%); scale: 1; }
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #5bdab3, #4bc79f);
+      color: white;
+      padding: 25px 30px;
+      position: relative;
+    }
+
+    .modal-title {
+      font-size: 22px;
+      font-weight: 600;
+      margin: 0;
+      line-height: 1.3;
+      padding-right: 40px;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      font-size: 24px;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+
+    .modal-body {
+      padding: 30px;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .modal-image {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-content-text {
+      font-size: 16px;
+      line-height: 1.7;
+      color: #333;
+      margin-bottom: 20px;
+      white-space: pre-wrap;
+    }
+
+    .modal-date {
+      font-size: 14px;
+      color: #999;
+      font-style: italic;
+      padding: 15px 0;
+      border-top: 1px solid #eee;
+      text-align: center;
+    }
+
+    /* Sidebar overlay for mobile */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 1200px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+      
+      .right-sidebar {
+        order: -1;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar {
+        width: 260px;
+      }
+      
+      .main-content {
+        margin-left: 260px;
+      }
+      
+      .content-wrapper {
+        padding: 25px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        width: 280px;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .mobile-toggle {
+        display: block;
+      }
+
+      .topbar {
+        padding: 15px 20px;
+      }
+
+      .greeting {
+        font-size: 18px;
+      }
+
+      .main-layout {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      .summary-boxes {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+      }
+
+      .box {
+        width: 100%;
+        max-width: 300px;
+        height: auto;
+        min-height: 100px;
+      }
+
+      .content-wrapper {
+        padding: 20px 15px;
+      }
+
+      .chart-container {
+        min-height: 350px;
+        padding: 20px;
+      }
+
+      table {
+        font-size: 12px;
+      }
+      
+      table th, table td {
+        padding: 8px;
+      }
+
+      /* Notification dropdown adjustments */
+      #notifMenu {
+        right: -20px;
+        left: auto;
+        min-width: 280px;
+        max-width: calc(100vw - 40px);
+        margin-right: 10px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .content-wrapper {
+        padding: 15px 10px;
+      }
+
+      .chart-container {
+        min-height: 300px;
+        padding: 15px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .content-wrapper {
+        padding: 10px 8px;
+      }
+
+      .box {
+        padding: 15px;
+      }
+
+      .chart-container {
+        min-height: 250px;
+        padding: 12px;
+      }
+
+      .greeting {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Image -->
+  <div class="background-image"></div>
+
+  <!-- Sidebar Overlay for Mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Left Sidebar Navigation -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1 class="sidebar-title">PPMS {{ account.barangay.name }}</h1>
+    </div>
+    
+    <nav class="nav-menu">
+      <div class="nav-item">
+        <a href="{% url 'register_parent' %}" class="nav-link">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+          </svg>
+          Register Parent
+        </a>
+      </div>
+      
+      <div class="nav-item">
+        <a href="{% url 'register_preschooler' %}" class="nav-link">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+          </svg>
+          Register Preschooler
+        </a>
+      </div>
+      
+      <div class="nav-item">
+        <a href="{% url 'email_endorsement' %}" class="nav-link">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+          </svg>
+          Email Endorsement
+        </a>
+      </div>
+      
+      
+      <div class="nav-item">
+        <a href="{% url 'history' %}" class="nav-link">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+          </svg>
+          View Parent Logs
+        </a>
+      </div>
+      
+      
+      
+      
+      
+      
+      
+      <div class="nav-item">
+        <button class="nav-link" id="nutritionReportBtn">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+          Nutrition Report
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" id="immunizationReportBtn">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+          Immunization Report
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <button class="mobile-toggle" id="mobileToggle">☰</button>
+        <div class="greeting">PPMS CLUSTER 4 IMUS CITY</div>
+      </div>
+      <div class="top-icons">
+        <!-- Notification -->
+        <div class="notif-dropdown">
+          <button class="icon-btn" id="notifBtn" style="position: relative;">
+            <img src="{% static 'media/notification.png' %}" alt="Notifications" style="width: 2.5rem; height: 2.5rem;">
+            <span id="notifDot"></span>
+          </button>
+
+          <div class="dropdown" id="notifMenu" style="max-height: 400px; overflow-y: auto; width: 320px; min-width: 280px;">
+            {% if notifications %}
+              {% for notif in notifications %}
+                {% if notif.type == 'account' %}
+                  <a href="{% url 'register_preschooler' %}" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="account" style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; align-items: center;">
+                      <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      <span class="notif-text">
+                        New Registered
+                        {% if notif.user_role|lower == "parent" %}
+                          <strong>Parent</strong>
+                        {% else %}
+                          <strong>{{ notif.user_role }}</strong>
+                        {% endif %}
+                        account named <strong>{{ notif.full_name }}</strong>.
+                      </span>
+                    </div>
+                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
+                  </a>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <div class="dropdown-item">No notifications available.</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Profile -->
+        <div class="profile-dropdown">
+          <button class="icon-btn" id="profileBtn" style="padding: 0; border: none; background: none;">
+            {% if account.profile_photo and account.profile_photo.image %}
+              <img src="{{ account.profile_photo.image.url }}" alt="Profile" style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover;">
+            {% else %}
+              <img src="{% static 'media/default-profile.jpg' %}" alt="Default Profile" style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover;">
+            {% endif %}
+          </button>
+          <div class="dropdown" id="profileMenu">
+            <a href="{% url 'profile' %}">Profile</a>
+            <a href="#" id="logoutLink">Logout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+      <!-- Main Layout -->
+      <div class="main-layout">
+        <!-- Left Side - Main Dashboard -->
+        <div class="main-content-left">
+          <!-- Container -->
+          <div class="container">
+            <h2>{{ account.barangay.name }}</h2>
+
+            <div class="summary-boxes">
+              <a href="{% url 'registered_parents' %}" class="box">
+                <strong>Registered Parents</strong><br>{{ parent_count }}
+              </a>
+              <a href="{% url 'preschoolers' %}" class="box">
+                <strong>Registered Preschoolers</strong><br>{{ preschooler_count }}
+              </a>
+              <a href="{% url 'archived' %}" class="box">
+                <strong>Archived Preschoolers</strong><br>{{ archived_preschooler_count }}
+              </a>
+            </div>
+          </div>
+
+          <!-- Nutritional Status Summary -->
+          <div class="section-title">Nutritional Status Summary of Barangay</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Count</th>
+                <th>Percentage</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Normal</td>
+                <td>{{ nutritional_summary.normal }}</td>
+                <td>{{ nutritional_percentages.normal }}%</td>
+              </tr>
+              <tr>
+                <td>Wasted</td>
+                <td>{{ nutritional_summary.wasted }}</td>
+                <td>{{ nutritional_percentages.wasted }}%</td>
+              </tr>
+              <tr>
+                <td>Overweight</td>
+                <td>{{ nutritional_summary.overweight }}</td>
+                <td>{{ nutritional_percentages.overweight }}%</td>
+              </tr>
+              <tr>
+                <td>Severely Wasted</td>
+                <td>{{ nutritional_summary.severely_wasted }}</td>
+                <td>{{ nutritional_percentages.severely_wasted }}%</td>
+              </tr>
+              <tr>
+                <td>Obese</td>
+                <td>{{ nutritional_summary.obese }}</td>
+                <td>{{ nutritional_percentages.obese }}%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Right Side - Announcements and Chart -->
+        <div class="right-sidebar">
+          <!-- Announcements Slideshow -->
+          <div class="announcements-container">
+            <h3 class="announcements-title">ANNOUNCEMENTS</h3>
+            
+            {% if announcements %}
+              <div class="slideshow-container">
+                {% for announcement in announcements %}
+                  <div class="slide {% if forloop.first %}active{% endif %}" onclick="openAnnouncementModal('{{ announcement.id }}')">
+                    <div class="slide-content">
+                      {% if announcement.image %}
+                        <img src="{{ announcement.image.url }}" alt="{{ announcement.title }}" class="announcement-image">
+                      {% endif %}
+                      
+                      <div class="announcement-title">{{ announcement.title }}</div>
+                      
+                      <div class="announcement-content">
+                        {{ announcement.content|truncatechars:80 }}
+                      </div>
+                      
+                      <div class="announcement-date">
+                        {{ announcement.created_at|date:"M d, Y - g:i A" }}
+                      </div>
+                    </div>
+
+                    <!-- Hidden full content for modal -->
+                    <div id="announcement-{{ announcement.id }}" style="display: none;">
+                      <div class="full-title">{{ announcement.title }}</div>
+                      <div class="full-content">{{ announcement.content }}</div>
+                      <div class="full-date">{{ announcement.created_at|date:"M d, Y - g:i A" }}</div>
+                      {% if announcement.image %}
+                        <div class="full-image">{{ announcement.image.url }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+
+              <!-- Navigation Controls -->
+              <div class="slide-nav">
+                <button class="nav-btn" onclick="previousSlide()">❮ Prev</button>
+                <div class="slide-indicators">
+                  {% for announcement in announcements %}
+                    <span class="indicator {% if forloop.first %}active{% endif %}" onclick="currentSlide({{ forloop.counter0 }})"></span>
+                  {% endfor %}
+                </div>
+                <button class="nav-btn" onclick="nextSlide()">Next ❯</button>
+              </div>
+            {% else %}
+              <div class="no-announcements">
+                <h4>No Announcements</h4>
+                <p>No announcements available at the moment.</p>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Nutritional Status Pie Chart -->
+          <div class="chart-container">
+            <h3 class="chart-title">Nutritional Status</h3>
+            <div class="chart-wrapper">
+              <canvas id="nutritionalChart"></canvas>
+            </div>
+            <div class="chart-legend" id="chartLegend">
+              <!-- Legend will be populated by JavaScript -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Announcement Modal -->
+  <div id="announcementModal" class="announcement-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle"></h3>
+        <button class="modal-close" onclick="closeAnnouncementModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <img id="modalImage" class="modal-image" style="display: none;" alt="">
+        <div id="modalContent" class="modal-content-text"></div>
+        <div id="modalDate" class="modal-date"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Django Messages -->
+  {% if messages %}
+    <ul id="django-messages" style="display: none;">
+      {% for message in messages %}
+        <li data-message="{{ message }}" data-tag="{{ message.tags }}"></li>
+      {% endfor %}
+    </ul>
+    
+    <script>
+      {% for message in messages %}
+        Swal.fire({
+          title: '{% if message.tags == "success" %}Success{% elif message.tags == "error" %}Error{% else %}Info{% endif %}',
+          text: '{{ message|escapejs }}',
+          icon: '{% if message.tags == "success" %}success{% elif message.tags == "error" %}error{% else %}info{% endif %}',
+          timer: 3000,
+          showConfirmButton: false
+        });
+      {% endfor %}
+    </script>
+  {% endif %}
+
+  <script>
+    // Global variables for slideshow
+    let currentSlideIndex = 0;
+    const slides = document.querySelectorAll('.slide');
+    const indicators = document.querySelectorAll('.indicator');
+    let slideInterval;
+
+    // Initialize everything when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      if (slides.length > 0) {
+        showSlide(0);
+        startAutoSlide();
+      }
+      
+      initializeNutritionalChart();
+      initializeNotifications();
+      initializeProfileDropdown();
+      initializeEventListeners();
+      initializeMobileToggle();
+    });
+
+    // Mobile sidebar toggle
+    function initializeMobileToggle() {
+      const mobileToggle = document.getElementById("mobileToggle");
+      const sidebar = document.getElementById("sidebar");
+      const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+      if (mobileToggle) {
+        mobileToggle.addEventListener("click", () => {
+          sidebar.classList.toggle("open");
+          sidebarOverlay.classList.toggle("active");
+        });
+
+        sidebarOverlay.addEventListener("click", () => {
+          sidebar.classList.remove("open");
+          sidebarOverlay.classList.remove("active");
+        });
+      }
+    }
+
+    // Slideshow Functions
+    function showSlide(index) {
+      slides.forEach(slide => slide.classList.remove('active'));
+      indicators.forEach(indicator => indicator.classList.remove('active'));
+      
+      if (slides[index]) {
+        slides[index].classList.add('active');
+        if (indicators[index]) {
+          indicators[index].classList.add('active');
+        }
+        currentSlideIndex = index;
+      }
+    }
+
+    function nextSlide() {
+      const nextIndex = (currentSlideIndex + 1) % slides.length;
+      showSlide(nextIndex);
+      resetAutoSlide();
+    }
+
+    function previousSlide() {
+      const prevIndex = (currentSlideIndex - 1 + slides.length) % slides.length;
+      showSlide(prevIndex);
+      resetAutoSlide();
+    }
+
+    function currentSlide(index) {
+      showSlide(index);
+      resetAutoSlide();
+    }
+
+    function startAutoSlide() {
+      if (slides.length > 1) {
+        slideInterval = setInterval(nextSlide, 4000);
+      }
+    }
+
+    function resetAutoSlide() {
+      clearInterval(slideInterval);
+      startAutoSlide();
+    }
+
+    document.querySelector('.slideshow-container')?.addEventListener('mouseenter', () => {
+      clearInterval(slideInterval);
+    });
+
+    document.querySelector('.slideshow-container')?.addEventListener('mouseleave', () => {
+      startAutoSlide();
+    });
+
+    // Nutritional Status Pie Chart
+    function initializeNutritionalChart() {
+      const ctx = document.getElementById('nutritionalChart');
+      if (!ctx) return;
+
+      const chartData = {
+        labels: ['Severely Wasted', 'Wasted', 'Normal', 'Overweight', 'Obese'],
+        datasets: [{
+          data: [
+            {{ nutritional_summary.severely_wasted }},
+            {{ nutritional_summary.wasted }},
+            {{ nutritional_summary.normal }},
+            {{ nutritional_summary.overweight }},
+            {{ nutritional_summary.obese }}
+          ],
+          backgroundColor: [
+            '#e74c3c',  // Severely Underweight - Red
+            '#f39c12',  // Underweight - Orange
+            '#27ae60',  // Normal - Green
+            '#e67e22',  // Overweight - Dark Orange
+            '#c0392b'   // Obese - Dark Red
+          ],
+          borderColor: '#ffffff',
+          borderWidth: 2,
+          hoverOffset: 8
+        }]
+      };
+
+      // Get percentages from Django context
+      const percentages = [
+        {{ nutritional_percentages.severely_wasted }},
+        {{ nutritional_percentages.wasted }},
+        {{ nutritional_percentages.normal }},
+        {{ nutritional_percentages.overweight }},
+        {{ nutritional_percentages.obese }}
+      ];
+
+      const chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label;
+                  const value = context.raw;
+                  const percentage = percentages[context.dataIndex];
+                  return `${label}: ${value} (${percentage}%)`;
+                }
+              }
+            }
+          },
+          animation: {
+            animateRotate: true,
+            animateScale: true,
+            duration: 1000
+          },
+          cutout: '50%'
+        }
+      });
+
+      createCustomLegend(chartData, percentages);
+    }
+
+    function createCustomLegend(chartData, percentages) {
+      const legendContainer = document.getElementById('chartLegend');
+      if (!legendContainer) return;
+
+      legendContainer.innerHTML = '';
+
+      chartData.labels.forEach((label, index) => {
+        const value = chartData.datasets[0].data[index];
+        const percentage = percentages[index];
+        const color = chartData.datasets[0].backgroundColor[index];
+
+        const legendItem = document.createElement('div');
+        legendItem.className = 'legend-item';
+        legendItem.innerHTML = `
+          <div class="legend-color" style="background-color: ${color}"></div>
+          <span><strong>${label}:</strong> ${value} (${percentage}%)</span>
+        `;
+
+        legendContainer.appendChild(legendItem);
+      });
+
+      // Only show total count if there's data
+      if ({{ preschoolers_with_bmi }} > 0) {
+        const totalInfo = document.createElement('div');
+        totalInfo.style.marginTop = '10px';
+        totalInfo.style.fontSize = '11px';
+        totalInfo.style.color = '#666';
+        totalInfo.style.textAlign = 'center';
+        totalInfo.innerHTML = `Total preschoolers with BMI data: {{ preschoolers_with_bmi }}`;
+        legendContainer.appendChild(totalInfo);
+      }
+    }
+
+    // Announcement Modal Functions
+    function openAnnouncementModal(announcementId) {
+      const announcementData = document.getElementById('announcement-' + announcementId);
+      if (!announcementData) return;
+      
+      const title = announcementData.querySelector('.full-title').textContent;
+      const content = announcementData.querySelector('.full-content').textContent;
+      const date = announcementData.querySelector('.full-date').textContent;
+      const imageElement = announcementData.querySelector('.full-image');
+      
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalContent').textContent = content;
+      document.getElementById('modalDate').textContent = 'Published on: ' + date;
+      
+      const modalImage = document.getElementById('modalImage');
+      if (imageElement) {
+        modalImage.src = imageElement.textContent;
+        modalImage.style.display = 'block';
+      } else {
+        modalImage.style.display = 'none';
+      }
+      
+      document.getElementById('announcementModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      clearInterval(slideInterval);
+    }
+
+    function closeAnnouncementModal() {
+      document.getElementById('announcementModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+      startAutoSlide();
+    }
+
+    document.getElementById('announcementModal')?.addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeAnnouncementModal();
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeAnnouncementModal();
+      }
+    });
+
+    // Initialize Notifications
+    function initializeNotifications() {
+      const notifBtn = document.getElementById("notifBtn");
+      const notifMenu = document.getElementById("notifMenu");
+      const notifDot = document.getElementById("notifDot");
+
+      const latestNotifTimestampStr = "{{ latest_notif_timestamp|default:'' }}";
+      const latestNotifTimestamp = latestNotifTimestampStr ? new Date(latestNotifTimestampStr) : null;
+      const lastReadStr = localStorage.getItem("lastReadNotifTimestamp");
+      const lastRead = lastReadStr ? new Date(lastReadStr) : null;
+
+      if (latestNotifTimestamp && (!lastRead || latestNotifTimestamp > lastRead)) {
+        notifDot.style.display = "inline-block";
+      }
+
+      if (notifBtn && notifMenu) {
+        notifBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          notifMenu.style.display = notifMenu.style.display === "block" ? "none" : "block";
+          notifDot.style.display = "none";
+          if (latestNotifTimestamp) {
+            localStorage.setItem('lastReadNotifTimestamp', latestNotifTimestamp.toISOString());
+          }
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!e.target.closest(".notif-dropdown")) {
+            notifMenu.style.display = "none";
+          }
+        });
+      }
+    }
+
+    // Initialize Profile Dropdown
+    function initializeProfileDropdown() {
+      const profileBtn = document.getElementById("profileBtn");
+      const profileMenu = document.getElementById("profileMenu");
+
+      if (profileBtn && profileMenu) {
+        profileBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          profileMenu.style.display = profileMenu.style.display === "flex" ? "none" : "flex";
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!e.target.closest(".profile-dropdown")) {
+            profileMenu.style.display = "none";
+          }
+        });
+      }
+    }
+
+    // Initialize Event Listeners
+    function initializeEventListeners() {
+      // Logout confirmation
+      document.getElementById("logoutLink")?.addEventListener("click", function(e) {
+        e.preventDefault();
+        Swal.fire({
+          title: 'Are you sure?',
+          text: "You will be logged out of your account.",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Yes, logout'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = "/logout/";
+          }
+        });
+      });
+
+      // Nutrition Report from sidebar
+      document.getElementById("nutritionReportBtn")?.addEventListener("click", function(e) {
+        e.preventDefault();
+        Swal.fire({
+          title: 'Select Month for Nutrition Report',
+          input: 'month',
+          showCancelButton: true,
+          confirmButtonColor: '#3498db',
+          cancelButtonColor: '#aaa',
+          confirmButtonText: 'Download Excel',
+          cancelButtonText: 'Cancel',
+          inputValidator: (value) => {
+            if (!value) {
+              return 'Please select a month first!';
+            }
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Show loading message
+            Swal.fire({
+              title: 'Generating Report...',
+              text: 'Please wait while we prepare your Excel file.',
+              icon: 'info',
+              allowOutsideClick: false,
+              showConfirmButton: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+
+            const downloadUrl = "/generate-nutrition-excel/?month=" + result.value;
+            
+            // Create download link and trigger download
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = 'nutrition-report.xlsx';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Close loading and show success after short delay
+            setTimeout(() => {
+              Swal.fire({
+                title: 'Download Started!',
+                text: 'Your nutrition report Excel file is being downloaded.',
+                icon: 'success',
+                timer: 3000,
+                showConfirmButton: false
+              });
+            }, 2000);
+          }
+        });
+      });
+
+      // Immunization Report from sidebar
+      document.getElementById("immunizationReportBtn")?.addEventListener("click", function(e) {
+        e.preventDefault();
+        Swal.fire({
+          title: 'Select Month for Immunization Report',
+          input: 'month',
+          showCancelButton: true,
+          confirmButtonColor: '#e74c3c',
+          cancelButtonColor: '#aaa',
+          confirmButtonText: 'Generate Report',
+          cancelButtonText: 'Cancel',
+          inputValidator: (value) => {
+            if (!value) {
+              return 'Please select a month first!';
+            }
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            const url = "{% url 'generate_immunization_report' %}?month=" + result.value;
+            window.open(url, "_blank");
+          }
+        });
+      });
+    }
+
+    const ONESIGNAL_CONFIG = {
+      APP_ID: '4849b31f-2680-43a1-b2f3-9d365d92a73e',
+      REST_API_KEY: 'os_v2_app_jbe3ghzgqbb2dmxttu3f3evhhyidgoblrseu3k4v673rxqhl6nn2xlfvgqtmng5ctneiapely3a72yzweqb6opblocgnxoyi2irfxia',
+      API_URL: 'https://onesignal.com/api/v1/notifications'
+    };
+  </script>
+
+</body>
+</html>
