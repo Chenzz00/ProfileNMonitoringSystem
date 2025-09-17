@@ -7013,53 +7013,52 @@ def register_parent(request):
                 )
                 logger.info(f"Account created successfully")
 
-            # Send email (outside transaction to prevent rollback on email failure)
-            try:
-                subject = "PPMS Cluster 4 – Parent Registration Successful"
-                
-                html_message = f"""
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <style>
-                        body {{ font-family: Arial, sans-serif; background-color: #f9fafb; padding: 20px; }}
-                        .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-                        .header {{ text-align: center; margin-bottom: 30px; }}
-                        .credentials {{ background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }}
-                        .credential-row {{ margin: 10px 0; font-size: 16px; }}
-                        .credential-label {{ font-weight: bold; color: #28a745; }}
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <div class="header">
-                            <h1>Registration Successful!</h1>
-                            <p>PPMS Cluster 4 - Imus City Healthcare Management</p>
-                        </div>
-                        <p>Hello <strong>{full_name}</strong>,</p>
-                        <p>Welcome to PPMS Cluster 4! Your parent account has been successfully registered for <strong>{user_barangay.name}</strong>.</p>
-                        
-                        <div class="credentials">
-                            <h3>Your Login Credentials</h3>
-                            <div class="credential-row">
-                                <span class="credential-label">Email:</span> {email}
-                            </div>
-                            <div class="credential-row">
-                                <span class="credential-label">Password:</span> {raw_password}
-                            </div>
-                        </div>
-                        
-                        <p><strong>Important:</strong> Please keep this information safe. You will be required to change your password on first login.</p>
-                        
-                        <hr>
-                        <p><small>This is an automated message. Please do not reply.<br>© 2025 PPMS Cluster 4. All rights reserved.</small></p>
-                    </div>
-                </body>
-                </html>
-                """
+            # ✅ Send email asynchronously (outside transaction to prevent rollback on email failure)
+            subject = "PPMS Cluster 4 – Parent Registration Successful"
+            
+            html_message = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {{ font-family: Arial, sans-serif; background-color: #f9fafb; padding: 20px; }}
+        .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+        .header {{ text-align: center; margin-bottom: 30px; }}
+        .credentials {{ background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }}
+        .credential-row {{ margin: 10px 0; font-size: 16px; }}
+        .credential-label {{ font-weight: bold; color: #28a745; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Registration Successful!</h1>
+            <p>PPMS Cluster 4 - Imus City Healthcare Management</p>
+        </div>
+        <p>Hello <strong>{full_name}</strong>,</p>
+        <p>Welcome to PPMS Cluster 4! Your parent account has been successfully registered for <strong>{user_barangay.name}</strong>.</p>
+        
+        <div class="credentials">
+            <h3>Your Login Credentials</h3>
+            <div class="credential-row">
+                <span class="credential-label">Email:</span> {email}
+            </div>
+            <div class="credential-row">
+                <span class="credential-label">Password:</span> {raw_password}
+            </div>
+        </div>
+        
+        <p><strong>Important:</strong> Please keep this information safe. You will be required to change your password on first login.</p>
+        
+        <hr>
+        <p><small>This is an automated message. Please do not reply.<br>© 2025 PPMS Cluster 4. All rights reserved.</small></p>
+    </div>
+</body>
+</html>
+"""
 
-                plain_message = f"""
+            plain_message = f"""
 PPMS Parent Registration Successful
 
 Hello {full_name},
@@ -7073,22 +7072,13 @@ Password: {raw_password}
 Important: You must change your password on first login.
 
 PPMS Cluster 4 - Imus City Healthcare Management
-                """
+"""
 
-                send_mail(
-                    subject,
-                    plain_message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [email],
-                    html_message=html_message,
-                    fail_silently=True,
-                )
-                logger.info(f"Email sent successfully to {email}")
+            # ✅ Send email asynchronously - user gets immediate response
+            send_async_email(subject, plain_message, html_message, email)
+            logger.info(f"Email queued for async sending to {email}")
 
-            except Exception as email_error:
-                logger.warning(f"Email sending failed (non-critical): {email_error}")
-
-            # Success message
+            # Success message - immediate response to user
             messages.success(request, f"Parent '{full_name}' registered successfully in {user_barangay.name}!\nEmail: {email}\nPassword: {raw_password}")
             return redirect('register_parent')
 
@@ -9398,6 +9388,7 @@ def test_push_notification(request):
             'success': False,
             'error': str(e)
         })
+
 
 
 
