@@ -1,6 +1,6 @@
 """
 Django settings for PPMA project.
-Ready for Netlify / Render deployment.
+Ready for Render (backend) + Netlify (frontend) deployment.
 """
 
 import os
@@ -51,12 +51,9 @@ FIREBASE_INITIALIZED = initialize_firebase()
 # =======================
 # Security
 # =======================
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY",
-    "django-insecure-CHANGE_THIS_IN_PRODUCTION"
-)
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-CHANGE_THIS_IN_PRODUCTION")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost 127.0.0.1").split()
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split()
 
 # =======================
 # Installed Apps
@@ -93,11 +90,13 @@ MIDDLEWARE = [
 # CORS / CSRF
 # =======================
 CORS_ALLOW_ALL_ORIGINS = True
+
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "http://10.0.2.2:8000",  # Android emulator
-    os.environ.get("SITE_URL", "https://ppms-website.netlify.app")
+    "https://ppms-website.netlify.app",  # Netlify frontend
+    "https://ppms.onrender.com",         # Render backend
 ]
 
 # =======================
