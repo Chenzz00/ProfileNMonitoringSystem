@@ -37,7 +37,17 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-CHANGE_THIS_IN_PRODUC
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = [
-    os.environ.get("RAILWAY_APP_DOMAIN", "localhost"),
+    "profilenmonitoringsystem-production.up.railway.app",
+    ".railway.app",
+    "localhost",
+    "127.0.0.1",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://profilenmonitoringsystem-production.up.railway.app",
+    "https://*.railway.app",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
 ]
 
 # =======================
@@ -75,9 +85,6 @@ MIDDLEWARE = [
 # CORS / CSRF
 # =======================
 CORS_ALLOW_ALL_ORIGINS = True
-CSRF_TRUSTED_ORIGINS = [
-    f"https://{os.environ.get('RAILWAY_APP_DOMAIN', 'localhost')}"
-]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
@@ -129,10 +136,10 @@ ASGI_APPLICATION = "PPMA.asgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("MYSQL_DATABASE", "railway"),
+        "NAME": os.environ.get("MYSQLDATABASE", "railway"),
         "USER": os.environ.get("MYSQLUSER", "root"),
-        "PASSWORD": os.environ.get("MYSQLPASSWORD", "NBJxczvxsuDEpbPWBOWIVXTlKjwuRjSD"),
-        "HOST": os.environ.get("MYSQLHOST", "mysql.railway.internal"),
+        "PASSWORD": os.environ.get("MYSQLPASSWORD", ""),
+        "HOST": os.environ.get("MYSQLHOST", "localhost"),
         "PORT": os.environ.get("MYSQLPORT", "3306"),
         "OPTIONS": {
             "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
@@ -183,14 +190,22 @@ EMAIL_TIMEOUT = 20
 # =======================
 # Channels (WebSockets)
 # =======================
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [os.environ.get("REDIS_URL", "redis://127.0.0.1:6379")],
+# If Redis is not available on Railway, use in-memory layer to avoid crashes
+if os.environ.get("REDIS_URL"):
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [os.environ["REDIS_URL"]],
+            },
         },
-    },
-}
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer"
+        }
+    }
 
 # =======================
 # Sessions
@@ -202,13 +217,13 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
 
 # =======================
-# Security (optional for production)
+# Security (Production)
 # =======================
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_SSL_REDIRECT = os.environ.get("DEBUG", "False") != "True"
+SECURE_SSL_REDIRECT = not DEBUG
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
