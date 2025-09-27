@@ -35,11 +35,8 @@ initialize_firebase()
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY", "django-insecure-CHANGE_THIS_IN_PRODUCTION"
 )
-
-# Production settings
 DEBUG = True  # Always False in production
 
-# Trust Railway proxy headers for HTTPS
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 ALLOWED_HOSTS = [
@@ -134,19 +131,16 @@ WSGI_APPLICATION = 'PPMA.wsgi.application'
 ASGI_APPLICATION = "PPMA.asgi.application"
 
 # =======================
-# Database (Railway MySQL)
+# Database (PostgreSQL on Railway)
 # =======================
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("MYSQLDATABASE", "railway"),
-        "USER": os.environ.get("MYSQLUSER", "root"),
-        "PASSWORD": os.environ.get("MYSQLPASSWORD"),
-        "HOST": os.environ.get("MYSQLHOST", "mysql.railway.internal"),
-        "PORT": os.environ.get("MYSQLPORT", "3306"),
-        "OPTIONS": {
-            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("POSTGRES_DB", "railway"),
+        "USER": os.environ.get("PGUSER", "postgres"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "QxMDpAiAAIcEwQtzWcatKMKPsdIpEXQF"),
+        "HOST": os.environ.get("PGHOST", "postgres.railway.internal"),
+        "PORT": os.environ.get("PGPORT", "5432"),
     }
 }
 
@@ -176,7 +170,6 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / "media"
 
-# Serve static files in production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -224,7 +217,6 @@ SESSION_SAVE_EVERY_REQUEST = True
 # =======================
 # Security (Production)
 # =======================
-# Trust Railway SSL proxy
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 SECURE_SSL_REDIRECT = True
