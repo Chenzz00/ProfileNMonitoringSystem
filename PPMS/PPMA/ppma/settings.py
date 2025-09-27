@@ -60,7 +60,11 @@ SECRET_KEY = 'django-insecure-$70!pna@gl9&(&!oske)1zkadl!s)us61jxgqd=(prrf4*2fga
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    "profilenonitoringsystem-production.up.railway.app",
+    "localhost",
+    "127.0.0.1"
+]
 
 
 # Application definition
@@ -235,5 +239,6 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 # ✅ Extra safety
 
 SESSION_SAVE_EVERY_REQUEST = True
+
 
 
