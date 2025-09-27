@@ -143,7 +143,7 @@ ASGI_APPLICATION = "PPMA.asgi.application"
 # =======================
 # Database
 # =======================
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = os.environ.get("DATABASE_URL", "${{ Postgres.DATABASE_URL }}")
 
 if DATABASE_URL:
     DATABASES = {
@@ -154,6 +154,7 @@ if DATABASE_URL:
         )
     }
 else:
+    # Fallback local database for development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -226,3 +227,4 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
+
