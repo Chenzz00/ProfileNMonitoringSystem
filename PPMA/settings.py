@@ -35,12 +35,15 @@ initialize_firebase()
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY", "django-insecure-CHANGE_THIS_IN_PRODUCTION"
 )
-DEBUG = os.environ.get("DEBUG", "False") == "True"
+
+# Production settings
+DEBUG = False  # Always False in production
+
+# Trust Railway proxy headers for HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 ALLOWED_HOSTS = [
     ".railway.app",
-    "localhost",
-    "127.0.0.1",
     "myppma.com",
     "www.myppma.com",
     "ppma.myppma.com",
@@ -48,7 +51,6 @@ ALLOWED_HOSTS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "https://*.railway.app",
-    "http://localhost:8000",
     "https://myppma.com",
     "https://www.myppma.com",
     "https://ppma.myppma.com",
@@ -222,11 +224,15 @@ SESSION_SAVE_EVERY_REQUEST = True
 # =======================
 # Security (Production)
 # =======================
-CSRF_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_SECURE = not DEBUG
+# Trust Railway SSL proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+SECURE_SSL_REDIRECT = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_SSL_REDIRECT = not DEBUG
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
