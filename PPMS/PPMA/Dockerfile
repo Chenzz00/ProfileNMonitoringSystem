@@ -1,11 +1,18 @@
+# =======================
 # Use slim Python base image
+# =======================
 FROM python:3.11-slim
 
+# =======================
 # Set environment variables
+# =======================
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV DJANGO_SETTINGS_MODULE=PPMA.settings
 
+# =======================
 # Install system libraries (WeasyPrint + MySQL dev headers + compiler)
+# =======================
 RUN apt-get update && apt-get install -y \
     build-essential \
     pkg-config \
@@ -26,24 +33,33 @@ RUN apt-get update && apt-get install -y \
     shared-mime-info \
  && rm -rf /var/lib/apt/lists/*
 
+# =======================
 # Set working directory
+# =======================
 WORKDIR /app
 
+# =======================
 # Copy and install dependencies
+# =======================
 COPY requirements.txt ./
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
+# =======================
 # Copy project files
+# =======================
 COPY . .
 
+# =======================
 # Expose container port
+# =======================
 EXPOSE 8080
 
-# Start the app (migrations, collectstatic, check tables, then Gunicorn)
+# =======================
+# Start the app
+# Runs migrations, collects static files, checks tables, then starts Gunicorn
+# =======================
 CMD bash -c "\
-    rm -f WebApp/migrations/0*.py && \
-    python manage.py makemigrations WebApp && \
     python manage.py migrate --verbosity=2 && \
     python manage.py collectstatic --noinput && \
     python -c \"import os,django; os.environ.setdefault('DJANGO_SETTINGS_MODULE','PPMA.settings'); django.setup(); print('=== Migration Complete - Checking Tables ===')\" && \
