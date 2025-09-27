@@ -123,15 +123,15 @@ ROOT_URLCONF = 'PPMA.urls'
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "WebApp" / "Templates" / "HTML"],  # 👈 point directly to HTML
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
@@ -235,4 +235,5 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 # ✅ Extra safety
 
 SESSION_SAVE_EVERY_REQUEST = True
+
 
