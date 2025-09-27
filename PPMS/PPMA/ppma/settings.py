@@ -133,9 +133,20 @@ ASGI_APPLICATION = "PPMA.asgi.application"
 # =======================
 # Database
 # =======================
+# Railway Postgres environment variables
+PGDATABASE = os.environ.get("PGDATABASE")
+PGHOST = os.environ.get("PGHOST")
+PGPASSWORD = os.environ.get("PGPASSWORD")
+PGPORT = os.environ.get("PGPORT")
+PGUSER = os.environ.get("PGUSER")
 DATABASE_URL = os.environ.get("DATABASE_URL")
+
 if not DATABASE_URL:
-    raise Exception("❌ DATABASE_URL not set! Add PostgreSQL plugin in Railway.")
+    # Fallback to assembling the URL manually from individual PG env vars
+    if all([PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE]):
+        DATABASE_URL = f"postgres://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}"
+    else:
+        raise Exception("❌ DATABASE_URL not set! Add PostgreSQL plugin in Railway.")
 
 DATABASES = {
     "default": dj_database_url.config(
@@ -205,3 +216,4 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
+
