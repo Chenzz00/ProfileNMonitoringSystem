@@ -138,9 +138,9 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("POSTGRES_DB", "railway"),
         "USER": os.environ.get("PGUSER", "postgres"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "QxMDpAiAAIcEwQtzWcatKMKPsdIpEXQF"),
-        "HOST": os.environ.get("PGHOST", "postgres.railway.internal"),
-        "PORT": os.environ.get("PGPORT", "5432"),
+        "PASSWORD": os.environ.get("PGPASSWORD", "QxMDpAiAAIcEwQtzWcatKMKPsdIpEXQF"),
+        "HOST": os.environ.get("PGHOST", "turntable.proxy.rlwy.net"),
+        "PORT": os.environ.get("PGPORT", "44683"),
     }
 }
 
@@ -228,3 +228,4 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
