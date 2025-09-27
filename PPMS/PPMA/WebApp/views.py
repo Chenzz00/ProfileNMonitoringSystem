@@ -27,7 +27,7 @@ from django.contrib.auth.password_validation import validate_password
 from .models import PasswordResetOTP
 from django.core.serializers.json import DjangoJSONEncoder
 from .models import Account, ProfilePhoto
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt,csrf_protect
 from django.http import JsonResponse
 from django.urls import reverse
 from django.template.loader import render_to_string
@@ -78,17 +78,424 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from .serializers import ESP32DataSerializer, ESP32ResponseSerializer
 import json
+from datetime import datetime, timedelta
+
 
 #REPORT
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 
 logger = logging.getLogger(__name__)
 
+ESP32_DATA_CACHE = {}
+
+# Device tracking for status monitoring
+DEVICE_STATUS = {}
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def receive_esp32_data_simple(request):
+    """
+    Multi-device ESP32 data reception with device ID separation
+    """
+    global ESP32_DATA_CACHE, DEVICE_STATUS
+    try:
+        # Parse JSON data
+        data = json.loads(request.body)
+        
+        # Use serializer for validation
+        serializer = ESP32DataSerializer(data=data)
+        
+        if serializer.is_valid():
+            validated_data = serializer.validated_data
+            device_id = validated_data.get('device_id')
+            measurement_type = validated_data.get('measurement_type', 'UNKNOWN').upper()
+            
+            # Validate device_id is provided
+            if not device_id:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'device_id is required for multi-device support'
+                }, status=400)
+            
+            # Update device status
+            if device_id in DEVICE_STATUS:
+                DEVICE_STATUS[device_id]['last_seen'] = timezone.now()
+                DEVICE_STATUS[device_id]['is_online'] = True
+                DEVICE_STATUS[device_id]['last_measurement_type'] = measurement_type
+                DEVICE_STATUS[device_id]['measurements_today'] += 1
+            
+            # Initialize device data if not exists
+            if device_id not in ESP32_DATA_CACHE:
+                ESP32_DATA_CACHE[device_id] = {}
+                print(f"DEBUG: Initialized new cache entry for device {device_id}")
+            else:
+                print(f"DEBUG: Existing cache for device {device_id}: {ESP32_DATA_CACHE[device_id]}")
+            
+            # Store data based on measurement type - MERGE with existing data
+            if measurement_type == 'BMI':
+                # Add BMI data while preserving any existing temperature data
+                print(f"DEBUG: Adding BMI data to device {device_id}...")
+                ESP32_DATA_CACHE[device_id].update({
+                    'weight': validated_data['weight'],
+                    'height': validated_data['height'],
+                    'bmi': validated_data.get('bmi'),
+                    'bmi_category': validated_data.get('bmi_category'),
+                    'subject_type': validated_data.get('subject_type'),
+                    'sensor_height': validated_data.get('sensor_height'),
+                    'bmi_timestamp': str(timezone.now()),
+                    'has_bmi_data': True
+                })
+                print(f"DEBUG: After BMI update for {device_id}: {ESP32_DATA_CACHE[device_id]}")
+                
+            elif measurement_type == 'TEMPERATURE':
+                # Add temperature data while preserving any existing BMI data
+                print(f"DEBUG: Adding temperature data to device {device_id}...")
+                ESP32_DATA_CACHE[device_id].update({
+                    'temperature': validated_data['temperature'],
+                    'temperature_status': validated_data.get('temperature_status'),
+                    'temp_timestamp': str(timezone.now()),
+                    'has_temperature_data': True
+                })
+                print(f"DEBUG: After temperature update for {device_id}: {ESP32_DATA_CACHE[device_id]}")
+                
+            else:
+                # Legacy support - store all available data
+                ESP32_DATA_CACHE[device_id].update({
+                    'weight': validated_data.get('weight'),
+                    'height': validated_data.get('height'),
+                    'temperature': validated_data.get('temperature'),
+                    'bmi': validated_data.get('bmi'),
+                    'bmi_category': validated_data.get('bmi_category'),
+                    'temperature_status': validated_data.get('temperature_status'),
+                })
+            
+            # Always update common fields
+            ESP32_DATA_CACHE[device_id].update({
+                'device_id': device_id,
+                'last_update': str(timezone.now()),
+                'esp32_timestamp': validated_data.get('timestamp'),
+                'measurement_type': measurement_type
+            })
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': f'{measurement_type} data received successfully from {device_id}',
+                'data': ESP32_DATA_CACHE[device_id],
+                'measurement_type': measurement_type,
+                'device_id': device_id
+            })
+            
+        else:
+            print(f"DEBUG: Validation failed: {serializer.errors}")
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Validation failed',
+                'errors': serializer.errors
+            }, status=400)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+        
+    except Exception as e:
+        print(f"DEBUG: Exception occurred: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_esp32_data_simple(request):
+    """
+    Get ESP32 data with device selection support
+    """
+    global ESP32_DATA_CACHE
+    
+    # Get device_id from URL parameter (required for multi-device)
+    device_id = request.GET.get('device_id')
+    force_clear = request.GET.get('clear', 'false').lower() == 'true'
+    
+    print(f"DEBUG: get_esp32_data_simple called - device_id: {device_id}, force_clear: {force_clear}")
+    
+    # If no device_id specified, return available devices
+    if not device_id:
+        available_devices = []
+        for dev_id, data in ESP32_DATA_CACHE.items():
+            available_devices.append({
+                'device_id': dev_id,
+                'device_name': DEVICE_STATUS.get(dev_id, {}).get('device_name', dev_id),
+                'last_update': data.get('last_update'),
+                'has_data': True,
+                'is_online': DEVICE_STATUS.get(dev_id, {}).get('is_online', False)
+            })
+        
+        # Also include devices with no data but known status
+        for dev_id, status in DEVICE_STATUS.items():
+            if dev_id not in ESP32_DATA_CACHE:
+                available_devices.append({
+                    'device_id': dev_id,
+                    'device_name': status.get('device_name', dev_id),
+                    'last_update': None,
+                    'has_data': False,
+                    'is_online': status.get('is_online', False)
+                })
+        
+        return JsonResponse({
+            'status': 'device_list',
+            'message': 'Please specify device_id parameter',
+            'available_devices': available_devices,
+            'example_url': '/api/esp32/get-data/?device_id=BMI_STATION_A'
+        })
+    
+    # If force clear is requested, clear data first and return
+    if force_clear:
+        if device_id in ESP32_DATA_CACHE:
+            cleared_data = ESP32_DATA_CACHE[device_id].copy()
+            del ESP32_DATA_CACHE[device_id]
+            print(f"DEBUG: FORCE CLEARED data for device {device_id}: {cleared_data}")
+        else:
+            print(f"DEBUG: No data to clear for device {device_id} (already empty)")
+        
+        return JsonResponse({
+            'status': 'no_data',
+            'message': f'ESP32 data cleared for device {device_id}',
+            'device_id': device_id,
+            'data_cleared': True,
+            'waiting_for': ['BMI', 'Temperature']
+        })
+    
+    # Normal data retrieval logic for specific device
+    esp32_data = ESP32_DATA_CACHE.get(device_id, {})
+    print(f"DEBUG: Retrieved ESP32 data for {device_id}: {esp32_data}")
+    
+    if esp32_data:
+        has_bmi = esp32_data.get('has_bmi_data', False)
+        has_temp = esp32_data.get('has_temperature_data', False)
+        is_complete = has_bmi and has_temp
+        
+        response_data = {
+            'status': 'success',
+            'data': esp32_data.copy(),
+            'device_id': device_id,
+            'device_name': DEVICE_STATUS.get(device_id, {}).get('device_name', device_id),
+            'has_bmi_data': has_bmi,
+            'has_temperature_data': has_temp,
+            'last_measurement_type': esp32_data.get('measurement_type', 'UNKNOWN'),
+            'is_complete': is_complete,
+            'waiting_for': []
+        }
+        
+        # Add info about what data we're still waiting for
+        if not has_bmi:
+            response_data['waiting_for'].append('BMI')
+        if not has_temp:
+            response_data['waiting_for'].append('Temperature')
+        
+        # Only clear if we have BOTH BMI and temperature data
+        if is_complete:
+            del ESP32_DATA_CACHE[device_id]
+            print(f"DEBUG: Auto-cleared COMPLETE data for device {device_id} (BMI + Temperature)")
+            response_data['data_cleared'] = True
+        else:
+            print(f"DEBUG: Keeping PARTIAL data for device {device_id} (BMI: {has_bmi}, Temp: {has_temp})")
+            response_data['data_cleared'] = False
+        
+        return JsonResponse(response_data)
+    else:
+        return JsonResponse({
+            'status': 'no_data',
+            'message': f'No ESP32 data available for device {device_id}',
+            'device_id': device_id,
+            'device_name': DEVICE_STATUS.get(device_id, {}).get('device_name', device_id),
+            'waiting_for': ['BMI', 'Temperature']
+        })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def clear_esp32_data(request):
+    """
+    FORCE clear ESP32 data cache for specific device or all devices
+    """
+    global ESP32_DATA_CACHE
+    
+    try:
+        # Handle different content types
+        if hasattr(request, 'content_type') and 'application/json' in request.content_type:
+            data = json.loads(request.body)
+            device_id = data.get('device_id')
+        else:
+            # Handle form data or beacon data
+            try:
+                # Try JSON first
+                data = json.loads(request.body)
+                device_id = data.get('device_id')
+            except:
+                # Fallback to POST parameters
+                device_id = request.POST.get('device_id')
+    except Exception as e:
+        print(f"DEBUG: Error parsing clear request: {e}")
+        device_id = None
+    
+    # If no device_id specified, show available devices
+    if not device_id:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'device_id is required for clearing data',
+            'available_devices': list(ESP32_DATA_CACHE.keys()),
+            'example': {'device_id': 'BMI_STATION_A'}
+        }, status=400)
+    
+    # ALWAYS clear data for specified device
+    if device_id in ESP32_DATA_CACHE:
+        cleared_data = ESP32_DATA_CACHE[device_id].copy()
+        del ESP32_DATA_CACHE[device_id]
+        print(f"DEBUG: POST CLEAR - Forcefully cleared data for device {device_id}: {cleared_data}")
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Data forcefully cleared for device {device_id}',
+            'device_id': device_id,
+            'cleared_data': cleared_data
+        })
+    else:
+        print(f"DEBUG: POST CLEAR - No data to clear for device {device_id} (cache was already empty)")
+        return JsonResponse({
+            'status': 'success',  # Still return success even if no data
+            'message': f'No data found for device {device_id} (already clear)',
+            'device_id': device_id,
+            'cleared_data': None
+        })
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def get_device_status(request):
+    """
+    Get status of all ESP32 devices
+    """
+    global ESP32_DATA_CACHE, DEVICE_STATUS
+    
+    device_statuses = []
+    for device_id, status in DEVICE_STATUS.items():
+        has_cached_data = device_id in ESP32_DATA_CACHE
+        cached_data = ESP32_DATA_CACHE.get(device_id, {})
+        
+        device_info = {
+            'device_id': device_id,
+            'device_name': status['device_name'],
+            'is_online': status['is_online'],
+            'last_seen': str(status['last_seen']) if status['last_seen'] else None,
+            'last_measurement_type': status['last_measurement_type'],
+            'measurements_today': status['measurements_today'],
+            'has_cached_data': has_cached_data,
+            'cached_data_preview': {
+                'has_bmi': cached_data.get('has_bmi_data', False),
+                'has_temperature': cached_data.get('has_temperature_data', False),
+                'last_update': cached_data.get('last_update')
+            } if has_cached_data else None
+        }
+        device_statuses.append(device_info)
+    
+    return JsonResponse({
+        'status': 'success',
+        'devices': device_statuses,
+        'total_devices': len(device_statuses),
+        'online_devices': len([d for d in device_statuses if d['is_online']]),
+        'devices_with_data': len([d for d in device_statuses if d['has_cached_data']])
+    })
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def debug_esp32_cache(request):
+    """
+    Debug view to see current ESP32 cache contents with device separation
+    """
+    global ESP32_DATA_CACHE, DEVICE_STATUS
+    
+    return JsonResponse({
+        'status': 'debug',
+        'cache_contents': ESP32_DATA_CACHE,
+        'device_status': DEVICE_STATUS,
+        'device_count': len(ESP32_DATA_CACHE),
+        'known_devices': list(DEVICE_STATUS.keys()),
+        'timestamp': str(timezone.now())
+    })
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def clear_all_esp32_data(request):
+    """
+    Clear all ESP32 data for all devices (useful for testing)
+    """
+    global ESP32_DATA_CACHE
+    
+    device_count = len(ESP32_DATA_CACHE)
+    cleared_data = ESP32_DATA_CACHE.copy()
+    ESP32_DATA_CACHE.clear()
+    
+    print(f"DEBUG: Cleared all ESP32 data ({device_count} devices): {cleared_data}")
+    
+    return JsonResponse({
+        'status': 'success',
+        'message': f'Cleared data for all {device_count} devices',
+        'devices_cleared': device_count,
+        'cleared_devices': list(cleared_data.keys()),
+        'cleared_data': cleared_data
+    })
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def list_esp32_devices(request):
+    """
+    List all ESP32 devices that have sent data or are known
+    """
+    global ESP32_DATA_CACHE, DEVICE_STATUS
+    
+    devices = []
+    all_device_ids = set(list(ESP32_DATA_CACHE.keys()) + list(DEVICE_STATUS.keys()))
+    
+    for device_id in all_device_ids:
+        data = ESP32_DATA_CACHE.get(device_id, {})
+        status = DEVICE_STATUS.get(device_id, {})
+        
+        devices.append({
+            'device_id': device_id,
+            'device_name': status.get('device_name', device_id),
+            'last_update': data.get('last_update'),
+            'has_bmi_data': data.get('has_bmi_data', False),
+            'has_temperature_data': data.get('has_temperature_data', False),
+            'last_measurement_type': data.get('measurement_type', status.get('last_measurement_type')),
+            'is_online': status.get('is_online', False),
+            'last_seen': str(status.get('last_seen')) if status.get('last_seen') else None,
+            'data_preview': {
+                'weight': data.get('weight'),
+                'height': data.get('height'),
+                'temperature': data.get('temperature')
+            } if data else None
+        })
+    
+    return JsonResponse({
+        'status': 'success',
+        'devices': devices,
+        'device_count': len(devices),
+        'cache_device_count': len(ESP32_DATA_CACHE),
+        'known_device_count': len(DEVICE_STATUS)
+    })
+
+
+# DRF versions (if you prefer using Django REST Framework)
 @api_view(['POST'])
-@permission_classes([AllowAny])  # Allow ESP32 to send data without authentication
+@permission_classes([AllowAny])
 def receive_esp32_data(request):
     """
-    API endpoint to receive data from ESP32 using proper serializers
+    API endpoint to receive data from ESP32 using proper serializers (DRF version with multi-device)
     """
     try:
         # Use serializer to validate incoming data
@@ -96,32 +503,66 @@ def receive_esp32_data(request):
         
         if serializer.is_valid():
             validated_data = serializer.validated_data
+            device_id = validated_data.get('device_id')
+            measurement_type = validated_data.get('measurement_type', 'UNKNOWN').upper()
             
-            # Store the data in session for the form to access
-            request.session['esp32_data'] = {
-                'weight': validated_data['weight'],
-                'height': validated_data['height'],
-                'temperature': validated_data['temperature'],
-                'bmi': validated_data.get('bmi'),
-                'bmi_category': validated_data.get('bmi_category'),
-                'temperature_status': validated_data.get('temperature_status'),
-                'device_id': validated_data.get('device_id', 'ESP32_BMI_Station'),
-                'timestamp': str(timezone.now()),
-                'esp32_timestamp': validated_data.get('timestamp')
-            }
+            # Update device tracking
+            if device_id in DEVICE_STATUS:
+                DEVICE_STATUS[device_id]['last_seen'] = timezone.now()
+                DEVICE_STATUS[device_id]['is_online'] = True
+                DEVICE_STATUS[device_id]['last_measurement_type'] = measurement_type
+                DEVICE_STATUS[device_id]['measurements_today'] += 1
             
-            # Optional: Save to database if you have a model
-            # measurement = BMIMeasurement.objects.create(**validated_data)
+            # Initialize device data if not exists
+            if device_id not in ESP32_DATA_CACHE:
+                ESP32_DATA_CACHE[device_id] = {}
+            
+            # Store data based on measurement type - MERGE with existing data
+            if measurement_type == 'BMI':
+                ESP32_DATA_CACHE[device_id].update({
+                    'weight': validated_data['weight'],
+                    'height': validated_data['height'],
+                    'bmi': validated_data.get('bmi'),
+                    'bmi_category': validated_data.get('bmi_category'),
+                    'subject_type': validated_data.get('subject_type'),
+                    'sensor_height': validated_data.get('sensor_height'),
+                    'bmi_timestamp': str(timezone.now()),
+                    'has_bmi_data': True
+                })
+            elif measurement_type == 'TEMPERATURE':
+                ESP32_DATA_CACHE[device_id].update({
+                    'temperature': validated_data['temperature'],
+                    'temperature_status': validated_data.get('temperature_status'),
+                    'temp_timestamp': str(timezone.now()),
+                    'has_temperature_data': True
+                })
+            
+            # Always update common fields
+            ESP32_DATA_CACHE[device_id].update({
+                'device_id': device_id,
+                'last_update': str(timezone.now()),
+                'esp32_timestamp': validated_data.get('timestamp'),
+                'measurement_type': measurement_type
+            })
             
             # Create response using response serializer
             response_data = {
                 'status': 'success',
-                'message': 'Data received and validated successfully',
+                'message': f'{measurement_type} data received and validated successfully from {device_id}',
                 'data': validated_data,
-                'server_timestamp': timezone.now()
+                'server_timestamp': timezone.now(),
+                'measurement_type': measurement_type,
+                'device_id': device_id
             }
             
             response_serializer = ESP32ResponseSerializer(response_data)
+            
+            # Debug logging
+            print(f"=== ESP32 DATA RECEIVED ({measurement_type}) ===")
+            print(f"Device: {device_id}")
+            print(f"Data: {validated_data}")
+            print(f"Cache: {ESP32_DATA_CACHE[device_id]}")
+            print("=" * 50)
             
             return Response(response_serializer.data, status=status.HTTP_200_OK)
         
@@ -136,6 +577,11 @@ def receive_esp32_data(request):
             
             response_serializer = ESP32ResponseSerializer(response_data)
             
+            print(f"=== VALIDATION FAILED ===")
+            print(f"Errors: {serializer.errors}")
+            print(f"Raw data: {request.data}")
+            print("=" * 30)
+            
             return Response(response_serializer.data, status=status.HTTP_400_BAD_REQUEST)
             
     except Exception as e:
@@ -148,6 +594,11 @@ def receive_esp32_data(request):
         
         response_serializer = ESP32ResponseSerializer(response_data)
         
+        print(f"=== SERVER ERROR ===")
+        print(f"Error: {str(e)}")
+        print(f"Raw data: {request.data}")
+        print("=" * 20)
+        
         return Response(response_serializer.data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -155,15 +606,27 @@ def receive_esp32_data(request):
 @permission_classes([AllowAny])
 def get_esp32_data(request):
     """
-    API endpoint for the webpage to get the latest ESP32 data
+    API endpoint for the webpage to get the latest ESP32 data (DRF version with device selection)
     """
-    esp32_data = request.session.get('esp32_data', None)
+    device_id = request.GET.get('device_id')
+    
+    if not device_id:
+        # Return list of available devices
+        return Response({
+            'status': 'device_selection_required',
+            'message': 'Please specify device_id parameter',
+            'available_devices': list(DEVICE_STATUS.keys()),
+            'example_url': '/api/esp32/data/?device_id=BMI_STATION_A'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    esp32_data = ESP32_DATA_CACHE.get(device_id, None)
     
     if esp32_data:
         response_data = {
             'status': 'success',
-            'message': 'ESP32 data found',
+            'message': f'ESP32 data found for device {device_id}',
             'data': esp32_data,
+            'device_id': device_id,
             'server_timestamp': timezone.now()
         }
         
@@ -172,163 +635,14 @@ def get_esp32_data(request):
     else:
         response_data = {
             'status': 'no_data',
-            'message': 'No ESP32 data available in session',
+            'message': f'No ESP32 data available for device {device_id}',
+            'device_id': device_id,
             'server_timestamp': timezone.now()
         }
         
         response_serializer = ESP32ResponseSerializer(response_data)
         return Response(response_serializer.data, status=status.HTTP_404_NOT_FOUND)
 
-
-# Alternative view using regular Django (without DRF)
-@csrf_exempt
-@require_http_methods(["POST"])
-def receive_esp32_data_simple(request):
-    """
-    Simple version without Django REST Framework (if you prefer)
-    """
-    try:
-        # Parse JSON data
-        data = json.loads(request.body)
-        
-        # Use serializer for validation only
-        serializer = ESP32DataSerializer(data=data)
-        
-        if serializer.is_valid():
-            validated_data = serializer.validated_data
-            
-            # Store in session
-            request.session['esp32_data'] = {
-                'weight': validated_data['weight'],
-                'height': validated_data['height'],
-                'temperature': validated_data['temperature'],
-                'bmi': validated_data.get('bmi'),
-                'bmi_category': validated_data.get('bmi_category'),
-                'temperature_status': validated_data.get('temperature_status'),
-                'device_id': validated_data.get('device_id', 'ESP32_BMI_Station'),
-                'timestamp': str(timezone.now()),
-            }
-            
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Data received successfully',
-                'data': validated_data
-            })
-            
-        else:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Validation failed',
-                'errors': serializer.errors
-            }, status=400)
-            
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Invalid JSON data'
-        }, status=400)
-        
-    except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=500)
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-
-@csrf_exempt
-@require_http_methods(["GET"])
-def get_esp32_data(request):
-    """
-    API endpoint for the webpage to get the latest ESP32 data
-    """
-    esp32_data = request.session.get('esp32_data', None)
-    
-    if esp32_data:
-        return JsonResponse({
-            'status': 'success',
-            'data': esp32_data
-        })
-    else:
-        return JsonResponse({
-            'status': 'no_data',
-            'message': 'No ESP32 data available'
-        })
-    
-@csrf_exempt
-@require_http_methods(["GET"])
-def get_esp32_data_simple(request):
-    """
-    Simple version to get ESP32 data
-    """
-    esp32_data = request.session.get('esp32_data', None)
-    
-    if esp32_data:
-        return JsonResponse({
-            'status': 'success',
-            'data': esp32_data
-        })
-    else:
-        return JsonResponse({
-            'status': 'no_data',
-            'message': 'No ESP32 data available'
-        })
-    
-# At the top of views.py, add this simple storage
-ESP32_DATA_CACHE = {}
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def receive_esp32_data_simple(request):
-    global ESP32_DATA_CACHE
-    try:
-        data = json.loads(request.body)
-        
-        # Store in global cache instead of session
-        ESP32_DATA_CACHE = {
-            'weight': data.get('weight'),
-            'height': data.get('height'),
-            'temperature': data.get('temperature'),
-            'bmi': data.get('bmi'),
-            'bmi_category': data.get('bmi_category'),
-            'temperature_status': data.get('temperature_status'),
-            'device_id': data.get('device_id', 'ESP32_BMI_Station'),
-            'timestamp': str(timezone.now()),
-        }
-        
-        print(f"DEBUG: Stored data: {ESP32_DATA_CACHE}")  # Debug output
-        
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Data received successfully',
-            'data': ESP32_DATA_CACHE
-        })
-        
-    except Exception as e:
-        return JsonResponse({
-            'status': 'error',
-            'message': str(e)
-        }, status=500)
-
-@csrf_exempt
-@require_http_methods(["GET"])
-def get_esp32_data_simple(request):
-    global ESP32_DATA_CACHE
-    
-    print(f"DEBUG: Retrieving data: {ESP32_DATA_CACHE}")  # Debug output
-    
-    if ESP32_DATA_CACHE:
-        return JsonResponse({
-            'status': 'success',
-            'data': ESP32_DATA_CACHE
-        })
-    else:
-        return JsonResponse({
-            'status': 'no_data',
-            'message': 'No ESP32 data available'
-        })
 #added for hardware - end
 
 
@@ -984,53 +1298,96 @@ def Admin(request):
             **nutritional_summary
         })
 
-
-
-    # NEW: Monthly Vaccination Trend Data for Line Chart
+    # NEW: Enhanced Vaccination Trend Data with Dynamic Date Filtering
     from django.db.models import Count, Q
     from datetime import timedelta
+    from dateutil.relativedelta import relativedelta
     
-    # Get the last 12 months
-    current_date = timezone.now().date()
+    # Get filter parameters from request
+    filter_month = request.GET.get('filter_month')
+    
+    # Determine center month
+    if filter_month:
+        try:
+            center_date = datetime.strptime(filter_month, '%Y-%m').date()
+        except ValueError:
+            center_date = timezone.now().date().replace(day=1)  # Current month as fallback
+    else:
+        center_date = timezone.now().date().replace(day=1)  # Current month by default
+    
+    # Generate 11 months: center month ±5 months
     trend_labels = []
-    monthly_registered_trend = []  # Changed: Monthly registrations instead of cumulative
+    monthly_registered_trend = []
     vaccinated_preschoolers_trend = []
+    all_months_data = []  # For JavaScript filtering
     
-    for i in range(11, -1, -1):  # Last 12 months
-        target_date = current_date - timedelta(days=30*i)
-        month_start = target_date.replace(day=1)
+    # Generate data for the 11-month window (5 before + current + 5 after)
+    for i in range(-5, 6):  # -5 to +5 inclusive
+        target_month = center_date + relativedelta(months=i)
         
-        # Calculate next month start for range
-        if month_start.month == 12:
-            next_month_start = month_start.replace(year=month_start.year + 1, month=1)
-        else:
-            next_month_start = month_start.replace(month=month_start.month + 1)
+        # Calculate next month for range queries
+        next_month = target_month + relativedelta(months=1)
         
         # Month label
-        month_label = month_start.strftime('%b %Y')
+        month_label = target_month.strftime('%b %Y')
         trend_labels.append(month_label)
         
-        # NEW: Monthly registrations (not cumulative)
+        # Monthly registrations for this specific month
         monthly_registered = Preschooler.objects.filter(
-            date_registered__gte=month_start,
-            date_registered__lt=next_month_start,
+            date_registered__gte=target_month,
+            date_registered__lt=next_month,
             is_archived=False
         ).count()
         monthly_registered_trend.append(monthly_registered)
         
         # Vaccinated preschoolers in this specific month
         vaccinated_in_month = VaccinationSchedule.objects.filter(
-            administered_date__gte=month_start,
-            administered_date__lt=next_month_start,
+            administered_date__gte=target_month,
+            administered_date__lt=next_month,
             status='completed'
         ).values('preschooler').distinct().count()
         
         vaccinated_preschoolers_trend.append(vaccinated_in_month)
+        
+        # Store month data for JavaScript
+        all_months_data.append({
+            'month': target_month.strftime('%Y-%m'),
+            'label': month_label,
+            'registered': monthly_registered,
+            'vaccinated': vaccinated_in_month
+        })
+
+    # Generate extended data for JavaScript (±12 months for smooth transitions)
+    extended_months_data = []
+    for i in range(-12, 13):  # -12 to +12 months
+        target_month = timezone.now().date().replace(day=1) + relativedelta(months=i)
+        next_month = target_month + relativedelta(months=1)
+        
+        monthly_registered = Preschooler.objects.filter(
+            date_registered__gte=target_month,
+            date_registered__lt=next_month,
+            is_archived=False
+        ).count()
+        
+        vaccinated_in_month = VaccinationSchedule.objects.filter(
+            administered_date__gte=target_month,
+            administered_date__lt=next_month,
+            status='completed'
+        ).values('preschooler').distinct().count()
+        
+        extended_months_data.append({
+            'month': target_month.strftime('%Y-%m'),
+            'label': target_month.strftime('%b %Y'),
+            'registered': monthly_registered,
+            'vaccinated': vaccinated_in_month
+        })
 
     vaccination_trend_data = {
         'labels': trend_labels,
         'registered': monthly_registered_trend,
-        'vaccinated': vaccinated_preschoolers_trend
+        'vaccinated': vaccinated_preschoolers_trend,
+        'center_month': center_date.strftime('%Y-%m'),
+        'all_months': extended_months_data  # For JavaScript filtering
     }
 
     # Prepare data for Barangay Bar Chart
@@ -1056,8 +1413,11 @@ def Admin(request):
             'values': list(status_totals.values())
         },
         'vaccination_trend_data': vaccination_trend_data,
-        'barangay_chart_data': barangay_chart_data
+        'barangay_chart_data': barangay_chart_data,
+        'current_filter_month': center_date.strftime('%Y-%m')  # For the date picker
     })
+
+    
 
 def archived(request):
     """Updated archived view with auto-archive check"""
@@ -1583,10 +1943,6 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
         if parent.email:
             try:
                 subject = f"[PPMS] Vaccination Scheduled for {preschooler.first_name}"
-                
-                # Fix: Handle the next schedule part separately to avoid nested f-string with backslash
-                next_dose_text = f"Next Dose: {next_schedule}\n" if next_schedule else ""
-                
                 message = (
                     f"Dear {parent.full_name},\n\n"
                     f"A vaccination appointment has been scheduled for your child, "
@@ -1594,12 +1950,12 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
                     f"Vaccine: {vaccine_name}\n"
                     f"Dose: {dose_number} of {required_doses}\n"
                     f"Scheduled Date: {immunization_date}\n"
-                    f"{next_dose_text}"
+                    f"{f'Next Dose: {next_schedule}\n' if next_schedule else ''}"
                     f"\nPlease bring your child on the scheduled date.\n"
                     f"You can confirm completion on your dashboard.\n\n"
                     f"Thank you,\nPPMS System"
                 )
-                
+
                 send_mail(
                     subject,
                     message,
@@ -1610,7 +1966,7 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
                 logger.info(f"[ASYNC] Email sent to {parent.email}")
             except Exception as email_error:
                 logger.error(f"[ASYNC] Email failed for {parent.email}: {email_error}")
-        
+
         # === Push notification ===
         if account and account.fcm_token:
             try:
@@ -1619,6 +1975,7 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
                     f"{vaccine_name} (Dose {dose_number}/{required_doses}) "
                     f"scheduled for {immunization_date}"
                 )
+
                 notification_data = {
                     "type": "vaccination_schedule",
                     "preschooler_id": str(preschooler.preschooler_id),
@@ -1629,6 +1986,7 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
                     "scheduled_date": str(immunization_date),
                     "schedule_id": str(schedule.id)
                 }
+
                 logger.info(f"[ASYNC] Sending push to {parent.email}")
                 PushNotificationService.send_push_notification(
                     token=account.fcm_token,
@@ -1640,8 +1998,10 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
                 logger.error(f"[ASYNC] Push failed for {parent.email}: {push_error}")
         else:
             logger.warning(f"[ASYNC] No FCM token found for {parent.email}")
+
     except Exception as e:
         logger.error(f"[ASYNC] Notification error for {parent.email}: {e}")
+
 
 @login_required
 def add_schedule(request, preschooler_id):
@@ -2509,38 +2869,35 @@ def parents_mypreschooler(request, preschooler_id):
 
 @login_required
 def add_vaccine(request, preschooler_id):
-    """
-    View to add a completed vaccine directly to immunization history
-    (without vaccine stock validation)
-    """
     if request.method == 'POST':
         preschooler = get_object_or_404(Preschooler, preschooler_id=preschooler_id)
 
         vaccine_name = request.POST.get('vaccine_name')
-        required_doses = request.POST.get('required_doses')
+        doses = request.POST.get('required_doses')  # This will always be 1
         immunization_date = request.POST.get('immunization_date')
-        completion_date_str = request.POST.get('completion_date')
 
         try:
-            # Parse dates
-            completion_date = datetime.strptime(completion_date_str, '%Y-%m-%dT%H:%M')
-            completion_date = timezone.make_aware(completion_date, timezone.get_current_timezone())
-            immunization_date = datetime.strptime(immunization_date, '%Y-%m-%d').date()
+            # Parse the immunization date
+            immunization_date_obj = datetime.strptime(immunization_date, '%Y-%m-%d').date()
+            
+            # Create completion_date from immunization_date (set time to noon)
+            completion_datetime = datetime.combine(immunization_date_obj, datetime.min.time().replace(hour=12))
+            completion_date = timezone.make_aware(completion_datetime, timezone.get_current_timezone())
 
-            required_doses_int = int(required_doses)
+            doses_int = int(doses)  # This will be 1
 
-            # Directly create the vaccination record (no stock check)
+            # Create the vaccination record for 1 dose
             VaccinationSchedule.objects.create(
                 preschooler=preschooler,
                 vaccine_name=vaccine_name,
-                required_doses=required_doses_int,
-                scheduled_date=immunization_date,
+                required_doses=doses_int,  # Always 1
+                scheduled_date=immunization_date_obj,
                 status='completed',
                 completion_date=completion_date,
                 reschedule_reason=None
             )
 
-            messages.success(request, f'Vaccine {vaccine_name} added to immunization history successfully!')
+            messages.success(request, f'1 dose of {vaccine_name} added to immunization history successfully!')
 
         except ValueError:
             messages.error(request, 'Invalid date format provided.')
@@ -2787,28 +3144,46 @@ def preschooler_detail(request, preschooler_id):
             **status
         })
 
-    # Enhanced data retrieval with better error handling
+    # FIXED: Enhanced data retrieval with proper separation of completed vs scheduled
     try:
-        pending_schedules = preschooler.vaccination_schedules.exclude(status='completed').order_by('scheduled_date')
-    except AttributeError:
-        from .models import VaccinationSchedule
-        pending_schedules = VaccinationSchedule.objects.filter(
-            preschooler=preschooler
+        # Only COMPLETED vaccinations for vaccine card and PDF
+        immunization_history = preschooler.vaccination_schedules.filter(
+            status='completed'
+        ).order_by('vaccine_name', 'completion_date')
+        
+        # Only SCHEDULED/PENDING appointments for the schedule table
+        pending_schedules = preschooler.vaccination_schedules.filter(
+            status__in=['scheduled', 'rescheduled', 'pending']
         ).exclude(status='completed').order_by('scheduled_date')
-
-    try:
-        immunization_history = preschooler.vaccination_schedules.filter(status='completed').order_by('vaccine_name', 'completion_date')
+        
     except AttributeError:
         from .models import VaccinationSchedule
+        
+        # Only COMPLETED vaccinations for vaccine card and PDF
         immunization_history = VaccinationSchedule.objects.filter(
             preschooler=preschooler,
             status='completed'
         ).order_by('vaccine_name', 'completion_date')
-    
+        
+        # Only SCHEDULED/PENDING appointments for the schedule table  
+        pending_schedules = VaccinationSchedule.objects.filter(
+            preschooler=preschooler,
+            status__in=['scheduled', 'rescheduled', 'pending']
+        ).exclude(status='completed').order_by('scheduled_date')
+
+    # Add dose numbers to completed vaccinations only
     vaccine_dose_counter = defaultdict(int)
     for record in immunization_history:
         vaccine_dose_counter[record.vaccine_name] += 1
         record.dose_number = vaccine_dose_counter[record.vaccine_name]
+
+    # Debug: Print what we're sending to template
+    print(f"DEBUG - Completed vaccinations: {immunization_history.count()}")
+    print(f"DEBUG - Pending schedules: {pending_schedules.count()}")
+    for record in immunization_history:
+        print(f"  Completed: {record.vaccine_name} - {record.status} - {record.completion_date}")
+    for record in pending_schedules:
+        print(f"  Pending: {record.vaccine_name} - {record.status} - {record.scheduled_date}")
 
     # Enhanced nutrition services handling
     try:
@@ -2828,8 +3203,8 @@ def preschooler_detail(request, preschooler_id):
     context = {
         'preschooler': preschooler,
         'bmi': bmi,
-        'pending_schedules': pending_schedules,
-        'immunization_history': immunization_history,
+        'immunization_history': immunization_history,  # ONLY completed vaccinations
+        'pending_schedules': pending_schedules,        # ONLY scheduled/pending appointments
         'nutrition_services': nutrition_services,
         'nutrition_statuses': nutrition_statuses,
         'vaccine_statuses': vaccine_statuses,
@@ -2841,7 +3216,6 @@ def preschooler_detail(request, preschooler_id):
         'weight_for_age_status': weight_for_age_status,
         'height_for_age_status': height_for_age_status,
         'weight_for_height_status': weight_for_height_status,
-        'nutrition_statuses': nutrition_statuses,
     }
 
     return render(request, 'HTML/preschooler_data.html', context)
@@ -3109,9 +3483,8 @@ def get_enhanced_nutrition_status(preschooler, service_type, total_doses):
         'age_description': eligibility['description']
     }
     
-    # Debug logging - FIX: Remove backslashes from f-string
-    debug_msg = f"DEBUG: {service_type} Status:"
-    print(debug_msg)
+    # Debug logging
+    print(f"DEBUG: {service_type} Status:")
     print(f"  - Completed doses: {completed_count}")
     print(f"  - Current status: {current_status}")
     print(f"  - Can schedule: {eligibility['can_schedule']}")
@@ -3624,31 +3997,33 @@ def profile(request):
             if account.editable_address.strip().lower() not in ['n/a', 'none', 'no address provided']:
                 return account.editable_address.strip()
         
-        # Build from individual fields
-        if account.house_number and str(account.house_number).strip().lower() not in ['n/a', 'none', '']:
-            address_parts.append(f" {account.house_number}")
-        if account.block and str(account.block).strip().lower() not in ['n/a', 'none', '']:
+        invalid_values = {'na', 'n/a', 'none', ''}
+
+        address_parts = []
+        if account.house_number and str(account.house_number).strip().lower() not in invalid_values:
+            address_parts.append(f"House {account.house_number}")
+        if account.block and str(account.block).strip().lower() not in invalid_values:
             address_parts.append(f"Block {account.block}")
-        if account.lot and str(account.lot).strip().lower() not in ['n/a', 'none', '']:
+        if account.lot and str(account.lot).strip().lower() not in invalid_values:
             address_parts.append(f"Lot {account.lot}")
-        if account.phase and str(account.phase).strip().lower() not in ['n/a', 'none', '']:
+        if account.phase and str(account.phase).strip().lower() not in invalid_values:
             address_parts.append(f"Phase {account.phase}")
-        if account.street and account.street.strip():
+        if account.street and str(account.street).strip().lower() not in invalid_values:
             address_parts.append(account.street.strip())
-        if account.subdivision and account.subdivision.strip():
+        if account.subdivision and str(account.subdivision).strip().lower() not in invalid_values:
             address_parts.append(account.subdivision.strip())
-        if account.city and account.city.strip():
+        if account.city and str(account.city).strip().lower() not in invalid_values:
             address_parts.append(account.city.strip())
-        if account.province and account.province.strip():
+        if account.province and str(account.province).strip().lower() not in invalid_values:
             address_parts.append(account.province.strip())
-        
+
         if address_parts:
             built_address = ", ".join(address_parts)
-            # Save the built address to editable_address if it's empty
             if not account.editable_address:
                 account.editable_address = built_address
                 account.save()
             return built_address
+
         
         # ✅ FOR PARENTS, CHECK PARENT MODEL AS FALLBACK
         if account.user_role and account.user_role.lower() == 'parent':
@@ -3851,6 +4226,8 @@ def registered_parents(request):
 def register(request):
     if request.method == 'POST':
         first_name   = request.POST.get("firstName")
+        middle_name  = request.POST.get("middleName")  # New field
+        suffix       = request.POST.get("suffix")      # New field
         last_name    = request.POST.get("lastName")
         email        = request.POST.get("email")
         contact      = request.POST.get("contact")
@@ -3912,6 +4289,8 @@ def register(request):
             print("[DEBUG] Creating Account with all info...")
             account = Account.objects.create(
                 first_name=first_name,
+                middle_name=middle_name,  # New field
+                suffix=suffix,            # New field
                 last_name=last_name,
                 email=email,
                 contact_number=contact,
@@ -3946,7 +4325,13 @@ def register(request):
         # Send Clean Email Confirmation
         try:
             # ✅ FIX 1: Create full_name variable
-            full_name = f"{first_name} {last_name}".strip()
+            full_name_parts = [first_name]
+            if middle_name:
+                full_name_parts.append(middle_name)
+            full_name_parts.append(last_name)
+            if suffix:
+                full_name_parts.append(suffix)
+            full_name = " ".join(full_name_parts)
             
             # Role-specific badge classes
             role_classes = {
@@ -4402,23 +4787,17 @@ def register_preschooler_entry(request):
             # Required fields
             parent_id = request.POST.get('parent_id')
             first_name = request.POST.get('first_name', '').strip()
+            middle_name = request.POST.get('middle_name', '').strip() or None  # ✅ save as None if blank
             last_name = request.POST.get('last_name', '').strip()
+            suffix = request.POST.get('suffix', '').strip() or None            # ✅ save as None if blank
             birthdate = request.POST.get('birthdate')
             gender = request.POST.get('gender')
-
-            # Optional fields
-            place_of_birth = request.POST.get('place_of_birth', '').strip()
-            birth_weight = request.POST.get('birth_weight', '').strip()
-            birth_length = request.POST.get('birth_length', '').strip()
-            time_of_birth = request.POST.get('time_of_birth', '').strip()
-            type_of_birth = request.POST.get('type_of_birth', '').strip()
-            place_of_delivery = request.POST.get('place_of_delivery', '').strip()
 
             # Validate required fields
             if not all([parent_id, first_name, last_name, birthdate, gender]):
                 return JsonResponse({'status': 'error', 'message': 'All required fields must be filled.'})
 
-            # Convert gender to WHO format (M/F) for BMI Z-score compatibility
+            # Convert gender to WHO format (M/F)
             if gender.lower() in ['male', 'boy', 'm']:
                 sex = 'M'
             elif gender.lower() in ['female', 'girl', 'f']:
@@ -4440,95 +4819,43 @@ def register_preschooler_entry(request):
             # Parse and validate birthdate
             birth_date = datetime.strptime(birthdate, '%Y-%m-%d').date()
             today = date.today()
-            
-            # Calculate age in months for more precise validation
-            age_in_months = (today.year - birth_date.year) * 12 + (today.month - birth_date.month)
-            if today.day < birth_date.day:
-                age_in_months -= 1
-            
-            # Calculate age in years for display
             age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
 
-            # Validate age range for preschoolers (0-59 months only)
-            if age_in_months < 0:
-                return JsonResponse({'status': 'error', 'message': 'Birthdate cannot be in the future.'})
-            elif age_in_months > 59:
-                return JsonResponse({
-                    'status': 'error', 
-                    'message': f'Child is too old for preschooler registration. Age is {age_in_months} months. Only children aged 0-59 months (0-4 years, 11 months) can be registered.'
-                })
+            if age < 0 or age > 6:
+                return JsonResponse({'status': 'error', 'message': 'Invalid age for preschooler registration. Age must be between 0-6 years.'})
 
-            # Validate numeric optional fields
-            birth_weight_value = None
-            birth_length_value = None
-
-            if birth_weight:
-                try:
-                    birth_weight_value = float(birth_weight)
-                    if birth_weight_value < 0:  # Only check for negative values
-                        return JsonResponse({'status': 'error', 'message': 'Birth weight cannot be negative.'})
-                except ValueError:
-                    return JsonResponse({'status': 'error', 'message': 'Invalid birth weight format.'})
-
-            if birth_length:
-                try:
-                    birth_length_value = float(birth_length)
-                    if birth_length_value < 0:  # Only check for negative values
-                        return JsonResponse({'status': 'error', 'message': 'Birth length cannot be negative.'})
-                except ValueError:
-                    return JsonResponse({'status': 'error', 'message': 'Invalid birth length format.'})
-
-            # Validate time format if provided
-            time_of_birth_value = None
-            if time_of_birth:
-                try:
-                    datetime.strptime(time_of_birth, '%H:%M')  # must be HH:MM
-                    time_of_birth_value = time_of_birth
-                except ValueError:
-                    return JsonResponse({'status': 'error', 'message': 'Invalid time format. Please use HH:MM format.'})
-
-            # Check for duplicate preschooler (same name and birthdate for same parent)
-            existing_preschooler = Preschooler.objects.filter(
-                first_name__iexact=first_name,
-                last_name__iexact=last_name,
-                birth_date=birth_date,
-                parent_id=parent
-            ).exists()
-            
-            if existing_preschooler:
-                return JsonResponse({'status': 'error', 'message': 'A preschooler with the same name and birthdate already exists for this parent.'})
-
-            # Create preschooler - FORCE assignment to same barangay as parent and user
+            # Create preschooler (model.save() will build full_name automatically)
             preschooler = Preschooler.objects.create(
                 first_name=first_name,
+                middle_name=middle_name,
                 last_name=last_name,
-                sex=sex,  # Use WHO-compatible format (M/F)
+                suffix=suffix,
+                sex=sex,
                 birth_date=birth_date,
                 age=age,
                 address=parent.address,
                 parent_id=parent,
-                barangay=user_barangay,  # Always use the registering user's barangay
-                place_of_birth=place_of_birth if place_of_birth else None,
-                birth_weight=birth_weight_value,
-                birth_height=birth_length_value,
-                time_of_birth=time_of_birth_value,
-                type_of_birth=type_of_birth if type_of_birth else None,
-                place_of_delivery=place_of_delivery if place_of_delivery else None,
+                barangay=user_barangay,
+                place_of_birth=request.POST.get('place_of_birth') or None,
+                birth_weight=request.POST.get('birth_weight') or None,
+                birth_height=request.POST.get('birth_length') or None,
+                time_of_birth=request.POST.get('time_of_birth') or None,
+                type_of_birth=request.POST.get('type_of_birth') or None,
+                place_of_delivery=request.POST.get('place_of_delivery') or None,
             )
 
-            # Link to parent
             parent.registered_preschoolers.add(preschooler)
 
-            print(f"DEBUG: Successfully registered preschooler {first_name} {last_name} (age: {age_in_months} months) for parent {parent.full_name} in barangay {user_barangay}")
+            print(f"DEBUG: Successfully registered preschooler {preschooler.full_name} for parent {parent.full_name} in barangay {user_barangay}")
 
             return JsonResponse({
                 'status': 'success', 
-                'message': f'Preschooler {first_name} {last_name} registered successfully in {user_barangay.name}!',
+                'message': f'Preschooler {preschooler.full_name} registered successfully in {user_barangay.name}!',
                 'data': {
                     'preschooler_id': preschooler.preschooler_id,
-                    'name': f"{first_name} {last_name}",
-                    'sex': sex,  # Return WHO format
-                    'age_months': age_in_months,  # Return precise age in months
+                    'name': preschooler.full_name,
+                    'sex': sex,
+                    'age_months': preschooler.age_in_months,
                     'barangay': str(user_barangay)
                 }
             })
@@ -4541,7 +4868,7 @@ def register_preschooler_entry(request):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
 
-
+    
 # Additional helper function to get preschoolers by barangay
 def get_preschoolers_by_barangay(request):
     """Get preschoolers filtered by user's barangay"""
@@ -4576,12 +4903,16 @@ def registered_bhw(request):
         else:
             bhw.last_activity_display = "No activity"
 
+    # Get all barangays for the filter dropdown
+    barangays = Barangay.objects.all().order_by('name')
+
     paginator = Paginator(bhw_list, 10)  # 10 BHWs per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     return render(request, 'HTML/registered_bhw.html', {
         'bhws': page_obj,
+        'barangays': barangays,  # Added this for the filter dropdown
         'total_bhw_count': bhw_list.count()  # Para makita ninyo ang total
     })
 
@@ -5047,13 +5378,23 @@ def reset_password(request, user_id):
         return redirect('login')  # Replace with your login URL name
     
     return render(request, 'HTML/reset_password.html', {'user': user})
+    
 def remove_bns(request, account_id):
     if request.method == 'POST':
-        bns = get_object_or_404(Account, pk=account_id, user_role="BNS")
-        name = bns.full_name
-        email = bns.email
-
         try:
+            bns = get_object_or_404(Account, pk=account_id)
+            
+            # Safety check for BNS role
+            bns_role_keywords = ['bns', 'nutritional', 'scholar']
+            if not any(keyword in bns.user_role.lower() for keyword in bns_role_keywords):
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'error': 'Not a BNS worker'})
+                messages.error(request, f"Cannot remove {bns.full_name}: Not a BNS worker.")
+                return redirect('healthcare_workers')
+            
+            name = bns.full_name
+            email = bns.email
+            
             # Get current date
             current_date = datetime.now().strftime('%B %d, %Y')
             
@@ -5088,12 +5429,11 @@ def remove_bns(request, account_id):
                         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                     }}
                     
-                    /* ✅ Simple header without background color */
                     .header {{
                         padding: 24px 32px;
                         text-align: center;
                         color: #111827;
-                        border-bottom: 4px solid #dc3545; /* Red divider */
+                        border-bottom: 4px solid #dc3545;
                     }}
                     .header h1 {{
                         font-size: 24px;
@@ -5123,7 +5463,6 @@ def remove_bns(request, account_id):
                         color: #64748b;
                     }}
                     
-                    /* ✅ Account Removal Details - Red Theme */
                     .details {{
                         background: #fef2f2;
                         border: 1px solid #ef4444;
@@ -5222,13 +5561,11 @@ def remove_bns(request, account_id):
             </head>
             <body>
                 <div class="container">
-                    <!-- Header -->
                     <div class="header">
                         <h1>Account Removed</h1>
                         <p>PPMS Cluster 4 - Imus City Healthcare Management</p>
                     </div>
                     
-                    <!-- Content -->
                     <div class="content">
                         <div class="greeting">
                             Hello <strong>{name}</strong>,
@@ -5238,13 +5575,11 @@ def remove_bns(request, account_id):
                             We would like to inform you that your BNS account has been removed from the PPMS Cluster 4 system.
                         </div>
                         
-                        <!-- Notice -->
                         <div class="notice">
                             <h3>Important Notice</h3>
                             <p>If you believe this was a mistake or have any questions, please contact the system administrator.</p>
                         </div>
                         
-                        <!-- ✅ Account Removal Details -->
                         <div class="details">
                             <h4>Account Information</h4>
                             <div class="detail-item">
@@ -5262,7 +5597,6 @@ def remove_bns(request, account_id):
                         </div>
                     </div>
                     
-                    <!-- Footer -->
                     <div class="footer">
                         <h3>PPMS Cluster 4</h3>
                         <p>Imus City Healthcare Management</p>
@@ -5311,22 +5645,42 @@ This is an automated message. Please do not reply.
 
             # Delete account
             bns.delete()
-
+            
+            # Return JSON for AJAX requests
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'name': name, 'type': 'BNS'})
+            
+            # Fallback for regular form submission
             messages.success(request, f"{name} has been successfully removed and notified via email.")
             
+        except Account.DoesNotExist:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'Worker no longer exists'})
+            messages.error(request, "The worker you're trying to remove no longer exists.")
         except Exception as e:
-            print(f"[ERROR] Failed to remove BNS or send email: {e}")
+            print(f"[ERROR] Failed to remove BNS: {e}")
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'An error occurred while removing the worker'})
             messages.error(request, "An error occurred while removing the BNS.")
 
-    return redirect('registered_bns')
+    return redirect('healthcare_workers')
 
 def remove_bhw(request, account_id):
     if request.method == 'POST':
-        bhw = get_object_or_404(Account, pk=account_id)
-        name = bhw.full_name
-        email = bhw.email
-
         try:
+            bhw = get_object_or_404(Account, pk=account_id)
+            
+            # Safety check for BHW role
+            bhw_role_keywords = ['bhw', 'healthworker', 'health worker']
+            if not any(keyword in bhw.user_role.lower() for keyword in bhw_role_keywords):
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'error': 'Not a BHW worker'})
+                messages.error(request, f"Cannot remove {bhw.full_name}: Not a BHW worker.")
+                return redirect('healthcare_workers')
+            
+            name = bhw.full_name
+            email = bhw.email
+            
             # Get current date
             current_date = datetime.now().strftime('%B %d, %Y')
             
@@ -5361,12 +5715,11 @@ def remove_bhw(request, account_id):
                         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                     }}
                     
-                    /* ✅ Simple header without background color */
                     .header {{
                         padding: 24px 32px;
                         text-align: center;
                         color: #111827;
-                        border-bottom: 4px solid #dc3545; /* Red divider */
+                        border-bottom: 4px solid #dc3545;
                     }}
                     .header h1 {{
                         font-size: 24px;
@@ -5396,7 +5749,6 @@ def remove_bhw(request, account_id):
                         color: #64748b;
                     }}
                     
-                    /* ✅ Account Removal Details - Red Theme */
                     .details {{
                         background: #fef2f2;
                         border: 1px solid #ef4444;
@@ -5495,29 +5847,25 @@ def remove_bhw(request, account_id):
             </head>
             <body>
                 <div class="container">
-                    <!-- Header -->
                     <div class="header">
                         <h1>Account Removed</h1>
                         <p>PPMS Cluster 4 - Imus City Healthcare Management</p>
                     </div>
                     
-                    <!-- Content -->
                     <div class="content">
                         <div class="greeting">
                             Hello <strong>{name}</strong>,
                         </div>
                         
                         <div class="message">
-                            We would like to inform you that your account has been removed from the PPMS Cluster 4 system.
+                            We would like to inform you that your BHW account has been removed from the PPMS Cluster 4 system.
                         </div>
                         
-                        <!-- Notice -->
                         <div class="notice">
                             <h3>Important Notice</h3>
                             <p>If you believe this was a mistake or have any questions, please contact the system administrator.</p>
                         </div>
                         
-                        <!-- ✅ Account Removal Details -->
                         <div class="details">
                             <h4>Account Information</h4>
                             <div class="detail-item">
@@ -5535,7 +5883,6 @@ def remove_bhw(request, account_id):
                         </div>
                     </div>
                     
-                    <!-- Footer -->
                     <div class="footer">
                         <h3>PPMS Cluster 4</h3>
                         <p>Imus City Healthcare Management</p>
@@ -5555,7 +5902,7 @@ PPMS Account Removal Notification
 
 Hello {name},
 
-We would like to inform you that your account has been removed from the PPMS Cluster 4 system.
+We would like to inform you that your BHW account has been removed from the PPMS Cluster 4 system.
 
 IMPORTANT NOTICE:
 If you believe this was a mistake or have any questions, please contact the system administrator.
@@ -5584,14 +5931,25 @@ This is an automated message. Please do not reply.
 
             # Delete account
             bhw.delete()
-
+            
+            # Return JSON for AJAX requests
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'name': name, 'type': 'BHW'})
+            
+            # Fallback for regular form submission
             messages.success(request, f"{name} has been successfully removed and notified via email.")
             
+        except Account.DoesNotExist:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'Worker no longer exists'})
+            messages.error(request, "The worker you're trying to remove no longer exists.")
         except Exception as e:
-            print(f"[ERROR] Failed to remove BHW or send email: {e}")
+            print(f"[ERROR] Failed to remove BHW: {e}")
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'An error occurred while removing the worker'})
             messages.error(request, "An error occurred while removing the BHW.")
 
-    return redirect('registered_bhw')
+    return redirect('healthcare_workers')
 
 
 def registered_midwife(request):
@@ -5616,14 +5974,21 @@ def registered_midwife(request):
 
     return render(request, 'HTML/registered_midwife.html', {'midwives': page_obj})
 
-
 def remove_midwife(request, account_id):
     if request.method == 'POST':
-        midwife = get_object_or_404(Account, pk=account_id)
-        name = midwife.full_name
-        email = midwife.email
-
         try:
+            midwife = get_object_or_404(Account, pk=account_id)
+            
+            # Safety check for Midwife role
+            if 'midwife' not in midwife.user_role.lower():
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'error': 'Not a Midwife worker'})
+                messages.error(request, f"Cannot remove {midwife.full_name}: Not a Midwife worker.")
+                return redirect('healthcare_workers')
+            
+            name = midwife.full_name
+            email = midwife.email
+            
             # Get current date
             current_date = datetime.now().strftime('%B %d, %Y')
             
@@ -5658,12 +6023,11 @@ def remove_midwife(request, account_id):
                         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                     }}
                     
-                    /* ✅ Simple header without background color */
                     .header {{
                         padding: 24px 32px;
                         text-align: center;
                         color: #111827;
-                        border-bottom: 4px solid #dc3545; /* Red divider */
+                        border-bottom: 4px solid #dc3545;
                     }}
                     .header h1 {{
                         font-size: 24px;
@@ -5693,7 +6057,6 @@ def remove_midwife(request, account_id):
                         color: #64748b;
                     }}
                     
-                    /* ✅ Account Removal Details - Red Theme */
                     .details {{
                         background: #fef2f2;
                         border: 1px solid #ef4444;
@@ -5792,29 +6155,25 @@ def remove_midwife(request, account_id):
             </head>
             <body>
                 <div class="container">
-                    <!-- Header -->
                     <div class="header">
                         <h1>Account Removed</h1>
                         <p>PPMS Cluster 4 - Imus City Healthcare Management</p>
                     </div>
                     
-                    <!-- Content -->
                     <div class="content">
                         <div class="greeting">
                             Hello <strong>{name}</strong>,
                         </div>
                         
                         <div class="message">
-                            We would like to inform you that your midwife account has been removed from the PPMS Cluster 4 system.
+                            We would like to inform you that your Midwife account has been removed from the PPMS Cluster 4 system.
                         </div>
                         
-                        <!-- Notice -->
                         <div class="notice">
                             <h3>Important Notice</h3>
                             <p>If you believe this was a mistake or have any questions, please contact the system administrator.</p>
                         </div>
                         
-                        <!-- ✅ Account Removal Details -->
                         <div class="details">
                             <h4>Account Information</h4>
                             <div class="detail-item">
@@ -5826,17 +6185,12 @@ def remove_midwife(request, account_id):
                                 <span class="detail-value">{email}</span>
                             </div>
                             <div class="detail-item">
-                                <span class="detail-label">Role:</span>
-                                <span class="detail-value">Midwife</span>
-                            </div>
-                            <div class="detail-item">
                                 <span class="detail-label">Date Removed:</span>
                                 <span class="detail-value">{current_date}</span>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Footer -->
                     <div class="footer">
                         <h3>PPMS Cluster 4</h3>
                         <p>Imus City Healthcare Management</p>
@@ -5856,7 +6210,7 @@ PPMS Account Removal Notification
 
 Hello {name},
 
-We would like to inform you that your midwife account has been removed from the PPMS Cluster 4 system.
+We would like to inform you that your Midwife account has been removed from the PPMS Cluster 4 system.
 
 IMPORTANT NOTICE:
 If you believe this was a mistake or have any questions, please contact the system administrator.
@@ -5864,7 +6218,6 @@ If you believe this was a mistake or have any questions, please contact the syst
 Account Information:
 - Full Name: {name}
 - Email: {email}
-- Role: Midwife
 - Date Removed: {current_date}
 
 PPMS Cluster 4
@@ -5882,20 +6235,29 @@ This is an automated message. Please do not reply.
                 html_message=html_message,
                 fail_silently=True,
             )
-            print(f"[DEBUG] ✅ Midwife removal email sent to {email}")
+            print(f"[DEBUG] ✅ Removal email sent to {email}")
 
             # Delete account
             midwife.delete()
-
+            
+            # Return JSON for AJAX requests
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'name': name, 'type': 'Midwife'})
+            
+            # Fallback for regular form submission
             messages.success(request, f"{name} has been successfully removed and notified via email.")
             
+        except Account.DoesNotExist:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'Worker no longer exists'})
+            messages.error(request, "The worker you're trying to remove no longer exists.")
         except Exception as e:
-            print(f"[ERROR] Failed to remove midwife or send email: {e}")
+            print(f"[ERROR] Failed to remove Midwife: {e}")
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'An error occurred while removing the worker'})
             messages.error(request, "An error occurred while removing the midwife.")
 
-    return redirect('registered_midwife')
-
-
+    return redirect('healthcare_workers')
 
 def validate(request):
     """Display BHW, BNS, Midwife, and Nurse accounts - focusing on pending validation by default"""
@@ -6305,11 +6667,19 @@ def registered_nurse(request):
 
 def remove_nurse(request, account_id):
     if request.method == 'POST':
-        nurse = get_object_or_404(Account, pk=account_id, user_role="nurse")
-        name = nurse.full_name
-        email = nurse.email
-
         try:
+            nurse = get_object_or_404(Account, pk=account_id)
+            
+            # Safety check for Nurse role
+            if 'nurse' not in nurse.user_role.lower():
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({'success': False, 'error': 'Not a Nurse worker'})
+                messages.error(request, f"Cannot remove {nurse.full_name}: Not a Nurse worker.")
+                return redirect('healthcare_workers')
+            
+            name = nurse.full_name
+            email = nurse.email
+            
             # Get current date
             current_date = datetime.now().strftime('%B %d, %Y')
             
@@ -6344,12 +6714,11 @@ def remove_nurse(request, account_id):
                         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                     }}
                     
-                    /* ✅ Simple header without background color */
                     .header {{
                         padding: 24px 32px;
                         text-align: center;
                         color: #111827;
-                        border-bottom: 4px solid #dc3545; /* Red divider */
+                        border-bottom: 4px solid #dc3545;
                     }}
                     .header h1 {{
                         font-size: 24px;
@@ -6379,7 +6748,6 @@ def remove_nurse(request, account_id):
                         color: #64748b;
                     }}
                     
-                    /* ✅ Account Removal Details - Red Theme */
                     .details {{
                         background: #fef2f2;
                         border: 1px solid #ef4444;
@@ -6478,29 +6846,25 @@ def remove_nurse(request, account_id):
             </head>
             <body>
                 <div class="container">
-                    <!-- Header -->
                     <div class="header">
                         <h1>Account Removed</h1>
                         <p>PPMS Cluster 4 - Imus City Healthcare Management</p>
                     </div>
                     
-                    <!-- Content -->
                     <div class="content">
                         <div class="greeting">
                             Hello <strong>{name}</strong>,
                         </div>
                         
                         <div class="message">
-                            We would like to inform you that your nurse account has been removed from the PPMS Cluster 4 system.
+                            We would like to inform you that your Nurse account has been removed from the PPMS Cluster 4 system.
                         </div>
                         
-                        <!-- Notice -->
                         <div class="notice">
                             <h3>Important Notice</h3>
                             <p>If you believe this was a mistake or have any questions, please contact the system administrator.</p>
                         </div>
                         
-                        <!-- ✅ Account Removal Details -->
                         <div class="details">
                             <h4>Account Information</h4>
                             <div class="detail-item">
@@ -6518,7 +6882,6 @@ def remove_nurse(request, account_id):
                         </div>
                     </div>
                     
-                    <!-- Footer -->
                     <div class="footer">
                         <h3>PPMS Cluster 4</h3>
                         <p>Imus City Healthcare Management</p>
@@ -6538,7 +6901,7 @@ PPMS Account Removal Notification
 
 Hello {name},
 
-We would like to inform you that your nurse account has been removed from the PPMS Cluster 4 system.
+We would like to inform you that your Nurse account has been removed from the PPMS Cluster 4 system.
 
 IMPORTANT NOTICE:
 If you believe this was a mistake or have any questions, please contact the system administrator.
@@ -6567,14 +6930,25 @@ This is an automated message. Please do not reply.
 
             # Delete account
             nurse.delete()
-
+            
+            # Return JSON for AJAX requests
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'name': name, 'type': 'Nurse'})
+            
+            # Fallback for regular form submission
             messages.success(request, f"{name} has been successfully removed and notified via email.")
             
+        except Account.DoesNotExist:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'Worker no longer exists'})
+            messages.error(request, "The worker you're trying to remove no longer exists.")
         except Exception as e:
-            print(f"[ERROR] Failed to remove nurse or send email: {e}")
+            print(f"[ERROR] Failed to remove Nurse: {e}")
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'An error occurred while removing the worker'})
             messages.error(request, "An error occurred while removing the nurse.")
 
-    return redirect('registered_nurse')
+    return redirect('healthcare_workers')
 
 def fix_existing_bns_records():
     """
@@ -6702,6 +7076,7 @@ def submit_bmi(request):
     # If GET → redirect to preschoolers
     return redirect('preschoolers')
 
+
     
 
 def bmi_form(request, preschooler_id):
@@ -6776,7 +7151,9 @@ def register_parent(request):
         try:
             # Get and validate form data
             first_name = request.POST.get('firstName', '').strip()
-            last_name = request.POST.get('lastName', '').strip()
+            middle_name = request.POST.get('middleName', '').strip()
+            last_name = request.POST.get('lastName', '').strip()    
+            suffix = request.POST.get('suffix', '').strip()
             email = request.POST.get('email', '').strip()
             contact_number = request.POST.get('contact_number', '').strip()
             birthdate = request.POST.get('birthdate', '').strip()
@@ -6821,7 +7198,20 @@ def register_parent(request):
                 address_parts.append(province)
 
             address = ", ".join(address_parts) if address_parts else "No address provided"
-            full_name = f"{first_name} {last_name}".strip()
+            middle_name = request.POST.get('middleName', '').strip()
+            suffix = request.POST.get('suffix', '').strip()
+            
+            name_parts = []
+            if first_name:
+                name_parts.append(first_name)
+            if middle_name:
+                name_parts.append(middle_name)
+            if last_name:
+                name_parts.append(last_name)
+            if suffix and suffix.lower() not in ['na', 'n/a']:
+                name_parts.append(suffix)
+            
+            full_name = " ".join(name_parts).strip()
 
             # Get user's barangay
             user_barangay = get_user_barangay(request.user)
@@ -6939,6 +7329,8 @@ def register_parent(request):
                 logger.info(f"Creating Parent record")
                 parent = Parent.objects.create(
                     first_name=first_name,
+                    middle_name=middle_name,
+                    suffix=suffix,
                     last_name=last_name,
                     email=email,
                     contact_number=contact_number,
@@ -6956,6 +7348,8 @@ def register_parent(request):
                 account = Account.objects.create(
                     email=email,
                     first_name=first_name,
+                    middle_name=middle_name,
+                    suffix=suffix,
                     last_name=last_name,
                     contact_number=contact_number,
                     birthdate=birthdate_obj,
@@ -7064,6 +7458,12 @@ PPMS Cluster 4 - Imus City Healthcare Management
         user_barangay = get_user_barangay(request.user)
         if user_barangay:
             context['user_barangay'] = user_barangay
+
+        try:
+            account = Account.objects.get(email=request.user.email)
+            context['account'] = account
+        except Account.DoesNotExist:
+            account = None
 
     return render(request, 'HTML/register_parent.html', context)
 
@@ -8385,7 +8785,7 @@ def delete_announcement(request, announcement_id):
     
     return redirect('manage_announcements')
 
-from django.db.models import Count, Q, F
+
 
 from django.db.models import Count, Q
 
@@ -8431,6 +8831,202 @@ def registered_barangays(request):
 
     return render(request, "HTML/barangay_list.html", {"barangays": page_obj})
 
+
+def healthcare_workers(request):
+    """Improved healthcare workers view with better BNS handling"""
+    from django.utils import timezone
+    from django.utils.timesince import timesince
+    from django.db.models import Q
+    from datetime import timedelta
+    
+    # Get all barangays for the filter dropdown
+    barangays = Barangay.objects.all().order_by('name')
+    print(f"DEBUG: Found {barangays.count()} barangays")
+    
+    # ===== BHW DATA =====
+    bhw_list = Account.objects.filter(
+        Q(user_role__iexact='healthworker') | Q(user_role__iexact='BHW'),
+        is_validated=True
+    ).select_related('barangay')
+    
+    print(f"DEBUG: Found {bhw_list.count()} BHW accounts")
+    
+    for bhw in bhw_list:
+        try:
+            bhw.bhw_data = BHW.objects.filter(email=bhw.email).first()
+        except Exception as e:
+            print(f"Error getting BHW data for {bhw.full_name}: {str(e)}")
+            bhw.bhw_data = None
+        
+        # Activity status
+        set_activity_status(bhw)
+    
+    # ===== BNS DATA - COMPREHENSIVE APPROACH =====
+    print("\n=== BNS DEBUGGING - COMPREHENSIVE ===")
+    
+    # First, let's see what user_role values actually exist
+    all_user_roles = Account.objects.filter(
+        is_validated=True
+    ).values_list('user_role', flat=True).distinct()
+    print("All user roles in validated accounts:")
+    for role in all_user_roles:
+        print(f"  - '{role}'")
+    
+    # Try multiple query strategies
+    bns_queries = [
+        # Strategy 1: Exact matches
+        Q(user_role__iexact='bns'),
+        Q(user_role__iexact='BNS'),
+        Q(user_role__iexact='Barangay Nutritional Scholar'),
+        
+        # Strategy 2: Contains/partial matches
+        Q(user_role__icontains='BNS'),
+        Q(user_role__icontains='Nutritional'),
+        Q(user_role__icontains='Scholar'),
+        
+        # Strategy 3: Case-insensitive partial matches
+        Q(user_role__icontains='bns'),
+        Q(user_role__icontains='nutritional'),
+        Q(user_role__icontains='scholar'),
+    ]
+    
+    # Combine all queries with OR
+    combined_query = bns_queries[0]
+    for query in bns_queries[1:]:
+        combined_query |= query
+    
+    bns_list = Account.objects.filter(
+        combined_query,
+        is_validated=True
+    ).select_related('barangay').distinct()  # Use distinct to avoid duplicates
+    
+    print(f"DEBUG: Found {bns_list.count()} BNS accounts with comprehensive query")
+    
+    # Debug: Show what we found
+    for bns in bns_list:
+        print(f"  - {bns.full_name} (role: '{bns.user_role}')")
+    
+    # If still no results, let's check if there are ANY BNS records in the BNS table
+    if bns_list.count() == 0:
+        print("\nNo BNS found in Account table. Checking BNS table directly...")
+        direct_bns = BNS.objects.all()
+        print(f"Direct BNS table has {direct_bns.count()} records:")
+        for bns in direct_bns[:5]:  # Show first 5
+            print(f"  - {bns.full_name} | {bns.email}")
+            # Try to find corresponding Account
+            account = Account.objects.filter(
+                Q(email=bns.email) | Q(full_name__iexact=bns.full_name),
+                is_validated=True
+            ).first()
+            if account:
+                print(f"    -> Found Account: {account.user_role}")
+            else:
+                print(f"    -> No matching validated Account found")
+    
+    # Process BNS data
+    for bns in bns_list:
+        try:
+            # Try multiple ways to find BNS profile
+            bns.bns_data = None
+            
+            # Method 1: By email
+            try:
+                bns.bns_data = BNS.objects.get(email=bns.email)
+                print(f"Found BNS data by email for {bns.full_name}")
+            except BNS.DoesNotExist:
+                # Method 2: By name
+                try:
+                    bns.bns_data = BNS.objects.get(full_name__iexact=bns.full_name)
+                    print(f"Found BNS data by name for {bns.full_name}")
+                except BNS.DoesNotExist:
+                    # Method 3: Partial name match
+                    bns.bns_data = BNS.objects.filter(
+                        Q(full_name__icontains=bns.full_name.split()[0]) |  # First name
+                        Q(full_name__icontains=bns.full_name.split()[-1])   # Last name
+                    ).first()
+                    if bns.bns_data:
+                        print(f"Found BNS data by partial name match for {bns.full_name}")
+                except BNS.MultipleObjectsReturned:
+                    bns.bns_data = BNS.objects.filter(full_name__iexact=bns.full_name).first()
+                    print(f"Multiple BNS found by name for {bns.full_name}, using first")
+            except BNS.MultipleObjectsReturned:
+                bns.bns_data = BNS.objects.filter(email=bns.email).first()
+                print(f"Multiple BNS found by email for {bns.full_name}, using first")
+                
+        except Exception as e:
+            print(f"Error processing BNS {bns.full_name}: {str(e)}")
+            bns.bns_data = None
+        
+        # Activity status
+        set_activity_status(bns)
+    
+    # ===== MIDWIFE DATA =====
+    midwife_list = Account.objects.filter(
+        Q(user_role__iexact='midwife') | Q(user_role__iexact='Midwife'),
+        is_validated=True
+    ).select_related('barangay')
+    
+    print(f"DEBUG: Found {midwife_list.count()} Midwife accounts")
+    
+    for midwife in midwife_list:
+        try:
+            midwife.midwife_data = Midwife.objects.filter(email=midwife.email).first()
+        except Exception as e:
+            print(f"Error getting Midwife data for {midwife.full_name}: {str(e)}")
+            midwife.midwife_data = None
+        
+        set_activity_status(midwife)
+    
+    # ===== NURSE DATA =====
+    nurse_list = Account.objects.filter(
+        Q(user_role__iexact='nurse') | Q(user_role__iexact='Nurse'),
+        is_validated=True
+    ).select_related('barangay')
+    
+    print(f"DEBUG: Found {nurse_list.count()} Nurse accounts")
+    
+    for nurse in nurse_list:
+        try:
+            nurse.nurse_data = Nurse.objects.filter(email=nurse.email).first()
+        except Exception as e:
+            print(f"Error getting Nurse data for {nurse.full_name}: {str(e)}")
+            nurse.nurse_data = None
+        
+        set_activity_status(nurse)
+    
+    # ===== FINAL SUMMARY =====
+    print(f"\n=== FINAL SUMMARY ===")
+    print(f"Total BHWs: {bhw_list.count()}")
+    print(f"Total BNS: {bns_list.count()}")  
+    print(f"Total Midwives: {midwife_list.count()}")
+    print(f"Total Nurses: {nurse_list.count()}")
+    print(f"Total Barangays: {barangays.count()}")
+    
+    context = {
+        'barangays': barangays,
+        'bhws': bhw_list,
+        'bnss': bns_list,
+        'midwives': midwife_list,
+        'nurses': nurse_list,
+    }
+    
+    return render(request, 'HTML/healthcare_workers.html', context)
+
+
+def set_activity_status(user):
+    """Helper function to set activity status for any user"""
+    from django.utils import timezone
+    from django.utils.timesince import timesince
+    from datetime import timedelta
+    
+    if hasattr(user, 'last_activity') and user.last_activity:
+        if timezone.now() - user.last_activity <= timedelta(minutes=1):
+            user.last_activity_display = "🟢 Online"
+        else:
+            time_diff = timesince(user.last_activity, timezone.now())
+            user.last_activity_display = f"{time_diff} ago"
+    else:
+        user.last_activity_display = "No activity"
 
 @csrf_exempt
 def get_announcement_data(request, announcement_id):
@@ -9355,5 +9951,92 @@ def test_push_notification(request):
             'error': str(e)
         })
 
+def get_pending_validation_count(request):
+    count = Account.objects.filter(
+        is_validated=False
+    ).exclude(user_role="Parent").count()
+    return JsonResponse({'pending_count': count})
 
 
+@csrf_protect
+@login_required
+@require_http_methods(["POST"])
+def save_temperature(request):
+    try:
+        preschooler_id = request.POST.get('preschooler_id')
+        temperature_value = request.POST.get('temperature_value')
+        
+        if not preschooler_id or not temperature_value:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Missing required fields'
+            })
+        
+        # Convert and validate temperature
+        try:
+            temp_float = float(temperature_value)
+            if temp_float < 30 or temp_float > 45:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Temperature must be between 30°C and 45°C'
+                })
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid temperature value'
+            })
+        
+        # Get the preschooler
+        try:
+            preschooler = Preschooler.objects.get(preschooler_id=preschooler_id, is_archived=False)
+        except Preschooler.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Preschooler not found'
+            })
+        
+        # Get BHW record - adjust this based on your actual model relationships
+        bhw = None
+        try:
+            # Option 1: If BHW model has a direct user field
+            if hasattr(BHW, 'user'):
+                bhw = BHW.objects.get(user=request.user)
+            
+            # Option 2: If you need to find BHW by username or other field
+            # elif hasattr(BHW, 'username'):
+            #     bhw = BHW.objects.get(username=request.user.username)
+            
+            # Option 3: If BHW has an email field
+            # elif hasattr(BHW, 'email'):
+            #     bhw = BHW.objects.get(email=request.user.email)
+            
+            # Option 4: If you need to find by a custom field
+            # else:
+            #     bhw = BHW.objects.filter(/* your custom condition */).first()
+                
+        except BHW.DoesNotExist:
+            # Create temperature record without BHW if not found
+            pass
+        except Exception as e:
+            print(f"Error finding BHW: {e}")
+        
+        # Create temperature record
+        temperature_record = Temperature.objects.create(
+            preschooler_id=preschooler,
+            temperature_value=temp_float,
+            recorded_by=bhw  # This can be None if BHW not found
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Temperature {temp_float}°C recorded successfully',
+            'temperature_id': temperature_record.temperature_id,
+            'date_recorded': temperature_record.date_recorded.strftime('%Y-%m-%d')
+        })
+        
+    except Exception as e:
+        print(f"Temperature save error: {e}")  # For debugging
+        return JsonResponse({
+            'status': 'error',
+            'message': 'An unexpected error occurred while saving temperature'
+        })
