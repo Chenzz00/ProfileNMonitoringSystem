@@ -13,7 +13,7 @@ import firebase_admin
 from firebase_admin import credentials
 from pathlib import Path
 import os
-import dj_database_url  # Add this missing import
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,7 +24,7 @@ FIREBASE_KEY_PATH = BASE_DIR / "PPMA" / "firebase-key.json"
 # Initialize Firebase Admin SDK
 def initialize_firebase():
     """Initialize Firebase Admin SDK if not already initialized."""
-    if not firebase_admin._apps:  # Check if Firebase is not already initialized
+    if not firebase_admin._apps:
         try:
             if FIREBASE_KEY_PATH.exists():
                 cred = credentials.Certificate(str(FIREBASE_KEY_PATH))
@@ -33,7 +33,6 @@ def initialize_firebase():
                 return True
             else:
                 print(f"⚠️ Firebase key not found at: {FIREBASE_KEY_PATH}")
-                print("🔧 Please download your service account key and place it in the correct location")
                 return False
         except Exception as e:
             print(f"❌ Firebase initialization failed: {e}")
@@ -52,7 +51,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-CHANGE_THIS_IN_PRODUC
 DEBUG = os.environ.get("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = [
-    os.environ.get("RAILWAY_APP_DOMAIN", "*"),  # Railway app domain or * for dev
+    os.environ.get("RAILWAY_APP_DOMAIN", "*"),
     "localhost",
     "127.0.0.1",
 ]
@@ -67,17 +66,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'corsheaders',  # CORS support
-    'rest_framework',  # DRF
+    'corsheaders',
+    'rest_framework',
     'rest_framework.authtoken',
-    'WebApp',  # Local app
+    'WebApp',
 ]
 
 # =======================
 # Middleware
 # =======================
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # FIRST
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -91,29 +90,18 @@ MIDDLEWARE = [
 # CORS / CSRF
 # =======================
 CORS_ALLOW_ALL_ORIGINS = True
-
 CSRF_TRUSTED_ORIGINS = [
     "https://ppms-website.netlify.app",
     f"https://{os.environ.get('RAILWAY_APP_DOMAIN', 'localhost')}"
 ]
-
-# Additional mobile/development CORS origins
 CORS_ALLOWED_ORIGINS = [
-    "http://10.0.2.2:8000",  # Android emulator
+    "http://10.0.2.2:8000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
 ]
-
 CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
+    'accept', 'accept-encoding', 'authorization', 'content-type', 'dnt',
+    'origin', 'user-agent', 'x-csrftoken', 'x-requested-with',
 ]
 
 # =======================
@@ -136,7 +124,7 @@ ROOT_URLCONF = 'PPMA.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "WebApp" / "Templates"],  # Fixed: removed /HTML
+        'DIRS': [BASE_DIR / "WebApp" / "Templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -155,25 +143,25 @@ ASGI_APPLICATION = "PPMA.asgi.application"
 # =======================
 # Database
 # =======================
-if os.environ.get("DATABASE_URL"):
-    # Production database (Railway PostgreSQL)
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
     DATABASES = {
         "default": dj_database_url.config(
-            default=os.environ.get("DATABASE_URL"),
+            default=DATABASE_URL,
             conn_max_age=600,
             ssl_require=True
         )
     }
 else:
-    # Local development database (PostgreSQL)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': 'ppms',
-            'USER': 'postgres',  # Default PostgreSQL user
-            'PASSWORD': '',      # Set your local PostgreSQL password
+            'USER': 'postgres',
+            'PASSWORD': '',
             'HOST': '127.0.0.1',
-            'PORT': '5432',      # Default PostgreSQL port
+            'PORT': '5432',
             'TIME_ZONE': 'Asia/Manila',
         }
     }
@@ -234,7 +222,7 @@ CHANNEL_LAYERS = {
 # Sessions
 # =======================
 LOGIN_URL = '/login/'
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
