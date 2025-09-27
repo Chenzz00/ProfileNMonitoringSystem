@@ -2,4 +2,4 @@
 builder = "dockerfile"
 [deploy]
 restartPolicyType = "ON_FAILURE"
-startCommand = "python manage.py makemigrations && python manage.py migrate --run-syncdb && gunicorn PPMA.wsgi:application --bind 0.0.0.0:8080"
+startCommand = "python manage.py makemigrations --empty WebApp && python manage.py makemigrations WebApp && python manage.py showmigrations && python manage.py migrate --fake-initial && python manage.py migrate && gunicorn PPMA.wsgi:application --bind 0.0.0.0:8080"
