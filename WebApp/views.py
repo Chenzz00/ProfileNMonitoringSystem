@@ -3113,8 +3113,9 @@ def get_enhanced_nutrition_status(preschooler, service_type, total_doses):
         'age_description': eligibility['description']
     }
     
-    # Debug logging
-    print(f"DEBUG: {service_type} Status:")
+    # Debug logging - FIX: Remove backslashes from f-string
+    debug_msg = f"DEBUG: {service_type} Status:"
+    print(debug_msg)
     print(f"  - Completed doses: {completed_count}")
     print(f"  - Current status: {current_status}")
     print(f"  - Can schedule: {eligibility['can_schedule']}")
@@ -9388,6 +9389,7 @@ def test_push_notification(request):
             'success': False,
             'error': str(e)
         })
+
 
 
 
