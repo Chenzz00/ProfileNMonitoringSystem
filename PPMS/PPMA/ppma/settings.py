@@ -124,17 +124,15 @@ WSGI_APPLICATION = 'PPMA.wsgi.application'
 ASGI_APPLICATION = "PPMA.asgi.application"
 
 # =======================
-# Database (Railway-ready)
+# Database (Railway-ready MySQL)
 # =======================
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
+    # Parse MySQL connection URL from Railway
+    # Example DATABASE_URL: mysql://USER:PASSWORD@HOST:PORT/DBNAME
     DATABASES = {
-        "default": dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=True
-        )
+        "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=False)
     }
 else:
     # Fallback to local SQLite for dev
@@ -206,3 +204,4 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
+
