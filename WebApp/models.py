@@ -27,6 +27,8 @@ class Account(models.Model):
 
     # Names
     first_name = models.CharField(max_length=100, blank=True, null=True)
+    middle_name = models.CharField(max_length=100, blank=True, null=True)
+    suffix = models.CharField(max_length=10, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
     full_name = models.CharField(max_length=200, editable=False, blank=True)  # auto-generated
 
@@ -35,7 +37,7 @@ class Account(models.Model):
     email = models.EmailField(max_length=254, unique=True, null=True)
     password = models.CharField(max_length=100, null=True)  # store hashed password
 
-    # ✅ Address fields
+    # Address fields
     house_number = models.CharField(max_length=50, blank=True, null=True)
     block = models.CharField(max_length=50, blank=True, null=True)
     lot = models.CharField(max_length=50, blank=True, null=True)
@@ -69,10 +71,131 @@ class Account(models.Model):
 
     def save(self, *args, **kwargs):
         # build full_name before saving
-        parts = [self.first_name or "", self.last_name or ""]
+        parts = [
+            self.first_name or "",
+            self.middle_name or "",   
+            self.last_name or "",
+            self.suffix or ""         
+        ]
         self.full_name = " ".join(p for p in parts if p).strip()
+    
         super().save(*args, **kwargs)
+    
+    # Helper method to clean any field value
+    def clean_field_value(self, field_value):
+        """Clean field value, return None if it's a placeholder like NA"""
+        if not field_value:
+            return None
+        
+        str_value = str(field_value).strip().lower()
+        invalid_values = {'na', 'n/a', 'none', 'null', '--', 'no address provided', ''}
+        
+        if str_value in invalid_values:
+            return None
+        
+        return str(field_value).strip()
+    
+    @property
+    def clean_first_name(self):
+        """Return first name without NA values"""
+        return self.clean_field_value(self.first_name)
+    
+    @property
+    def clean_middle_name(self):
+        """Return middle name without NA values"""
+        return self.clean_field_value(self.middle_name)
+    
+    @property
+    def clean_last_name(self):
+        """Return last name without NA values"""
+        return self.clean_field_value(self.last_name)
+    
+    @property
+    def clean_suffix(self):
+        """Return suffix without NA values"""
+        return self.clean_field_value(self.suffix)
 
+    @property
+    def clean_full_name(self):
+        """Return full name without NA values"""
+        parts = []
+        if self.clean_first_name:
+            parts.append(self.clean_first_name)
+        if self.clean_middle_name:
+            parts.append(self.clean_middle_name)
+        if self.clean_last_name:
+            parts.append(self.clean_last_name)
+        if self.clean_suffix:
+            parts.append(self.clean_suffix)
+        
+        return " ".join(parts) if parts else None
+    
+    @property
+    def clean_contact_number(self):
+        """Return contact number without NA values"""
+        return self.clean_field_value(self.contact_number)
+    
+    @property
+    def clean_address(self):
+        """Return address without NA values"""
+        if not self.editable_address:
+            return None
+            
+        # Clean the full address string
+        cleaned_address = self.clean_field_value(self.editable_address)
+        if not cleaned_address:
+            return None
+            
+        # Also clean individual parts separated by commas
+        parts = [part.strip() for part in cleaned_address.split(",")]
+        cleaned_parts = []
+        
+        for part in parts:
+            cleaned_part = self.clean_field_value(part)
+            if cleaned_part:
+                cleaned_parts.append(cleaned_part)
+        
+        return ", ".join(cleaned_parts) if cleaned_parts else None
+    
+    @property
+    def clean_house_number(self):
+        """Return house number without NA values"""
+        return self.clean_field_value(self.house_number)
+    
+    @property
+    def clean_block(self):
+        """Return block without NA values"""
+        return self.clean_field_value(self.block)
+    
+    @property
+    def clean_lot(self):
+        """Return lot without NA values"""
+        return self.clean_field_value(self.lot)
+    
+    @property
+    def clean_phase(self):
+        """Return phase without NA values"""
+        return self.clean_field_value(self.phase)
+    
+    @property
+    def clean_street(self):
+        """Return street without NA values"""
+        return self.clean_field_value(self.street)
+    
+    @property
+    def clean_subdivision(self):
+        """Return subdivision without NA values"""
+        return self.clean_field_value(self.subdivision)
+    
+    @property
+    def clean_city(self):
+        """Return city without NA values"""
+        return self.clean_field_value(self.city)
+    
+    @property
+    def clean_province(self):
+        """Return province without NA values"""
+        return self.clean_field_value(self.province)
 
     def __str__(self):
         return self.user.email
@@ -181,6 +304,8 @@ class Barangay(models.Model):
 class Parent(models.Model):
     parent_id = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=100, blank=True, null=True)
+    middle_name = models.CharField(max_length=100, blank=True, null=True)
+    suffix = models.CharField(max_length=10, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
     full_name = models.CharField(max_length=200, editable=False, blank=True)  # auto-generated
     contact_number = models.CharField(max_length=15, blank=True, null=True)
@@ -197,17 +322,36 @@ class Parent(models.Model):
     must_change_password = models.BooleanField(default=True)
     
     def save(self, *args, **kwargs):
-        # ✅ AUTO-GENERATE FULL_NAME
-        if self.first_name and self.last_name:
-            self.full_name = f"{self.first_name} {self.last_name}".strip()
-        elif self.first_name:
-            self.full_name = self.first_name.strip()
-        elif self.last_name:
-            self.full_name = self.last_name.strip()
+    # ✅ AUTO-GENERATE FULL_NAME with middle + suffix
+        parts = []
+        if self.first_name:
+            parts.append(self.first_name.strip())
+        if self.middle_name:
+            parts.append(self.middle_name.strip())
+        if self.last_name:
+            parts.append(self.last_name.strip())
+        if self.suffix:
+            parts.append(self.suffix.strip())
+
+        self.full_name = " ".join(parts).strip()
+
         super().save(*args, **kwargs)
 
     def __str__(self):
         return self.full_name or self.email or f"Parent {self.parent_id}"
+    
+    @property
+    def clean_address(self):
+        """Return address without NA/N/A values"""
+        if not self.editable_address:
+            return None
+        invalid = {"na", "n/a"}
+        # split by commas
+        parts = [part.strip() for part in self.editable_address.split(",")]
+        # keep only valid parts
+        cleaned = [p for p in parts if p.lower() not in invalid]
+        return ", ".join(cleaned) if cleaned else None
+    
 
     @property
     def computed_age(self):
@@ -221,6 +365,8 @@ class Parent(models.Model):
 class Preschooler(models.Model):
     preschooler_id = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=100)
+    middle_name = models.CharField(max_length=100, blank=True, null=True)
+    suffix = models.CharField(max_length=10, blank=True, null=True)
     last_name = models.CharField(max_length=100)
     
     # Modified to use WHO standard M/F format
@@ -293,8 +439,25 @@ class Preschooler(models.Model):
     date_registered = models.DateTimeField(default=timezone.now)
     is_notif_read = models.BooleanField(default=False)
     
+    # ✅ Auto-generate full_name
+    def save(self, *args, **kwargs):
+        name_parts = [self.first_name]
+
+        if self.middle_name and self.middle_name.strip().lower() != "na":
+            name_parts.append(self.middle_name)
+
+        if self.last_name:
+            name_parts.append(self.last_name)
+
+        if self.suffix and self.suffix.strip().lower() != "na":
+            name_parts.append(self.suffix)
+
+        self.full_name = " ".join(part.strip() for part in name_parts if part)
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.preschooler_id})"
+        return f"{self.first_name} {self.middle_name} {self.last_name} ({self.preschooler_id})"
     
     class Meta:
         verbose_name = "Preschooler"
