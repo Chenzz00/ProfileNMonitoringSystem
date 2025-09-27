@@ -1,5 +1,6 @@
 [build]
-apt = "apt.txt"
+builder = "dockerfile"
 
 [deploy]
-start = "python manage.py migrate && gunicorn PPMA.wsgi:application --bind 0.0.0.0:$PORT --workers 4"
+startCommand = "gunicorn PPMA.wsgi:application --bind 0.0.0.0:$PORT --workers 4"
+restartPolicyType = "ON_FAILURE"
