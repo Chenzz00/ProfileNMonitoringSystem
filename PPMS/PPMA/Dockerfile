@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y \
     fonts-dejavu-core \
     shared-mime-info \
  && rm -rf /var/lib/apt/lists/*
+
 # Create working directory
 WORKDIR /app
 
@@ -39,5 +40,5 @@ COPY . .
 # Expose port (Railway uses $PORT automatically)
 EXPOSE 8000
 
-# Start with Gunicorn
-CMD ["sh", "-c", "gunicorn PPMA.wsgi:application --bind 0.0.0.0:${PORT}"]
+# Start with Gunicorn (use default 8000 if $PORT not set)
+CMD ["sh", "-c", "gunicorn PPMA.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
