@@ -139,6 +139,7 @@ DATABASES = {
         "NAME": os.environ.get("MYSQLDATABASE", "ppma_db"),
         "USER": os.environ.get("MYSQLUSER", "root"),
         "PASSWORD": os.environ.get("MYSQLPASSWORD", ""),
+        # Railway injects MYSQLHOST (ex: mysql.railway.internal)
         "HOST": os.environ.get("MYSQLHOST", "127.0.0.1"),
         "PORT": os.environ.get("MYSQLPORT", "3306"),
         "OPTIONS": {
@@ -146,7 +147,6 @@ DATABASES = {
         },
     }
 }
-
 
 # =======================
 # Password validation
@@ -227,4 +227,3 @@ SECURE_SSL_REDIRECT = not DEBUG
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-
