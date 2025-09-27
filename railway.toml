@@ -2,4 +2,4 @@
 builder = "dockerfile"
 [deploy]
 restartPolicyType = "ON_FAILURE"
-startCommand = "python manage.py makemigrations WebApp; python manage.py migrate; gunicorn PPMA.wsgi:application --bind 0.0.0.0:8080"
+startCommand = "echo 'Starting migrations...' && python manage.py showmigrations && echo 'Running makemigrations...' && python manage.py makemigrations WebApp && echo 'Running migrate...' && python manage.py migrate --verbosity=2 && echo 'Migration complete, starting server...' && gunicorn PPMA.wsgi:application --bind 0.0.0.0:8080"
