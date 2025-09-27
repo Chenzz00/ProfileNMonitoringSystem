@@ -53,7 +53,11 @@ FIREBASE_INITIALIZED = initialize_firebase()
 # =======================
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-CHANGE_THIS_IN_PRODUCTION")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split()
+ALLOWED_HOSTS = [
+    "profilenonitoringsystem-production.up.railway.app",
+    "localhost",
+    "127.0.0.1"
+]
 
 # =======================
 # Installed Apps
@@ -213,4 +217,5 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_SAVE_EVERY_REQUEST = True
+
 
