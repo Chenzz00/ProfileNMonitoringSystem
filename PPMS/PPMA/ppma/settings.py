@@ -33,7 +33,7 @@ initialize_firebase()
 # =======================
 # Security
 # =======================
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-CHANGE_THIS_IN_PRODUCTION")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-CHANGE_THIS_IN_PRODUCTION")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = [
@@ -85,10 +85,6 @@ MIDDLEWARE = [
 # CORS / CSRF
 # =======================
 CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-]
 CORS_ALLOW_HEADERS = [
     'accept', 'accept-encoding', 'authorization', 'content-type', 'dnt',
     'origin', 'user-agent', 'x-csrftoken', 'x-requested-with',
@@ -133,21 +129,18 @@ ASGI_APPLICATION = "PPMA.asgi.application"
 # =======================
 # Database (Railway MySQL)
 # =======================
-
-# Debug print for Railway env variables
-print("🔎 Railway DB Config:")
+print("🔎 Checking Railway DB ENV Vars...")
 print("  MYSQLDATABASE:", os.environ.get("MYSQLDATABASE"))
 print("  MYSQLUSER:", os.environ.get("MYSQLUSER"))
-print("  MYSQLPASSWORD:", "***HIDDEN***" if os.environ.get("MYSQLPASSWORD") else None)
 print("  MYSQLHOST:", os.environ.get("MYSQLHOST"))
 print("  MYSQLPORT:", os.environ.get("MYSQLPORT"))
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("MYSQLDATABASE", "railway"),
-        "USER": os.environ.get("MYSQLUSER", "root"),
-        "PASSWORD": os.environ.get("MYSQLPASSWORD", ""),  # ensure it’s never None
+        "NAME": os.environ.get("MYSQLDATABASE", ""),
+        "USER": os.environ.get("MYSQLUSER", ""),
+        "PASSWORD": os.environ.get("MYSQLPASSWORD", ""),
         "HOST": os.environ.get("MYSQLHOST", "mysql.railway.internal"),
         "PORT": os.environ.get("MYSQLPORT", "3306"),
         "OPTIONS": {
