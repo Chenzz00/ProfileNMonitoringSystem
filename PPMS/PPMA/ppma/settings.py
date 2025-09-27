@@ -15,13 +15,16 @@ from pathlib import Path
 import os
 import dj_database_url
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# =======================
+# Base Directory
+# =======================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# =======================
 # Firebase configuration
+# =======================
 FIREBASE_KEY_PATH = BASE_DIR / "PPMA" / "firebase-key.json"
 
-# Initialize Firebase Admin SDK
 def initialize_firebase():
     """Initialize Firebase Admin SDK if not already initialized."""
     if not firebase_admin._apps:
@@ -41,14 +44,13 @@ def initialize_firebase():
         print("ℹ️ Firebase already initialized")
         return True
 
-# Initialize Firebase
 FIREBASE_INITIALIZED = initialize_firebase()
 
 # =======================
 # Security
 # =======================
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-CHANGE_THIS_IN_PRODUCTION")
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = [
     os.environ.get("RAILWAY_APP_DOMAIN", "*"),
@@ -143,33 +145,17 @@ ASGI_APPLICATION = "PPMA.asgi.application"
 # =======================
 # Database
 # =======================
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = os.environ.get("DATABASE_URL", 
+    "postgresql://postgres:ZqCjqbJboopmLzzClMETuWfgOqfyoubI@postgres.railway.internal:5432/railway"
+)
 
-if DATABASE_URL:
-    DATABASES = {
-        "default": dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=True  # Railway Postgres requires SSL
-        )
-    }
-else:
-    # Local development fallback
-    if os.environ.get("RAILWAY_ENV") == "production":
-        raise Exception(
-            "❌ DATABASE_URL not set in environment. "
-            "Add a PostgreSQL plugin in Railway."
-        )
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'ppms',
-            'USER': 'postgres',
-            'PASSWORD': '',
-            'HOST': '127.0.0.1',
-            'PORT': '5432',
-        }
-    }
+DATABASES = {
+    "default": dj_database_url.config(
+        default=DATABASE_URL,
+        conn_max_age=600,
+        ssl_require=True
+    )
+}
 
 # =======================
 # Password validation
@@ -231,6 +217,3 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
-
-
-
