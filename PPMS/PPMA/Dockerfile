@@ -40,38 +40,12 @@ COPY . .
 # Expose container port
 EXPOSE 8080
 
-# Enhanced startup with database connection testing and verbose output
+# Start the app (migrations, collectstatic, check tables, then Gunicorn)
 CMD bash -c "\
-    echo '=== Starting Django Application ===' && \
-    echo 'Database Configuration:' && \
-    echo 'Host: $MYSQLHOST' && \
-    echo 'Database: $MYSQLDATABASE' && \
-    echo 'User: $MYSQLUSER' && \
-    echo 'Port: $MYSQLPORT' && \
-    echo '=== Testing Database Connection ===' && \
-    python manage.py check --database default && \
-    echo '=== Database Connection: SUCCESS ===' && \
-    echo '=== Cleaning Old Migrations ===' && \
     rm -f WebApp/migrations/0*.py && \
-    echo '=== Creating Migrations ===' && \
     python manage.py makemigrations WebApp && \
-    echo '=== Showing Migration Plan ===' && \
-    python manage.py showmigrations && \
-    echo '=== Applying Migrations ===' && \
     python manage.py migrate --verbosity=2 && \
-    echo '=== Migration Complete - Checking Tables ===' && \
-    python -c \"
-import django
-import os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'PPMA.settings')
-django.setup()
-from django.db import connection
-cursor = connection.cursor()
-cursor.execute('SHOW TABLES')
-tables = cursor.fetchall()
-print('Tables in database:', [table[0] for table in tables])
-\" && \
-    echo '=== Collecting Static Files ===' && \
     python manage.py collectstatic --noinput && \
-    echo '=== Starting Gunicorn Server ===' && \
-    gunicorn PPMA.wsgi:application --bind 0.0.0.0:8080 --workers 4"
+    python -c \"import os,django; os.environ.setdefault('DJANGO_SETTINGS_MODULE','PPMA.settings'); django.setup(); print('=== Migration Complete - Checking Tables ===')\" && \
+    gunicorn PPMA.wsgi:application --bind 0.0.0.0:8080 --workers 4\
+"
