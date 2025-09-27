@@ -5,7 +5,7 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Install system libraries required for WeasyPrint + compiler for pycairo
+# Install system libraries required for WeasyPrint + pycairo
 RUN apt-get update && apt-get install -y \
     build-essential \
     pkg-config \
@@ -25,13 +25,11 @@ RUN apt-get update && apt-get install -y \
     shared-mime-info \
  && rm -rf /var/lib/apt/lists/*
 
-# Create working directory
+# Set working directory
 WORKDIR /app
 
-# Copy requirements
+# Copy requirements and install
 COPY requirements.txt .
-
-# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project files
@@ -40,9 +38,5 @@ COPY . .
 # Expose port (Railway sets $PORT automatically)
 EXPOSE 8000
 
-# Copy entrypoint script and make it executable
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-# Use entrypoint to start Gunicorn
-ENTRYPOINT ["/entrypoint.sh"]
+# Start Gunicorn directly
+CMD ["gunicorn", "PPMA.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
