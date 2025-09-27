@@ -127,14 +127,14 @@ def receive_esp32_data_simple(request):
             # Initialize device data if not exists
             if device_id not in ESP32_DATA_CACHE:
                 ESP32_DATA_CACHE[device_id] = {}
-                print(f"DEBUG: Initialized new cache entry for device {device_id}")
+                print("DEBUG: Initialized new cache entry for device {device_id}")
             else:
-                print(f"DEBUG: Existing cache for device {device_id}: {ESP32_DATA_CACHE[device_id]}")
+                print("DEBUG: Existing cache for device {device_id}: {ESP32_DATA_CACHE[device_id]}")
             
             # Store data based on measurement type - MERGE with existing data
             if measurement_type == 'BMI':
                 # Add BMI data while preserving any existing temperature data
-                print(f"DEBUG: Adding BMI data to device {device_id}...")
+                print("DEBUG: Adding BMI data to device {device_id}...")
                 ESP32_DATA_CACHE[device_id].update({
                     'weight': validated_data['weight'],
                     'height': validated_data['height'],
@@ -145,18 +145,18 @@ def receive_esp32_data_simple(request):
                     'bmi_timestamp': str(timezone.now()),
                     'has_bmi_data': True
                 })
-                print(f"DEBUG: After BMI update for {device_id}: {ESP32_DATA_CACHE[device_id]}")
+                print("DEBUG: After BMI update for {device_id}: {ESP32_DATA_CACHE[device_id]}")
                 
             elif measurement_type == 'TEMPERATURE':
                 # Add temperature data while preserving any existing BMI data
-                print(f"DEBUG: Adding temperature data to device {device_id}...")
+                print("DEBUG: Adding temperature data to device {device_id}...")
                 ESP32_DATA_CACHE[device_id].update({
                     'temperature': validated_data['temperature'],
                     'temperature_status': validated_data.get('temperature_status'),
                     'temp_timestamp': str(timezone.now()),
                     'has_temperature_data': True
                 })
-                print(f"DEBUG: After temperature update for {device_id}: {ESP32_DATA_CACHE[device_id]}")
+                print("DEBUG: After temperature update for {device_id}: {ESP32_DATA_CACHE[device_id]}")
                 
             else:
                 # Legacy support - store all available data
@@ -186,7 +186,7 @@ def receive_esp32_data_simple(request):
             })
             
         else:
-            print(f"DEBUG: Validation failed: {serializer.errors}")
+            print("DEBUG: Validation failed: {serializer.errors}")
             return JsonResponse({
                 'status': 'error',
                 'message': 'Validation failed',
@@ -200,7 +200,7 @@ def receive_esp32_data_simple(request):
         }, status=400)
         
     except Exception as e:
-        print(f"DEBUG: Exception occurred: {str(e)}")
+        print("DEBUG: Exception occurred: {str(e)}")
         return JsonResponse({
             'status': 'error',
             'message': str(e)
@@ -219,7 +219,7 @@ def get_esp32_data_simple(request):
     device_id = request.GET.get('device_id')
     force_clear = request.GET.get('clear', 'false').lower() == 'true'
     
-    print(f"DEBUG: get_esp32_data_simple called - device_id: {device_id}, force_clear: {force_clear}")
+    print("DEBUG: get_esp32_data_simple called - device_id: {device_id}, force_clear: {force_clear}")
     
     # If no device_id specified, return available devices
     if not device_id:
@@ -256,9 +256,9 @@ def get_esp32_data_simple(request):
         if device_id in ESP32_DATA_CACHE:
             cleared_data = ESP32_DATA_CACHE[device_id].copy()
             del ESP32_DATA_CACHE[device_id]
-            print(f"DEBUG: FORCE CLEARED data for device {device_id}: {cleared_data}")
+            print("DEBUG: FORCE CLEARED data for device {device_id}: {cleared_data}")
         else:
-            print(f"DEBUG: No data to clear for device {device_id} (already empty)")
+            print("DEBUG: No data to clear for device {device_id} (already empty)")
         
         return JsonResponse({
             'status': 'no_data',
@@ -270,7 +270,7 @@ def get_esp32_data_simple(request):
     
     # Normal data retrieval logic for specific device
     esp32_data = ESP32_DATA_CACHE.get(device_id, {})
-    print(f"DEBUG: Retrieved ESP32 data for {device_id}: {esp32_data}")
+    print("DEBUG: Retrieved ESP32 data for {device_id}: {esp32_data}")
     
     if esp32_data:
         has_bmi = esp32_data.get('has_bmi_data', False)
@@ -298,10 +298,10 @@ def get_esp32_data_simple(request):
         # Only clear if we have BOTH BMI and temperature data
         if is_complete:
             del ESP32_DATA_CACHE[device_id]
-            print(f"DEBUG: Auto-cleared COMPLETE data for device {device_id} (BMI + Temperature)")
+            print("DEBUG: Auto-cleared COMPLETE data for device {device_id} (BMI + Temperature)")
             response_data['data_cleared'] = True
         else:
-            print(f"DEBUG: Keeping PARTIAL data for device {device_id} (BMI: {has_bmi}, Temp: {has_temp})")
+            print("DEBUG: Keeping PARTIAL data for device {device_id} (BMI: {has_bmi}, Temp: {has_temp})")
             response_data['data_cleared'] = False
         
         return JsonResponse(response_data)
@@ -338,7 +338,7 @@ def clear_esp32_data(request):
                 # Fallback to POST parameters
                 device_id = request.POST.get('device_id')
     except Exception as e:
-        print(f"DEBUG: Error parsing clear request: {e}")
+        print("DEBUG: Error parsing clear request: {e}")
         device_id = None
     
     # If no device_id specified, show available devices
@@ -354,7 +354,7 @@ def clear_esp32_data(request):
     if device_id in ESP32_DATA_CACHE:
         cleared_data = ESP32_DATA_CACHE[device_id].copy()
         del ESP32_DATA_CACHE[device_id]
-        print(f"DEBUG: POST CLEAR - Forcefully cleared data for device {device_id}: {cleared_data}")
+        print("DEBUG: POST CLEAR - Forcefully cleared data for device {device_id}: {cleared_data}")
         return JsonResponse({
             'status': 'success',
             'message': f'Data forcefully cleared for device {device_id}',
@@ -362,7 +362,7 @@ def clear_esp32_data(request):
             'cleared_data': cleared_data
         })
     else:
-        print(f"DEBUG: POST CLEAR - No data to clear for device {device_id} (cache was already empty)")
+        print("DEBUG: POST CLEAR - No data to clear for device {device_id} (cache was already empty)")
         return JsonResponse({
             'status': 'success',  # Still return success even if no data
             'message': f'No data found for device {device_id} (already clear)',
@@ -439,7 +439,7 @@ def clear_all_esp32_data(request):
     cleared_data = ESP32_DATA_CACHE.copy()
     ESP32_DATA_CACHE.clear()
     
-    print(f"DEBUG: Cleared all ESP32 data ({device_count} devices): {cleared_data}")
+    print("DEBUG: Cleared all ESP32 data ({device_count} devices): {cleared_data}")
     
     return JsonResponse({
         'status': 'success',
@@ -558,10 +558,10 @@ def receive_esp32_data(request):
             response_serializer = ESP32ResponseSerializer(response_data)
             
             # Debug logging
-            print(f"=== ESP32 DATA RECEIVED ({measurement_type}) ===")
-            print(f"Device: {device_id}")
-            print(f"Data: {validated_data}")
-            print(f"Cache: {ESP32_DATA_CACHE[device_id]}")
+            print("=== ESP32 DATA RECEIVED ({measurement_type}) ===")
+            print("Device: {device_id}")
+            print("Data: {validated_data}")
+            print("Cache: {ESP32_DATA_CACHE[device_id]}")
             print("=" * 50)
             
             return Response(response_serializer.data, status=status.HTTP_200_OK)
@@ -577,9 +577,9 @@ def receive_esp32_data(request):
             
             response_serializer = ESP32ResponseSerializer(response_data)
             
-            print(f"=== VALIDATION FAILED ===")
-            print(f"Errors: {serializer.errors}")
-            print(f"Raw data: {request.data}")
+            print("=== VALIDATION FAILED ===")
+            print("Errors: {serializer.errors}")
+            print("Raw data: {request.data}")
             print("=" * 30)
             
             return Response(response_serializer.data, status=status.HTTP_400_BAD_REQUEST)
@@ -594,9 +594,9 @@ def receive_esp32_data(request):
         
         response_serializer = ESP32ResponseSerializer(response_data)
         
-        print(f"=== SERVER ERROR ===")
-        print(f"Error: {str(e)}")
-        print(f"Raw data: {request.data}")
+        print("=== SERVER ERROR ===")
+        print("Error: {str(e)}")
+        print("Raw data: {request.data}")
         print("=" * 20)
         
         return Response(response_serializer.data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -654,9 +654,9 @@ def get_esp32_data(request):
     user_barangay = None
     debug_info = []
     
-    debug_info.append(f"Current user: {request.user}")
-    debug_info.append(f"User email: {request.user.email}")
-    debug_info.append(f"User is authenticated: {request.user.is_authenticated}")
+    debug_info.append("Current user: {request.user}")
+    debug_info.append("User email: {request.user.email}")
+    debug_info.append("User is authenticated: {request.user.is_authenticated}")
     
     if request.user.is_authenticated:
         # Check each model type
@@ -664,7 +664,7 @@ def get_esp32_data(request):
         try:
             account = Account.objects.get(email=request.user.email)
             user_barangay = account.barangay
-            debug_info.append(f"✓ Found in Account: {account.email}, Barangay: {user_barangay}")
+            debug_info.append("✓ Found in Account: {account.email}, Barangay: {user_barangay}")
         except Account.DoesNotExist:
             debug_info.append("✗ Not found in Account model")
             
@@ -673,7 +673,7 @@ def get_esp32_data(request):
             try:
                 bhw = BHW.objects.get(email=request.user.email)
                 user_barangay = bhw.barangay
-                debug_info.append(f"✓ Found in BHW: {bhw.email}, Barangay: {user_barangay}")
+                debug_info.append("✓ Found in BHW: {bhw.email}, Barangay: {user_barangay}")
             except BHW.DoesNotExist:
                 debug_info.append("✗ Not found in BHW model")
                 
@@ -682,7 +682,7 @@ def get_esp32_data(request):
             try:
                 bns = BNS.objects.get(email=request.user.email)
                 user_barangay = bns.barangay
-                debug_info.append(f"✓ Found in BNS: {bns.email}, Barangay: {user_barangay}")
+                debug_info.append("✓ Found in BNS: {bns.email}, Barangay: {user_barangay}")
             except BNS.DoesNotExist:
                 debug_info.append("✗ Not found in BNS model")
                 
@@ -691,7 +691,7 @@ def get_esp32_data(request):
             try:
                 midwife = Midwife.objects.get(email=request.user.email)
                 user_barangay = midwife.barangay
-                debug_info.append(f"✓ Found in Midwife: {midwife.email}, Barangay: {user_barangay}")
+                debug_info.append("✓ Found in Midwife: {midwife.email}, Barangay: {user_barangay}")
             except Midwife.DoesNotExist:
                 debug_info.append("✗ Not found in Midwife model")
                 
@@ -700,7 +700,7 @@ def get_esp32_data(request):
             try:
                 nurse = Nurse.objects.get(email=request.user.email)
                 user_barangay = nurse.barangay
-                debug_info.append(f"✓ Found in Nurse: {nurse.email}, Barangay: {user_barangay}")
+                debug_info.append("✓ Found in Nurse: {nurse.email}, Barangay: {user_barangay}")
             except Nurse.DoesNotExist:
                 debug_info.append("✗ Not found in Nurse model")
                 
@@ -709,30 +709,30 @@ def get_esp32_data(request):
             try:
                 parent = Parent.objects.get(email=request.user.email)
                 user_barangay = parent.barangay
-                debug_info.append(f"✓ Found in Parent: {parent.email}, Barangay: {user_barangay}")
+                debug_info.append("✓ Found in Parent: {parent.email}, Barangay: {user_barangay}")
             except Parent.DoesNotExist:
                 debug_info.append("✗ Not found in Parent model")
 
-    debug_info.append(f"Final user_barangay: {user_barangay}")
+    debug_info.append("Final user_barangay: {user_barangay}")
 
     # Check all vaccine stocks in database first
     all_stocks = VaccineStock.objects.all()
-    debug_info.append(f"Total vaccine stocks in database: {all_stocks.count()}")
+    debug_info.append("Total vaccine stocks in database: {all_stocks.count()}")
     
     for stock in all_stocks:
         if stock.barangay:
-            debug_info.append(f"Stock: {stock.vaccine_name} - Barangay: {stock.barangay.name}")
+            debug_info.append("Stock: {stock.vaccine_name} - Barangay: {stock.barangay.name}")
         else:
-            debug_info.append(f"Stock: {stock.vaccine_name} - No barangay assigned")
+            debug_info.append("Stock: {stock.vaccine_name} - No barangay assigned")
 
     # Filter stocks by barangay if user has one
     if user_barangay:
         stocks = VaccineStock.objects.filter(barangay=user_barangay)
-        debug_info.append(f"Filtering by barangay: {user_barangay}")
-        debug_info.append(f"Found {stocks.count()} stocks for this barangay")
+        debug_info.append("Filtering by barangay: {user_barangay}")
+        debug_info.append("Found {stocks.count()} stocks for this barangay")
     else:
         stocks = VaccineStock.objects.all()
-        debug_info.append(f"No barangay filter applied. Showing all {stocks.count()} stocks")
+        debug_info.append("No barangay filter applied. Showing all {stocks.count()} stocks")
 
     # Print all debug info
     for info in debug_info:
@@ -783,7 +783,7 @@ def get_esp32_data(request):
         ]
 
         if name not in valid_options:
-            messages.error(request, f"Invalid medicine/vaccine name: {name}")
+            messages.error(request, "Invalid medicine/vaccine name: {name}")
             return redirect('view_vaccine_stocks')
 
         try:
@@ -817,14 +817,14 @@ def get_esp32_data(request):
                                     except Parent.DoesNotExist:
                                         pass
 
-            print(f"Adding stock - User barangay: {user_barangay}")
+            print("Adding stock - User barangay: {user_barangay}")
 
             # Build query filters
             stock_filter = {'vaccine_name': name}
             if user_barangay:
                 stock_filter['barangay'] = user_barangay
 
-            print(f"Stock filter: {stock_filter}")
+            print("Stock filter: {stock_filter}")
 
             # Try to find existing stock
             try:
@@ -833,8 +833,8 @@ def get_esp32_data(request):
                 stock.available_stock += quantity
                 stock.save()
                 
-                messages.success(request, f"Stock updated for {name}. Added {quantity} units.")
-                print(f"Updated existing stock for {name} in barangay {user_barangay}")
+                messages.success(request, "Stock updated for {name}. Added {quantity} units.")
+                print("Updated existing stock for {name} in barangay {user_barangay}")
                 
             except VaccineStock.DoesNotExist:
                 # Create new stock entry
@@ -846,12 +846,12 @@ def get_esp32_data(request):
                 }
                 
                 new_stock = VaccineStock.objects.create(**stock_data)
-                messages.success(request, f"New medicine/vaccine '{name}' added with {quantity} units.")
-                print(f"Created new stock for {name} in barangay {user_barangay}")
+                messages.success(request, "New medicine/vaccine '{name}' added with {quantity} units.")
+                print("Created new stock for {name} in barangay {user_barangay}")
 
         except Exception as e:
-            messages.error(request, f"An error occurred: {str(e)}")
-            print(f"Error adding stock: {str(e)}")
+            messages.error(request, "An error occurred: {str(e)}")
+            print("Error adding stock: {str(e)}")
 
     return redirect('view_vaccine_stocks')
 
@@ -883,15 +883,15 @@ def email_endorsement(request):
     account = None
     
     debug_info = []
-    debug_info.append(f"Current user: {request.user}")
-    debug_info.append(f"User email: {request.user.email}")
+    debug_info.append("Current user: {request.user}")
+    debug_info.append("User email: {request.user.email}")
     
     if request.user.is_authenticated:
         # Check each model type to find the user and their barangay
         try:
             account = Account.objects.select_related('barangay').get(email=request.user.email)
             user_barangay = account.barangay
-            debug_info.append(f"✓ Found in Account: {account.email}, Barangay: {user_barangay}")
+            debug_info.append("✓ Found in Account: {account.email}, Barangay: {user_barangay}")
         except Account.DoesNotExist:
             debug_info.append("✗ Not found in Account model")
             
@@ -905,7 +905,7 @@ def email_endorsement(request):
                     'barangay': bhw.barangay,
                     'full_name': bhw.full_name
                 })()
-                debug_info.append(f"✓ Found in BHW: {bhw.email}, Barangay: {user_barangay}")
+                debug_info.append("✓ Found in BHW: {bhw.email}, Barangay: {user_barangay}")
             except BHW.DoesNotExist:
                 try:
                     bns = BNS.objects.select_related('barangay').get(email=request.user.email)
@@ -915,7 +915,7 @@ def email_endorsement(request):
                         'barangay': bns.barangay,
                         'full_name': bns.full_name
                     })()
-                    debug_info.append(f"✓ Found in BNS: {bns.email}, Barangay: {user_barangay}")
+                    debug_info.append("✓ Found in BNS: {bns.email}, Barangay: {user_barangay}")
                 except BNS.DoesNotExist:
                     try:
                         midwife = Midwife.objects.select_related('barangay').get(email=request.user.email)
@@ -925,7 +925,7 @@ def email_endorsement(request):
                             'barangay': midwife.barangay,
                             'full_name': midwife.full_name
                         })()
-                        debug_info.append(f"✓ Found in Midwife: {midwife.email}, Barangay: {user_barangay}")
+                        debug_info.append("✓ Found in Midwife: {midwife.email}, Barangay: {user_barangay}")
                     except Midwife.DoesNotExist:
                         try:
                             nurse = Nurse.objects.select_related('barangay').get(email=request.user.email)
@@ -935,7 +935,7 @@ def email_endorsement(request):
                                 'barangay': nurse.barangay,
                                 'full_name': nurse.full_name
                             })()
-                            debug_info.append(f"✓ Found in Nurse: {nurse.email}, Barangay: {user_barangay}")
+                            debug_info.append("✓ Found in Nurse: {nurse.email}, Barangay: {user_barangay}")
                         except Nurse.DoesNotExist:
                             try:
                                 parent = Parent.objects.select_related('barangay').get(email=request.user.email)
@@ -945,11 +945,11 @@ def email_endorsement(request):
                                     'barangay': parent.barangay,
                                     'full_name': parent.full_name
                                 })()
-                                debug_info.append(f"✓ Found in Parent: {parent.email}, Barangay: {user_barangay}")
+                                debug_info.append("✓ Found in Parent: {parent.email}, Barangay: {user_barangay}")
                             except Parent.DoesNotExist:
                                 debug_info.append("✗ User not found in any model")
 
-    debug_info.append(f"Final user_barangay: {user_barangay}")
+    debug_info.append("Final user_barangay: {user_barangay}")
 
     # If no account found or no barangay assigned, handle appropriately
     if not account:
@@ -962,11 +962,11 @@ def email_endorsement(request):
 
     # Filter only parents from the same barangay
     parents = Parent.objects.filter(barangay=user_barangay).exclude(email__isnull=True)
-    debug_info.append(f"Found {parents.count()} parents in barangay {user_barangay}")
+    debug_info.append("Found {parents.count()} parents in barangay {user_barangay}")
     
     # Debug: Show which parents were found
     for parent in parents:
-        debug_info.append(f"Parent: {parent.full_name} ({parent.email}) - Barangay: {parent.barangay}")
+        debug_info.append("Parent: {parent.full_name} ({parent.email}) - Barangay: {parent.barangay}")
 
     # Print debug info
     for info in debug_info:
@@ -981,7 +981,7 @@ def email_endorsement(request):
         # Validate that the recipient is from the same barangay
         try:
             recipient_parent = Parent.objects.get(email=to_email, barangay=user_barangay)
-            debug_info.append(f"Recipient validation passed: {recipient_parent.email} is in {user_barangay}")
+            debug_info.append("Recipient validation passed: {recipient_parent.email} is in {user_barangay}")
         except Parent.DoesNotExist:
             messages.error(request, "Invalid recipient. You can only send emails to parents in your barangay.")
             return redirect('email_endorsement')
@@ -994,11 +994,11 @@ def email_endorsement(request):
                 recipient_list=[to_email],
                 fail_silently=False
             )
-            messages.success(request, f"Endorsement email sent successfully to {to_email}.")
+            messages.success(request, "Endorsement email sent successfully to {to_email}.")
             return redirect('dashboard')
         except Exception as e:
-            messages.error(request, f"Error sending email: {e}")
-            print(f"Email sending error: {e}")
+            messages.error(request, "Error sending email: {e}")
+            print("Email sending error: {e}")
             return redirect('email_endorsement')
 
     return render(request, 'HTML/email_endorsement.html', {
@@ -1025,7 +1025,7 @@ def generate_immunization_report(request):
         'bhw', 'health worker', 'bns', 'nutrition', 'nutritional', 'scholar', 'midwife', 'admin'
     ])
     if not is_authorized:
-        messages.error(request, f"Your role ({account.user_role}) is not authorized to generate immunization reports.")
+        messages.error(request, "Your role ({account.user_role}) is not authorized to generate immunization reports.")
         return redirect('dashboard')
 
     barangay = account.barangay
@@ -1092,14 +1092,14 @@ def generate_immunization_report(request):
         last_completed = max([s.completion_date or s.administered_date for s in schedules if s.completion_date or s.administered_date], default=None)
         last_vaccination_date = last_completed.strftime('%m/%d/%Y') if last_completed else "N/A"
 
-        completed_text = "; ".join([f"{s.vaccine_name} ({(s.completion_date or s.administered_date or s.scheduled_date).strftime('%m/%d/%Y')})" for s in schedules])
+        completed_text = "; ".join(["{s.vaccine_name} ({(s.completion_date or s.administered_date or s.scheduled_date).strftime('%m/%d/%Y')})" for s in schedules])
 
         preschoolers_data.append({
-            'name': f"{p.first_name} {p.last_name}",
-            'age': f"{age_years} years, {age_months % 12} months",
+            'name': "{p.first_name} {p.last_name}",
+            'age': "{age_years} years, {age_months % 12} months",
             'sex': p.sex,
             'vaccination_status': vaccination_status,
-            'vaccines_received': f"{total_completed}/{total_scheduled}",
+            'vaccines_received': "{total_completed}/{total_scheduled}",
             'last_vaccination': last_vaccination_date,
             'vaccination_schedule': completed_text,
             'parent_name': parent_name,
@@ -1121,7 +1121,7 @@ def generate_immunization_report(request):
     pdf = html.write_pdf()
 
     response = HttpResponse(pdf, content_type='application/pdf')
-    response['Content-Disposition'] = 'inline; filename="Immunization-Report.pdf"'
+    response['Content-Disposition'] = 'inline; filename="Immunization-Report.pd"'
     return response
 
 
@@ -1135,7 +1135,7 @@ def addbarangay(request):
         phone_number = request.POST.get('phone-number', '').strip()
         hall_address = request.POST.get('hall-address', '').strip()
 
-        print(f"[DEBUG] Received: {name=}, {phone_number=}, {hall_address=}")
+        print("[DEBUG] Received: {name=}, {phone_number=}, {hall_address=}")
 
         # ✅ Check for empty barangay name
         if not name:
@@ -1144,7 +1144,7 @@ def addbarangay(request):
 
         # ✅ Check if barangay name already exists
         if Barangay.objects.filter(name__iexact=name).exists():
-            messages.error(request, f"A barangay named '{name}' already exists.")
+            messages.error(request, "A barangay named '{name}' already exists.")
             return render(request, 'HTML/addbarangay.html')
 
         # ✅ Try saving the barangay
@@ -1154,10 +1154,10 @@ def addbarangay(request):
                 phone_number=phone_number,
                 hall_address=hall_address,
             )
-            messages.success(request, f"Barangay {name} was added successfully!")
+            messages.success(request, "Barangay {name} was added successfully!")
             return redirect('addbarangay')
         except Exception as e:
-            print(f"[ERROR] Failed to add barangay: {e}")
+            print("[ERROR] Failed to add barangay: {e}")
             messages.error(request, "Something went wrong while saving. Please try again.")
     
     return render(request, 'HTML/addbarangay.html')
@@ -1191,7 +1191,7 @@ def Admin(request):
     for child in preschoolers:
         notifications.append({
             'type': 'preschooler',
-            'full_name': f"{child.first_name} {child.last_name}",
+            'full_name': "{child.first_name} {child.last_name}",
             'date_registered': child.date_registered,
             'bhw_image': getattr(child.bhw_id.account.profile_photo.image, 'url', None)
                           if child.bhw_id and child.bhw_id.account and hasattr(child.bhw_id.account, 'profile_photo') else None,
@@ -1289,7 +1289,7 @@ def Admin(request):
                         status_totals['Obese'] += 1
 
                 except Exception as e:
-                    print(f"⚠️ BMI classification error for preschooler {p.id}: {e}")
+                    print("⚠️ BMI classification error for preschooler {p.id}: {e}")
 
         # Add barangay data even if it has 0 preschoolers
         summary.append({
@@ -1425,7 +1425,7 @@ def archived(request):
     # Run auto-archive check here too
     auto_archived_count = auto_archive_aged_preschoolers()
     if auto_archived_count > 0:
-        print(f"AUTO-ARCHIVED: {auto_archived_count} preschoolers in archived view")
+        print("AUTO-ARCHIVED: {auto_archived_count} preschoolers in archived view")
     
     # Get user info for barangay filtering (if not admin)
     user_email = request.session.get('email')
@@ -1455,13 +1455,13 @@ def archived(request):
             "id": p.preschooler_id,
             "first_name": p.first_name,
             "last_name": p.last_name,
-            "name": f"{p.first_name} {p.last_name}",
+            "name": "{p.first_name} {p.last_name}",
             "age": p.age_in_months if p.age_in_months else p.age,
-            "age_display": f"{p.age_in_months} months" if p.age_in_months else f"{p.age} years",
+            "age_display": "{p.age_in_months} months" if p.age_in_months else "{p.age} years",
             "barangay": p.barangay.name if p.barangay else "N/A",
             "gender": p.sex,
             "birthdate": str(p.birth_date),
-            "parent_name": f"{p.parent_id.first_name} {p.parent_id.last_name}" if p.parent_id else "N/A",
+            "parent_name": "{p.parent_id.first_name} {p.parent_id.last_name}" if p.parent_id else "N/A",
             "archived_date": p.date_registered.strftime("%Y-%m-%d") if p.date_registered else "N/A",
             "weight": "",
             "height": "",
@@ -1495,7 +1495,7 @@ def auto_archive_aged_preschoolers():
             preschooler.is_archived = True
             preschooler.save()
             
-            print(f"AUTO-ARCHIVED: {preschooler.first_name} {preschooler.last_name} - Age: {age_in_months} months")
+            print("AUTO-ARCHIVED: {preschooler.first_name} {preschooler.last_name} - Age: {age_in_months} months")
             archived_count += 1
     
     return archived_count
@@ -1534,7 +1534,7 @@ def dashboard(request):
     ).distinct().order_by('-created_at')
 
     parent_count = parent_accounts.count()
-    print(f"DEBUG Dashboard ({account.barangay}): Parent count = {parent_count}")
+    print("DEBUG Dashboard ({account.barangay}): Parent count = {parent_count}")
 
     # ✅ Nutritional Summary via WHO BMI-for-age Z-scores
     nutritional_summary = {
@@ -1584,7 +1584,7 @@ def dashboard(request):
                     nutritional_summary['obese'] += 1
 
             except Exception as e:
-                print(f"⚠️ BMI classification error for preschooler {p.id}: {e}")
+                print("⚠️ BMI classification error for preschooler {p.id}: {e}")
 
     # ✅ Calculate percentages
     nutritional_percentages = {}
@@ -1750,7 +1750,7 @@ def login(request):
                                 'is_active': True,
                             }
                         )
-                        print(f"✅ FCM token saved for {account.email}")
+                        print("✅ FCM token saved for {account.email}")
 
                     return redirect('dashboard')
 
@@ -1788,13 +1788,13 @@ def login(request):
                                 'is_active': True,
                             }
                         )
-                        print(f"✅ FCM token saved for {account.email}")
+                        print("✅ FCM token saved for {account.email}")
 
                     return redirect('parent_dashboard')
 
                 # ❌ Unknown role
                 else:
-                    messages.warning(request, f"Unknown user role: {account.user_role}. Please contact support.")
+                    messages.warning(request, "Unknown user role: {account.user_role}. Please contact support.")
                     return redirect('login')
 
             except Account.DoesNotExist:
@@ -1892,7 +1892,7 @@ def parent_dashboard(request):
                 z = bmi_zscore(p.sex, total_age_months, bmi_value)
                 bmi_status = classify_bmi_for_age(z)
             except Exception as e:
-                print(f"Error calculating BMI/Z-score for preschooler {p.id}: {e}")
+                print("Error calculating BMI/Z-score for preschooler {p.id}: {e}")
                 bmi_status = p.nutritional_status  # fallback
 
         preschoolers.append({
@@ -1905,7 +1905,7 @@ def parent_dashboard(request):
 
     # Show welcome message only once per session
     if not request.session.get('first_login_shown', False):
-        messages.success(request, f" Welcome, {account.full_name}!")    
+        messages.success(request, " Welcome, {account.full_name}!")    
         request.session['first_login_shown'] = True
 
     # ✅ FIXED: Filter upcoming schedules - only show 'scheduled' status
@@ -1924,7 +1924,7 @@ def parent_dashboard(request):
 
     return render(request, 'HTML/parent_dashboard.html', {
         'account': account,
-        'full_name': f"{account.first_name} {account.last_name}".strip(),
+        'full_name': "{account.first_name} {account.last_name}".strip(),
         'preschoolers': preschoolers,
         'upcoming_schedules': upcoming_schedules,
         'announcements': announcements,
@@ -1942,18 +1942,18 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
         # === Email notification ===
         if parent.email:
             try:
-                subject = f"[PPMS] Vaccination Scheduled for {preschooler.first_name}"
+                subject = "[PPMS] Vaccination Scheduled for {preschooler.first_name}"
                 message = (
-                    f"Dear {parent.full_name},\n\n"
-                    f"A vaccination appointment has been scheduled for your child, "
-                    f"{preschooler.first_name} {preschooler.last_name}.\n\n"
-                    f"Vaccine: {vaccine_name}\n"
-                    f"Dose: {dose_number} of {required_doses}\n"
-                    f"Scheduled Date: {immunization_date}\n"
-                    f"{f'Next Dose: {next_schedule}\n' if next_schedule else ''}"
-                    f"\nPlease bring your child on the scheduled date.\n"
-                    f"You can confirm completion on your dashboard.\n\n"
-                    f"Thank you,\nPPMS System"
+                    "Dear {parent.full_name},\n\n"
+                    "A vaccination appointment has been scheduled for your child, "
+                    "{preschooler.first_name} {preschooler.last_name}.\n\n"
+                    "Vaccine: {vaccine_name}\n"
+                    "Dose: {dose_number} of {required_doses}\n"
+                    "Scheduled Date: {immunization_date}\n"
+                    "{f'Next Dose: {next_schedule}\n' if next_schedule else ''}"
+                    "\nPlease bring your child on the scheduled date.\n"
+                    "You can confirm completion on your dashboard.\n\n"
+                    "Thank you,\nPPMS System"
                 )
 
                 send_mail(
@@ -1963,23 +1963,23 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
                     [parent.email],
                     fail_silently=False
                 )
-                logger.info(f"[ASYNC] Email sent to {parent.email}")
+                logger.info("[ASYNC] Email sent to {parent.email}")
             except Exception as email_error:
-                logger.error(f"[ASYNC] Email failed for {parent.email}: {email_error}")
+                logger.error("[ASYNC] Email failed for {parent.email}: {email_error}")
 
         # === Push notification ===
         if account and account.fcm_token:
             try:
-                notification_title = f"Vaccination Scheduled for {preschooler.first_name}"
+                notification_title = "Vaccination Scheduled for {preschooler.first_name}"
                 notification_body = (
-                    f"{vaccine_name} (Dose {dose_number}/{required_doses}) "
-                    f"scheduled for {immunization_date}"
+                    "{vaccine_name} (Dose {dose_number}/{required_doses}) "
+                    "scheduled for {immunization_date}"
                 )
 
                 notification_data = {
                     "type": "vaccination_schedule",
                     "preschooler_id": str(preschooler.preschooler_id),
-                    "preschooler_name": f"{preschooler.first_name} {preschooler.last_name}",
+                    "preschooler_name": "{preschooler.first_name} {preschooler.last_name}",
                     "vaccine_name": vaccine_name,
                     "dose_number": str(dose_number),
                     "total_doses": str(required_doses),
@@ -1987,7 +1987,7 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
                     "schedule_id": str(schedule.id)
                 }
 
-                logger.info(f"[ASYNC] Sending push to {parent.email}")
+                logger.info("[ASYNC] Sending push to {parent.email}")
                 PushNotificationService.send_push_notification(
                     token=account.fcm_token,
                     title=notification_title,
@@ -1995,25 +1995,25 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
                     data=notification_data
                 )
             except Exception as push_error:
-                logger.error(f"[ASYNC] Push failed for {parent.email}: {push_error}")
+                logger.error("[ASYNC] Push failed for {parent.email}: {push_error}")
         else:
-            logger.warning(f"[ASYNC] No FCM token found for {parent.email}")
+            logger.warning("[ASYNC] No FCM token found for {parent.email}")
 
     except Exception as e:
-        logger.error(f"[ASYNC] Notification error for {parent.email}: {e}")
+        logger.error("[ASYNC] Notification error for {parent.email}: {e}")
 
 
 @login_required
 def add_schedule(request, preschooler_id):
     """Add vaccination schedule with improved async notification handling"""
-    logger.info(f"[DEBUG] Entered add_schedule view for preschooler {preschooler_id}")
+    logger.info("[DEBUG] Entered add_schedule view for preschooler {preschooler_id}")
 
     try:
         from .models import Preschooler, VaccinationSchedule, Account
         preschooler = get_object_or_404(Preschooler, pk=preschooler_id)
-        logger.info(f"[DEBUG] Found preschooler: {preschooler.first_name} {preschooler.last_name}")
+        logger.info("[DEBUG] Found preschooler: {preschooler.first_name} {preschooler.last_name}")
     except Exception as e:
-        logger.error(f"[DEBUG] Error getting preschooler: {e}")
+        logger.error("[DEBUG] Error getting preschooler: {e}")
         messages.error(request, "Preschooler not found")
         return redirect(request.META.get("HTTP_REFERER", "/"))
 
@@ -2059,11 +2059,11 @@ def add_schedule(request, preschooler_id):
             status='scheduled',
             confirmed_by_parent=False
         )
-        logger.info(f"[DEBUG] VaccinationSchedule saved: {schedule.id}")
+        logger.info("[DEBUG] VaccinationSchedule saved: {schedule.id}")
 
         messages.success(
             request,
-            f"Vaccination schedule for {vaccine_name} (Dose {dose_number}) added successfully!"
+            "Vaccination schedule for {vaccine_name} (Dose {dose_number}) added successfully!"
         )
 
         # === Fire off async notifications ===
@@ -2076,8 +2076,8 @@ def add_schedule(request, preschooler_id):
             ).start()
 
     except Exception as e:
-        logger.error(f"[ERROR] Failed to save schedule or notify: {e}")
-        messages.error(request, f"Error: {str(e)}")
+        logger.error("[ERROR] Failed to save schedule or notify: {e}")
+        messages.error(request, "Error: {str(e)}")
 
     return redirect(request.META.get("HTTP_REFERER", "/"))
 
@@ -2092,35 +2092,35 @@ def send_nutrition_notifications_async(parents, preschooler, service_type, dose_
             # === Email Notification ===
             if parent.email:
                 try:
-                    subject = f"[PPMS] Nutrition Service Scheduled for {preschooler.first_name}"
+                    subject = "[PPMS] Nutrition Service Scheduled for {preschooler.first_name}"
                     message = (
-                        f"Dear {parent.full_name},\n\n"
-                        f"A nutrition service appointment has been scheduled for your child, "
-                        f"{preschooler.first_name} {preschooler.last_name}.\n\n"
-                        f"Service Type: {service_type}\n"
-                        f"Dose: {dose_number} of {total_doses}\n"
-                        f"Scheduled Date: {service_date}\n"
-                        f"{f'Notes: {notes}\n' if notes else ''}"
-                        f"\nPlease bring your child on the scheduled date.\n"
-                        f"You can confirm completion on your dashboard.\n\n"
-                        f"Thank you,\nPPMS System"
+                        "Dear {parent.full_name},\n\n"
+                        "A nutrition service appointment has been scheduled for your child, "
+                        "{preschooler.first_name} {preschooler.last_name}.\n\n"
+                        "Service Type: {service_type}\n"
+                        "Dose: {dose_number} of {total_doses}\n"
+                        "Scheduled Date: {service_date}\n"
+                        "{f'Notes: {notes}\n' if notes else ''}"
+                        "\nPlease bring your child on the scheduled date.\n"
+                        "You can confirm completion on your dashboard.\n\n"
+                        "Thank you,\nPPMS System"
                     )
                     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [parent.email], fail_silently=False)
-                    logger.info(f"[ASYNC] Nutrition email sent to {parent.email}")
+                    logger.info("[ASYNC] Nutrition email sent to {parent.email}")
                 except Exception as e:
-                    logger.error(f"[ASYNC] Failed to send nutrition email to {parent.email}: {e}")
+                    logger.error("[ASYNC] Failed to send nutrition email to {parent.email}: {e}")
 
             # === Push Notification ===
             try:
                 account = Account.objects.filter(email=parent.email).first()
                 if account and account.fcm_token:
                     service_emoji = "🍎" if service_type == "Vitamin A" else "💊"
-                    title = f"{service_emoji} Nutrition Service Scheduled for {preschooler.first_name}"
-                    body = f"{service_type} (Dose {dose_number}/{total_doses}) scheduled for {service_date}"
+                    title = "{service_emoji} Nutrition Service Scheduled for {preschooler.first_name}"
+                    body = "{service_type} (Dose {dose_number}/{total_doses}) scheduled for {service_date}"
                     data = {
                         "type": "nutrition_service_schedule",
                         "preschooler_id": str(preschooler.preschooler_id),
-                        "preschooler_name": f"{preschooler.first_name} {preschooler.last_name}",
+                        "preschooler_name": "{preschooler.first_name} {preschooler.last_name}",
                         "service_type": service_type,
                         "dose_number": str(dose_number),
                         "total_doses": str(total_doses),
@@ -2134,14 +2134,14 @@ def send_nutrition_notifications_async(parents, preschooler, service_type, dose_
                         body=body,
                         data=data
                     )
-                    logger.info(f"[ASYNC] Nutrition push sent to {parent.email}")
+                    logger.info("[ASYNC] Nutrition push sent to {parent.email}")
                 else:
-                    logger.warning(f"[ASYNC] No FCM token for {parent.email}")
+                    logger.warning("[ASYNC] No FCM token for {parent.email}")
             except Exception as e:
-                logger.error(f"[ASYNC] Failed to send nutrition push to {parent.email}: {e}")
+                logger.error("[ASYNC] Failed to send nutrition push to {parent.email}: {e}")
 
         except Exception as e:
-            logger.error(f"[ASYNC] Error handling parent {parent.email}: {e}")
+            logger.error("[ASYNC] Error handling parent {parent.email}: {e}")
 
 
 @login_required
@@ -2149,12 +2149,12 @@ def schedule_nutrition_service(request, preschooler_id):
     """Schedule nutrition service with async push/email notifications"""
     from .models import Preschooler, NutritionService
 
-    logger.info(f"[DEBUG] Entered schedule_nutrition_service view for preschooler {preschooler_id}")
+    logger.info("[DEBUG] Entered schedule_nutrition_service view for preschooler {preschooler_id}")
     try:
         preschooler = get_object_or_404(Preschooler, pk=preschooler_id)
-        logger.info(f"[DEBUG] Found preschooler: {preschooler.first_name} {preschooler.last_name}")
+        logger.info("[DEBUG] Found preschooler: {preschooler.first_name} {preschooler.last_name}")
     except Exception as e:
-        logger.error(f"[DEBUG] Error getting preschooler: {e}")
+        logger.error("[DEBUG] Error getting preschooler: {e}")
         messages.error(request, "Preschooler not found")
         return redirect(request.META.get("HTTP_REFERER", "/"))
 
@@ -2195,11 +2195,11 @@ def schedule_nutrition_service(request, preschooler_id):
             notes=notes,
             confirmed_by_parent=False
         )
-        logger.info(f"[DEBUG] NutritionService saved: {schedule.id}")
+        logger.info("[DEBUG] NutritionService saved: {schedule.id}")
 
         messages.success(
             request,
-            f"Nutrition service schedule for {service_type} (Dose {dose_number}) added successfully!"
+            "Nutrition service schedule for {service_type} (Dose {dose_number}) added successfully!"
         )
 
         # === Async notifications ===
@@ -2213,8 +2213,8 @@ def schedule_nutrition_service(request, preschooler_id):
             logger.warning("No parents found for this preschooler")
 
     except Exception as e:
-        logger.error(f"[ERROR] Failed to save nutrition schedule or send notifications: {e}")
-        messages.error(request, f"Error: {str(e)}")
+        logger.error("[ERROR] Failed to save nutrition schedule or send notifications: {e}")
+        messages.error(request, "Error: {str(e)}")
 
     return redirect(request.META.get("HTTP_REFERER", "/"))
 
@@ -2236,7 +2236,7 @@ def update_nutrition_status(request, schedule_id):
         schedule = get_object_or_404(NutritionService, id=schedule_id)
         preschooler = schedule.preschooler
         
-        logger.info(f"[DEBUG] Updating nutrition status for schedule {schedule_id} to {status}")
+        logger.info("[DEBUG] Updating nutrition status for schedule {schedule_id} to {status}")
         
         if status == 'completed':
             from django.utils import timezone
@@ -2255,7 +2255,7 @@ def update_nutrition_status(request, schedule_id):
             needs_next_dose = completed_doses < total_doses
             fully_completed = completed_doses >= total_doses
             
-            logger.info(f"[DEBUG] Completed doses: {completed_doses}/{total_doses}")
+            logger.info("[DEBUG] Completed doses: {completed_doses}/{total_doses}")
             
             # === Run notifications asynchronously ===
             if enhanced_notifications:
@@ -2266,25 +2266,25 @@ def update_nutrition_status(request, schedule_id):
                         if parent.email:
                             try:
                                 if fully_completed:
-                                    subject = f"[PPMS] {schedule.service_type} Treatment Complete for {preschooler.first_name}"
+                                    subject = "[PPMS] {schedule.service_type} Treatment Complete for {preschooler.first_name}"
                                     message = (
-                                        f"Dear {parent.full_name},\n\n"
-                                        f"Congratulations! Your child {preschooler.first_name} {preschooler.last_name} "
-                                        f"has completed all {total_doses} doses of {schedule.service_type}.\n\n"
-                                        f"Treatment completed on: {schedule.completion_date.strftime('%B %d, %Y at %I:%M %p')}\n\n"
-                                        f"Thank you for ensuring your child received proper nutrition care.\n\n"
-                                        f"PPMS System"
+                                        "Dear {parent.full_name},\n\n"
+                                        "Congratulations! Your child {preschooler.first_name} {preschooler.last_name} "
+                                        "has completed all {total_doses} doses of {schedule.service_type}.\n\n"
+                                        "Treatment completed on: {schedule.completion_date.strftime('%B %d, %Y at %I:%M %p')}\n\n"
+                                        "Thank you for ensuring your child received proper nutrition care.\n\n"
+                                        "PPMS System"
                                     )
                                 else:
-                                    subject = f"[PPMS] {schedule.service_type} Dose Completed for {preschooler.first_name}"
+                                    subject = "[PPMS] {schedule.service_type} Dose Completed for {preschooler.first_name}"
                                     message = (
-                                        f"Dear {parent.full_name},\n\n"
-                                        f"Your child {preschooler.first_name} {preschooler.last_name} "
-                                        f"has received dose {completed_doses} of {total_doses} "
-                                        f"for {schedule.service_type}.\n\n"
-                                        f"Completed on: {schedule.completion_date.strftime('%B %d, %Y at %I:%M %p')}\n\n"
-                                        f"Remaining doses needed: {total_doses - completed_doses}\n\n"
-                                        f"Thank you,\nPPMS System"
+                                        "Dear {parent.full_name},\n\n"
+                                        "Your child {preschooler.first_name} {preschooler.last_name} "
+                                        "has received dose {completed_doses} of {total_doses} "
+                                        "for {schedule.service_type}.\n\n"
+                                        "Completed on: {schedule.completion_date.strftime('%B %d, %Y at %I:%M %p')}\n\n"
+                                        "Remaining doses needed: {total_doses - completed_doses}\n\n"
+                                        "Thank you,\nPPMS System"
                                     )
 
                                 send_mail(
@@ -2294,9 +2294,9 @@ def update_nutrition_status(request, schedule_id):
                                     [parent.email], 
                                     fail_silently=False
                                 )
-                                logger.info(f"[DEBUG] Email sent to {parent.email}")
+                                logger.info("[DEBUG] Email sent to {parent.email}")
                             except Exception as email_error:
-                                logger.error(f"[DEBUG] Email sending failed: {email_error}")
+                                logger.error("[DEBUG] Email sending failed: {email_error}")
                         
                         # --- PUSH ---
                         try:
@@ -2305,16 +2305,16 @@ def update_nutrition_status(request, schedule_id):
                                 service_emoji = "🍎" if schedule.service_type == "Vitamin A" else "💊"
                                 
                                 if fully_completed:
-                                    notification_title = f"🏆 {schedule.service_type} Treatment Complete!"
-                                    notification_body = f"{preschooler.first_name} completed all {total_doses} doses"
+                                    notification_title = "🏆 {schedule.service_type} Treatment Complete!"
+                                    notification_body = "{preschooler.first_name} completed all {total_doses} doses"
                                 else:
-                                    notification_title = f"{service_emoji} {schedule.service_type} Dose Complete"
-                                    notification_body = f"Dose {completed_doses}/{total_doses} completed for {preschooler.first_name}"
+                                    notification_title = "{service_emoji} {schedule.service_type} Dose Complete"
+                                    notification_body = "Dose {completed_doses}/{total_doses} completed for {preschooler.first_name}"
                                 
                                 notification_data = {
                                     "type": "nutrition_service_completed",
                                     "preschooler_id": str(preschooler.preschooler_id),
-                                    "preschooler_name": f"{preschooler.first_name} {preschooler.last_name}",
+                                    "preschooler_name": "{preschooler.first_name} {preschooler.last_name}",
                                     "service_type": schedule.service_type,
                                     "completed_doses": str(completed_doses),
                                     "total_doses": str(total_doses),
@@ -2328,9 +2328,9 @@ def update_nutrition_status(request, schedule_id):
                                     body=notification_body,
                                     data=notification_data
                                 )
-                                logger.info(f"[DEBUG] Push result: {push_result}")
+                                logger.info("[DEBUG] Push result: {push_result}")
                         except Exception as push_error:
-                            logger.error(f"[DEBUG] Push error: {push_error}")
+                            logger.error("[DEBUG] Push error: {push_error}")
 
                 # 🔹 Run notifications in a background thread
                 threading.Thread(target=send_notifications, daemon=True).start()
@@ -2372,7 +2372,7 @@ def update_nutrition_status(request, schedule_id):
             })
             
     except Exception as e:
-        logger.error(f"[ERROR] Failed to update nutrition status: {e}")
+        logger.error("[ERROR] Failed to update nutrition status: {e}")
         return JsonResponse({
             'success': False,
             'message': f'Error updating status: {str(e)}'
@@ -2381,7 +2381,7 @@ def update_nutrition_status(request, schedule_id):
 @login_required
 def reschedule_nutrition_service(request, schedule_id):
     """Reschedule nutrition service with async push/email notification handling"""
-    logger.info(f"[DEBUG] Entered reschedule_nutrition_service view for schedule {schedule_id}")
+    logger.info("[DEBUG] Entered reschedule_nutrition_service view for schedule {schedule_id}")
 
     if request.method != "POST":
         return JsonResponse({"success": False, "message": "Invalid request method"})
@@ -2396,7 +2396,7 @@ def reschedule_nutrition_service(request, schedule_id):
         reschedule_reason = data.get('reschedule_reason', '')
         enhanced_notifications = data.get('enhanced_notifications', False)
         
-        logger.info(f"[DEBUG] Reschedule data: new_date={new_date}, reason={reschedule_reason}, enhanced={enhanced_notifications}")
+        logger.info("[DEBUG] Reschedule data: new_date={new_date}, reason={reschedule_reason}, enhanced={enhanced_notifications}")
 
         # Get the nutrition service schedule
         schedule = get_object_or_404(NutritionService, pk=schedule_id)
@@ -2413,8 +2413,8 @@ def reschedule_nutrition_service(request, schedule_id):
         # Update the schedule
         schedule.scheduled_date = new_date
         schedule.status = 'rescheduled'
-        reschedule_info = f"Rescheduled from {old_date} to {new_date}. Reason: {reschedule_reason}"
-        schedule.notes = f"{(schedule.notes + '; ') if schedule.notes else ''}{reschedule_info}"
+        reschedule_info = "Rescheduled from {old_date} to {new_date}. Reason: {reschedule_reason}"
+        schedule.notes = "{(schedule.notes + '; ') if schedule.notes else ''}{reschedule_info}"
         schedule.save()
         
         logger.info("[DEBUG] Schedule updated successfully")
@@ -2423,26 +2423,26 @@ def reschedule_nutrition_service(request, schedule_id):
         if enhanced_notifications:
             def send_notifications():
                 parents = preschooler.parents.all()
-                logger.info(f"[DEBUG] Found {parents.count()} parent(s) for reschedule notifications")
+                logger.info("[DEBUG] Found {parents.count()} parent(s) for reschedule notifications")
                 
                 for parent in parents:
-                    logger.info(f"[DEBUG] Processing notifications for parent: {parent.full_name} ({parent.email})")
+                    logger.info("[DEBUG] Processing notifications for parent: {parent.full_name} ({parent.email})")
 
                     # --- EMAIL ---
                     if parent.email:
                         try:
-                            subject = f"[PPMS] Nutrition Service Rescheduled for {preschooler.first_name}"
+                            subject = "[PPMS] Nutrition Service Rescheduled for {preschooler.first_name}"
                             message = (
-                                f"Dear {parent.full_name},\n\n"
-                                f"The nutrition service appointment for your child, "
-                                f"{preschooler.first_name} {preschooler.last_name}, has been rescheduled.\n\n"
-                                f"Service Type: {schedule.service_type}\n"
-                                f"Original Date: {old_date}\n"
-                                f"New Date: {new_date}\n"
-                                f"Reason: {reschedule_reason}\n"
-                                f"\nPlease bring your child on the new scheduled date.\n"
-                                f"You can view the updated schedule on your dashboard.\n\n"
-                                f"Thank you for your understanding,\nPPMS System"
+                                "Dear {parent.full_name},\n\n"
+                                "The nutrition service appointment for your child, "
+                                "{preschooler.first_name} {preschooler.last_name}, has been rescheduled.\n\n"
+                                "Service Type: {schedule.service_type}\n"
+                                "Original Date: {old_date}\n"
+                                "New Date: {new_date}\n"
+                                "Reason: {reschedule_reason}\n"
+                                "\nPlease bring your child on the new scheduled date.\n"
+                                "You can view the updated schedule on your dashboard.\n\n"
+                                "Thank you for your understanding,\nPPMS System"
                             )
                             
                             send_mail(
@@ -2452,24 +2452,24 @@ def reschedule_nutrition_service(request, schedule_id):
                                 [parent.email], 
                                 fail_silently=False
                             )
-                            logger.info(f"[DEBUG] Reschedule email sent to {parent.email}")
+                            logger.info("[DEBUG] Reschedule email sent to {parent.email}")
                         except Exception as email_error:
-                            logger.error(f"[DEBUG] Reschedule email failed: {email_error}")
+                            logger.error("[DEBUG] Reschedule email failed: {email_error}")
 
                     # --- PUSH ---
                     try:
                         account = Account.objects.filter(email=parent.email).first()
                         if account and account.fcm_token:
                             service_emoji = "🍎" if schedule.service_type == "Vitamin A" else "💊"
-                            notification_title = f"{service_emoji} Nutrition Service Rescheduled"
+                            notification_title = "{service_emoji} Nutrition Service Rescheduled"
                             notification_body = (
-                                f"{schedule.service_type} for {preschooler.first_name} moved to {new_date}"
+                                "{schedule.service_type} for {preschooler.first_name} moved to {new_date}"
                             )
                             
                             notification_data = {
                                 "type": "nutrition_service_reschedule",
                                 "preschooler_id": str(preschooler.preschooler_id),
-                                "preschooler_name": f"{preschooler.first_name} {preschooler.last_name}",
+                                "preschooler_name": "{preschooler.first_name} {preschooler.last_name}",
                                 "service_type": schedule.service_type,
                                 "old_date": str(old_date),
                                 "new_date": str(new_date),
@@ -2483,11 +2483,11 @@ def reschedule_nutrition_service(request, schedule_id):
                                 body=notification_body,
                                 data=notification_data
                             )
-                            logger.info(f"[DEBUG] Push notification result for {parent.email}: {push_result}")
+                            logger.info("[DEBUG] Push notification result for {parent.email}: {push_result}")
                         else:
-                            logger.warning(f"[DEBUG] No FCM token found for parent {parent.email}")
+                            logger.warning("[DEBUG] No FCM token found for parent {parent.email}")
                     except Exception as push_error:
-                        logger.error(f"[DEBUG] Push error for {parent.email}: {push_error}")
+                        logger.error("[DEBUG] Push error for {parent.email}: {push_error}")
 
             # 🔹 Launch async thread for notifications
             threading.Thread(target=send_notifications, daemon=True).start()
@@ -2495,28 +2495,28 @@ def reschedule_nutrition_service(request, schedule_id):
         # Return response immediately
         return JsonResponse({
             "success": True,
-            "message": f"{schedule.service_type} successfully rescheduled to {new_date}",
+            "message": "{schedule.service_type} successfully rescheduled to {new_date}",
             "new_date": new_date,
             "reschedule_reason": reschedule_reason
         })
 
     except Exception as e:
-        logger.error(f"[ERROR] Failed to reschedule nutrition service: {e}")
+        logger.error("[ERROR] Failed to reschedule nutrition service: {e}")
         return JsonResponse({
             "success": False,
-            "message": f"Error rescheduling service: {str(e)}"
+            "message": "Error rescheduling service: {str(e)}"
         })
 @login_required
 def add_nutrition_service(request, preschooler_id):
     """Add completed nutrition service with notifications"""
-    logger.info(f"[DEBUG] Entered add_nutrition_service view for preschooler {preschooler_id}")
+    logger.info("[DEBUG] Entered add_nutrition_service view for preschooler {preschooler_id}")
 
     try:
         from .models import Preschooler, NutritionHistory, Account
         preschooler = get_object_or_404(Preschooler, pk=preschooler_id)
-        logger.info(f"[DEBUG] Found preschooler: {preschooler.first_name} {preschooler.last_name}")
+        logger.info("[DEBUG] Found preschooler: {preschooler.first_name} {preschooler.last_name}")
     except Exception as e:
-        logger.error(f"[DEBUG] Error getting preschooler: {e}")
+        logger.error("[DEBUG] Error getting preschooler: {e}")
         messages.error(request, "Preschooler not found")
         return redirect(request.META.get("HTTP_REFERER", "/"))
 
@@ -2529,10 +2529,10 @@ def add_nutrition_service(request, preschooler_id):
     completion_date = request.POST.get("completion_date")
     notes = request.POST.get("notes", "")
 
-    logger.info(f"[DEBUG] Form data:")
-    logger.info(f"[DEBUG]   service_type: {service_type}")
-    logger.info(f"[DEBUG]   completion_date: {completion_date}")
-    logger.info(f"[DEBUG]   notes: {notes}")
+    logger.info("[DEBUG] Form data:")
+    logger.info("[DEBUG]   service_type: {service_type}")
+    logger.info("[DEBUG]   completion_date: {completion_date}")
+    logger.info("[DEBUG]   notes: {notes}")
 
     # Validate required fields
     if not service_type or not completion_date:
@@ -2559,50 +2559,50 @@ def add_nutrition_service(request, preschooler_id):
             status='completed',
             dose_number=dose_number
         )
-        logger.info(f"[DEBUG] NutritionHistory saved: {nutrition_history.id}")
+        logger.info("[DEBUG] NutritionHistory saved: {nutrition_history.id}")
         
         messages.success(
             request,
-            f"Nutrition service {service_type} (Dose {dose_number}) added successfully!"
+            "Nutrition service {service_type} (Dose {dose_number}) added successfully!"
         )
 
         # === SEND COMPLETION NOTIFICATIONS ===
         parents = preschooler.parents.all()
-        logger.info(f"[DEBUG] Found {parents.count()} parent(s) for completion notification")
+        logger.info("[DEBUG] Found {parents.count()} parent(s) for completion notification")
         
         for parent in parents:
             # Send email
             if parent.email:
                 try:
-                    subject = f"[PPMS] Nutrition Service Completed for {preschooler.first_name}"
+                    subject = "[PPMS] Nutrition Service Completed for {preschooler.first_name}"
                     message = (
-                        f"Dear {parent.full_name},\n\n"
-                        f"A nutrition service has been completed for your child, "
-                        f"{preschooler.first_name} {preschooler.last_name}.\n\n"
-                        f"Service: {service_type}\n"
-                        f"Dose: {dose_number}\n"
-                        f"Completion Date: {completion_date}\n"
-                        f"{f'Notes: {notes}\n' if notes else ''}"
-                        f"\nThank you,\nPPMS System"
+                        "Dear {parent.full_name},\n\n"
+                        "A nutrition service has been completed for your child, "
+                        "{preschooler.first_name} {preschooler.last_name}.\n\n"
+                        "Service: {service_type}\n"
+                        "Dose: {dose_number}\n"
+                        "Completion Date: {completion_date}\n"
+                        "{f'Notes: {notes}\n' if notes else ''}"
+                        "\nThank you,\nPPMS System"
                     )
                     
                     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [parent.email], fail_silently=False)
-                    logger.info(f"[DEBUG] Completion email sent to parent {parent.email}")
+                    logger.info("[DEBUG] Completion email sent to parent {parent.email}")
                 except Exception as email_error:
-                    logger.error(f"[DEBUG] Completion email sending failed: {email_error}")
+                    logger.error("[DEBUG] Completion email sending failed: {email_error}")
 
             # Send push notification
             try:
                 account = Account.objects.filter(email=parent.email).first()
                 if account and account.fcm_token:
                     nutrition_icon = "✅🍎" if service_type == "Vitamin A" else "✅💊"
-                    notification_title = f"{nutrition_icon} Nutrition Service Completed"
-                    notification_body = f"{service_type} completed for {preschooler.first_name}"
+                    notification_title = "{nutrition_icon} Nutrition Service Completed"
+                    notification_body = "{service_type} completed for {preschooler.first_name}"
                     
                     notification_data = {
                         "type": "nutrition_completed",
                         "preschooler_id": str(preschooler.preschooler_id),
-                        "preschooler_name": f"{preschooler.first_name} {preschooler.last_name}",
+                        "preschooler_name": "{preschooler.first_name} {preschooler.last_name}",
                         "service_type": service_type,
                         "dose_number": str(dose_number),
                         "completion_date": str(completion_date)
@@ -2616,16 +2616,16 @@ def add_nutrition_service(request, preschooler_id):
                     )
                     
                     if push_result.get("success"):
-                        logger.info(f"[DEBUG] Completion push notification sent to {parent.email}")
+                        logger.info("[DEBUG] Completion push notification sent to {parent.email}")
                     else:
-                        logger.error(f"[DEBUG] Completion push notification failed for {parent.email}")
+                        logger.error("[DEBUG] Completion push notification failed for {parent.email}")
                         
             except Exception as push_error:
-                logger.error(f"[DEBUG] Error sending completion push notification: {push_error}")
+                logger.error("[DEBUG] Error sending completion push notification: {push_error}")
 
     except Exception as e:
-        logger.error(f"[ERROR] Failed to save nutrition history: {e}")
-        messages.error(request, f"Error: {str(e)}")
+        logger.error("[ERROR] Failed to save nutrition history: {e}")
+        messages.error(request, "Error: {str(e)}")
 
     return redirect(request.META.get("HTTP_REFERER", "/"))
 
@@ -2668,7 +2668,7 @@ def confirm_schedule(request, schedule_id):
                 confirmed_by_parent=False
             )
             print("[DEBUG] ➕ Created next dose schedule:", next_schedule)
-            messages.success(request, f"Dose {schedule.doses} confirmed. ✅ Next dose scheduled.")
+            messages.success(request, "Dose {schedule.doses} confirmed. ✅ Next dose scheduled.")
         else:
             print("[DEBUG] ⛔ Skipped creating duplicate schedule")
     else:
@@ -2825,7 +2825,7 @@ def parents_mypreschooler(request, preschooler_id):
             z = bmi_zscore(preschooler.sex, total_age_months, bmi_value)
             weight_height_for_age_status = classify_bmi_for_age(z)
         except Exception as e:
-            print(f"⚠️ BMI calculation error for preschooler {preschooler.id}: {e}")
+            print("⚠️ BMI calculation error for preschooler {preschooler.id}: {e}")
             weight_height_for_age_status = preschooler.nutritional_status or "N/A"
 
     # --- Get immunization history (detailed per dose with numbering) ---
@@ -2842,7 +2842,7 @@ def parents_mypreschooler(request, preschooler_id):
         
         immunization_history.append({
             'vaccine_name': record.vaccine_name,
-            'doses': f"{vaccine_dose_counter[record.vaccine_name]}/{record.required_doses}",
+            'doses': "{vaccine_dose_counter[record.vaccine_name]}/{record.required_doses}",
             'given_date': record.scheduled_date,  # or record.completion_date
         })
 
@@ -3036,7 +3036,7 @@ def preschooler_detail(request, preschooler_id):
     # AUTO-ARCHIVE CHECK - Run before showing preschooler details
     auto_archived_count = auto_archive_aged_preschoolers()
     if auto_archived_count > 0:
-        print(f"AUTO-ARCHIVED: {auto_archived_count} preschoolers during detail view")
+        print("AUTO-ARCHIVED: {auto_archived_count} preschoolers during detail view")
     
     # Get preschooler or 404 if not found or archived
     preschooler = get_object_or_404(Preschooler, preschooler_id=preschooler_id, is_archived=False)
@@ -3045,7 +3045,7 @@ def preschooler_detail(request, preschooler_id):
     if preschooler.age_in_months and preschooler.age_in_months >= 60:
         preschooler.is_archived = True
         preschooler.save()
-        messages.warning(request, f"{preschooler.first_name} {preschooler.last_name} has been automatically archived as they have exceeded the preschooler age limit (60 months).")
+        messages.warning(request, "{preschooler.first_name} {preschooler.last_name} has been automatically archived as they have exceeded the preschooler age limit (60 months).")
         return redirect('preschoolers')
     
     bmi = preschooler.bmi_set.order_by('-date_recorded').first()
@@ -3094,7 +3094,7 @@ def preschooler_detail(request, preschooler_id):
             z = bmi_zscore(preschooler.sex, total_age_months, bmi.bmi_value)
             nutritional_status = classify_bmi_for_age(z)
         except Exception as e:
-            print(f"Error during BMI classification: {e}")
+            print("Error during BMI classification: {e}")
             nutritional_status = "Error"
 
     # Define standard vaccines with corrected doses based on your requirements
@@ -3178,12 +3178,12 @@ def preschooler_detail(request, preschooler_id):
         record.dose_number = vaccine_dose_counter[record.vaccine_name]
 
     # Debug: Print what we're sending to template
-    print(f"DEBUG - Completed vaccinations: {immunization_history.count()}")
-    print(f"DEBUG - Pending schedules: {pending_schedules.count()}")
+    print("DEBUG - Completed vaccinations: {immunization_history.count()}")
+    print("DEBUG - Pending schedules: {pending_schedules.count()}")
     for record in immunization_history:
-        print(f"  Completed: {record.vaccine_name} - {record.status} - {record.completion_date}")
+        print("  Completed: {record.vaccine_name} - {record.status} - {record.completion_date}")
     for record in pending_schedules:
-        print(f"  Pending: {record.vaccine_name} - {record.status} - {record.scheduled_date}")
+        print("  Pending: {record.vaccine_name} - {record.status} - {record.scheduled_date}")
 
     # Enhanced nutrition services handling
     try:
@@ -3343,7 +3343,7 @@ def get_nutrition_eligibility(preschooler, service_type):
         
         # Calculate months since last service
         months_since_last = (today - last_service_date).days // 30
-        print(f"DEBUG: {service_type} - Last service: {last_service_date}, Months since: {months_since_last}")
+        print("DEBUG: {service_type} - Last service: {last_service_date}, Months since: {months_since_last}")
         
         # Must wait at least 6 months
         if months_since_last < 6:
@@ -3484,12 +3484,12 @@ def get_enhanced_nutrition_status(preschooler, service_type, total_doses):
     }
     
     # Debug logging
-    print(f"DEBUG: {service_type} Status:")
-    print(f"  - Completed doses: {completed_count}")
-    print(f"  - Current status: {current_status}")
-    print(f"  - Can schedule: {eligibility['can_schedule']}")
-    print(f"  - Eligibility reason: {eligibility['reason']}")
-    print(f"  - Age description: {eligibility['description']}")
+    print("DEBUG: {service_type} Status:")
+    print("  - Completed doses: {completed_count}")
+    print("  - Current status: {current_status}")
+    print("  - Can schedule: {eligibility['can_schedule']}")
+    print("  - Eligibility reason: {eligibility['reason']}")
+    print("  - Age description: {eligibility['description']}")
     
     return enhanced_status
     
@@ -3513,11 +3513,11 @@ def add_nutrition_service(request, preschooler_id):
                 notes=notes
             )
             
-            messages.success(request, f"{service_type} recorded successfully.")
+            messages.success(request, "{service_type} recorded successfully.")
             return redirect('preschooler_detail', preschooler_id=preschooler_id)
             
         except Exception as e:
-            messages.error(request, f"Error recording nutrition service: {str(e)}")
+            messages.error(request, "Error recording nutrition service: {str(e)}")
             return redirect('preschooler_detail', preschooler_id=preschooler_id)
     
     return redirect('preschooler_detail', preschooler_id=preschooler_id)
@@ -3535,50 +3535,50 @@ def send_completion_notifications_async(parents, preschooler, schedule, complete
             if parent.email:
                 try:
                     if completed_count >= required_doses:
-                        subject = f"[PPMS] {schedule.vaccine_name} Vaccination Complete for {preschooler.first_name}"
+                        subject = "[PPMS] {schedule.vaccine_name} Vaccination Complete for {preschooler.first_name}"
                         message = (
-                            f"Dear {parent.full_name},\n\n"
-                            f"Great news! Your child {preschooler.first_name} {preschooler.last_name} "
-                            f"has completed all {required_doses} doses of {schedule.vaccine_name}.\n\n"
-                            f"Vaccination completed on: {schedule.completion_date.strftime('%B %d, %Y at %I:%M %p')}\n"
-                            f"Total doses completed: {completed_count}/{required_doses}\n\n"
-                            f"Your child is now fully protected against this disease.\n\n"
-                            f"Thank you for keeping your child's vaccinations up to date!\n\n"
-                            f"PPMS System"
+                            "Dear {parent.full_name},\n\n"
+                            "Great news! Your child {preschooler.first_name} {preschooler.last_name} "
+                            "has completed all {required_doses} doses of {schedule.vaccine_name}.\n\n"
+                            "Vaccination completed on: {schedule.completion_date.strftime('%B %d, %Y at %I:%M %p')}\n"
+                            "Total doses completed: {completed_count}/{required_doses}\n\n"
+                            "Your child is now fully protected against this disease.\n\n"
+                            "Thank you for keeping your child's vaccinations up to date!\n\n"
+                            "PPMS System"
                         )
                     else:
-                        subject = f"[PPMS] {schedule.vaccine_name} Dose Completed for {preschooler.first_name}"
+                        subject = "[PPMS] {schedule.vaccine_name} Dose Completed for {preschooler.first_name}"
                         message = (
-                            f"Dear {parent.full_name},\n\n"
-                            f"Your child {preschooler.first_name} {preschooler.last_name} "
-                            f"has received dose {completed_count} of {required_doses} for {schedule.vaccine_name}.\n\n"
-                            f"Vaccination completed on: {schedule.completion_date.strftime('%B %d, %Y at %I:%M %p')}\n"
-                            f"Progress: {completed_count}/{required_doses} doses completed\n"
-                            f"Remaining doses: {required_doses - completed_count}\n\n"
-                            f"Please ensure your child receives the remaining doses.\n\n"
-                            f"Thank you,\nPPMS System"
+                            "Dear {parent.full_name},\n\n"
+                            "Your child {preschooler.first_name} {preschooler.last_name} "
+                            "has received dose {completed_count} of {required_doses} for {schedule.vaccine_name}.\n\n"
+                            "Vaccination completed on: {schedule.completion_date.strftime('%B %d, %Y at %I:%M %p')}\n"
+                            "Progress: {completed_count}/{required_doses} doses completed\n"
+                            "Remaining doses: {required_doses - completed_count}\n\n"
+                            "Please ensure your child receives the remaining doses.\n\n"
+                            "Thank you,\nPPMS System"
                         )
 
                     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [parent.email], fail_silently=False)
-                    logger.info(f"[ASYNC] Vaccination email sent to {parent.email}")
+                    logger.info("[ASYNC] Vaccination email sent to {parent.email}")
                 except Exception as e:
-                    logger.error(f"[ASYNC] Failed to send vaccination email to {parent.email}: {e}")
+                    logger.error("[ASYNC] Failed to send vaccination email to {parent.email}: {e}")
 
             # === Push Notification ===
             account = Account.objects.filter(email=parent.email).first()
             if account and account.fcm_token:
                 try:
                     if completed_count >= required_doses:
-                        title = f"🎉 {schedule.vaccine_name} Complete!"
-                        body = f"{preschooler.first_name} completed all {required_doses} doses"
+                        title = "🎉 {schedule.vaccine_name} Complete!"
+                        body = "{preschooler.first_name} completed all {required_doses} doses"
                     else:
-                        title = f"💉 {schedule.vaccine_name} Dose Complete"
-                        body = f"Dose {completed_count}/{required_doses} completed for {preschooler.first_name}"
+                        title = "💉 {schedule.vaccine_name} Dose Complete"
+                        body = "Dose {completed_count}/{required_doses} completed for {preschooler.first_name}"
 
                     data = {
                         "type": "vaccination_completed",
                         "preschooler_id": str(preschooler.preschooler_id),
-                        "preschooler_name": f"{preschooler.first_name} {preschooler.last_name}",
+                        "preschooler_name": "{preschooler.first_name} {preschooler.last_name}",
                         "vaccine_name": schedule.vaccine_name,
                         "completed_doses": str(completed_count),
                         "total_doses": str(required_doses),
@@ -3594,14 +3594,14 @@ def send_completion_notifications_async(parents, preschooler, schedule, complete
                         body=body,
                         data=data
                     )
-                    logger.info(f"[ASYNC] Vaccination push sent to {parent.email}")
+                    logger.info("[ASYNC] Vaccination push sent to {parent.email}")
                 except Exception as e:
-                    logger.error(f"[ASYNC] Failed to send push to {parent.email}: {e}")
+                    logger.error("[ASYNC] Failed to send push to {parent.email}: {e}")
             else:
-                logger.warning(f"[ASYNC] No FCM token for {parent.email}")
+                logger.warning("[ASYNC] No FCM token for {parent.email}")
 
         except Exception as e:
-            logger.error(f"[ASYNC] Error handling parent {parent.email}: {e}")
+            logger.error("[ASYNC] Error handling parent {parent.email}: {e}")
 
 
 @require_POST
@@ -3650,8 +3650,8 @@ def update_schedule_status(request, schedule_id):
             ).count()
 
             PreschoolerActivityLog.objects.create(
-                preschooler_name=f"{preschooler.first_name} {preschooler.last_name}",
-                activity=f"Vaccination completed: {schedule.vaccine_name} (Dose {current_dose})",
+                preschooler_name="{preschooler.first_name} {preschooler.last_name}",
+                activity="Vaccination completed: {schedule.vaccine_name} (Dose {current_dose})",
                 performed_by=request.user.username if request.user.is_authenticated else 'System',
                 barangay=schedule.preschooler.barangay
             )
@@ -3692,7 +3692,7 @@ def update_schedule_status(request, schedule_id):
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'message': 'Invalid JSON'})
     except Exception as e:
-        logger.error(f"[ERROR] update_schedule_status: {e}")
+        logger.error("[ERROR] update_schedule_status: {e}")
         return JsonResponse({'success': False, 'message': f'Error updating status: {str(e)}'})
 
 
@@ -3703,18 +3703,18 @@ def send_reschedule_notifications_async(parent, account, preschooler, schedule, 
         # === Email notification ===
         if parent.email:
             try:
-                subject = f"[PPMS] Vaccination Rescheduled for {preschooler.first_name}"
+                subject = "[PPMS] Vaccination Rescheduled for {preschooler.first_name}"
                 message = (
-                    f"Dear {parent.full_name},\n\n"
-                    f"The vaccination appointment for your child {preschooler.first_name} {preschooler.last_name} "
-                    f"has been rescheduled.\n\n"
-                    f"Vaccine: {schedule.vaccine_name}\n"
-                    f"Original Date: {old_date.strftime('%B %d, %Y')}\n"
-                    f"New Date: {new_date.strftime('%B %d, %Y')}\n"
-                    f"Reason: {reschedule_reason}\n\n"
-                    f"Please mark your calendar with the new appointment date.\n"
-                    f"If you have any questions, please contact the health center.\n\n"
-                    f"Thank you for your understanding,\nPPMS System"
+                    "Dear {parent.full_name},\n\n"
+                    "The vaccination appointment for your child {preschooler.first_name} {preschooler.last_name} "
+                    "has been rescheduled.\n\n"
+                    "Vaccine: {schedule.vaccine_name}\n"
+                    "Original Date: {old_date.strftime('%B %d, %Y')}\n"
+                    "New Date: {new_date.strftime('%B %d, %Y')}\n"
+                    "Reason: {reschedule_reason}\n\n"
+                    "Please mark your calendar with the new appointment date.\n"
+                    "If you have any questions, please contact the health center.\n\n"
+                    "Thank you for your understanding,\nPPMS System"
                 )
 
                 send_mail(
@@ -3724,24 +3724,24 @@ def send_reschedule_notifications_async(parent, account, preschooler, schedule, 
                     [parent.email],
                     fail_silently=False
                 )
-                logger.info(f"[ASYNC] Reschedule email sent to {parent.email}")
+                logger.info("[ASYNC] Reschedule email sent to {parent.email}")
             except Exception as email_error:
-                logger.error(f"[ASYNC] Reschedule email failed for {parent.email}: {email_error}")
+                logger.error("[ASYNC] Reschedule email failed for {parent.email}: {email_error}")
 
         # === Push notification ===
         if account and account.fcm_token:
             try:
-                notification_title = f"Vaccination Rescheduled - {preschooler.first_name}"
+                notification_title = "Vaccination Rescheduled - {preschooler.first_name}"
                 notification_body = (
-                    f"{schedule.vaccine_name} moved from {old_date.strftime('%b %d')} "
-                    f"to {new_date.strftime('%b %d, %Y')}. "
-                    f"Reason: {reschedule_reason}"
+                    "{schedule.vaccine_name} moved from {old_date.strftime('%b %d')} "
+                    "to {new_date.strftime('%b %d, %Y')}. "
+                    "Reason: {reschedule_reason}"
                 )
 
                 notification_data = {
                     "type": "vaccination_reschedule",
                     "preschooler_id": str(preschooler.preschooler_id),
-                    "preschooler_name": f"{preschooler.first_name} {preschooler.last_name}",
+                    "preschooler_name": "{preschooler.first_name} {preschooler.last_name}",
                     "vaccine_name": schedule.vaccine_name,
                     "old_date": str(old_date),
                     "new_date": str(new_date),
@@ -3755,14 +3755,14 @@ def send_reschedule_notifications_async(parent, account, preschooler, schedule, 
                     body=notification_body,
                     data=notification_data
                 )
-                logger.info(f"[ASYNC] Reschedule push sent to {parent.email}")
+                logger.info("[ASYNC] Reschedule push sent to {parent.email}")
             except Exception as push_error:
-                logger.error(f"[ASYNC] Reschedule push failed for {parent.email}: {push_error}")
+                logger.error("[ASYNC] Reschedule push failed for {parent.email}: {push_error}")
         else:
-            logger.warning(f"[ASYNC] No FCM token for {parent.email}")
+            logger.warning("[ASYNC] No FCM token for {parent.email}")
 
     except Exception as e:
-        logger.error(f"[ASYNC] Error in reschedule notification for {parent.email}: {e}")
+        logger.error("[ASYNC] Error in reschedule notification for {parent.email}: {e}")
 
 
 @require_POST
@@ -3787,11 +3787,11 @@ def reschedule_vaccination(request):
         schedule.reschedule_reason = reschedule_reason
         schedule.save()
 
-        logger.info(f"[DEBUG] Vaccination rescheduled: {schedule.vaccine_name} from {old_date} to {new_schedule_date}")
+        logger.info("[DEBUG] Vaccination rescheduled: {schedule.vaccine_name} from {old_date} to {new_schedule_date}")
 
         PreschoolerActivityLog.objects.create(
-            preschooler_name=f"{preschooler.first_name} {preschooler.last_name}",
-            activity=f"Vaccination rescheduled: {schedule.vaccine_name} from {old_date} to {new_schedule_date}",
+            preschooler_name="{preschooler.first_name} {preschooler.last_name}",
+            activity="Vaccination rescheduled: {schedule.vaccine_name} from {old_date} to {new_schedule_date}",
             performed_by=request.user.email if hasattr(request.user, 'email') else 'System',
             barangay=preschooler.barangay
         )
@@ -3811,7 +3811,7 @@ def reschedule_vaccination(request):
         )
 
     except Exception as e:
-        logger.error(f"[ERROR] Failed to reschedule vaccination: {e}")
+        logger.error("[ERROR] Failed to reschedule vaccination: {e}")
         messages.error(request, f'Error rescheduling vaccination: {str(e)}')
         return redirect(request.META.get('HTTP_REFERER', '/'))
 
@@ -3864,7 +3864,7 @@ def auto_archive_aged_preschoolers():
             preschooler.is_archived = True
             preschooler.save()
             
-            print(f"AUTO-ARCHIVED: {preschooler.first_name} {preschooler.last_name} - Age: {age_in_months} months")
+            print("AUTO-ARCHIVED: {preschooler.first_name} {preschooler.last_name} - Age: {age_in_months} months")
             archived_count += 1
     
     return archived_count
@@ -3874,10 +3874,10 @@ def preschoolers(request):
     user_email = request.session.get('email')
     raw_role = (request.session.get('user_role') or '').strip().lower()
 
-    print(f"=== PRESCHOOLERS VIEW DEBUG ===")
-    print(f"Email: '{user_email}'")
-    print(f"Raw Role: '{raw_role}'")
-    print(f"Session data: {dict(request.session)}")
+    print("=== PRESCHOOLERS VIEW DEBUG ===")
+    print("Email: '{user_email}'")
+    print("Raw Role: '{raw_role}'")
+    print("Session data: {dict(request.session)}")
 
     # Get current account
     account = get_object_or_404(Account, email=user_email)
@@ -3885,7 +3885,7 @@ def preschoolers(request):
     # AUTO-ARCHIVE CHECK - Run this every time the view is accessed
     auto_archived_count = auto_archive_aged_preschoolers()
     if auto_archived_count > 0:
-        print(f"AUTO-ARCHIVED: {auto_archived_count} preschoolers aged out (60+ months)")
+        print("AUTO-ARCHIVED: {auto_archived_count} preschoolers aged out (60+ months)")
 
     # Query preschoolers (now excluding newly auto-archived ones)
     if raw_role == 'admin':
@@ -3897,7 +3897,7 @@ def preschoolers(request):
             barangay=account.barangay
         )
         barangay_name = account.barangay.name if account.barangay else "No Barangay"
-        print(f"Showing preschoolers for barangay: {barangay_name}")
+        print("Showing preschoolers for barangay: {barangay_name}")
 
     preschoolers_qs = preschoolers_qs.select_related('parent_id', 'barangay') \
         .prefetch_related(
@@ -3905,7 +3905,7 @@ def preschoolers(request):
             Prefetch('temperature_set', queryset=Temperature.objects.order_by('-date_recorded'), to_attr='temp_records')
         )
 
-    print(f"Found {preschoolers_qs.count()} preschoolers")
+    print("Found {preschoolers_qs.count()} preschoolers")
 
     # Pagination
     paginator = Paginator(preschoolers_qs, 10)
@@ -3931,14 +3931,14 @@ def preschoolers(request):
                 z = bmi_zscore(p.sex, total_age_months, latest_bmi.bmi_value)
                 p.nutritional_status = classify_bmi_for_age(z)
             except Exception as e:
-                print(f"Error computing BMI classification for {p.first_name}: {e}")
+                print("Error computing BMI classification for {p.first_name}: {e}")
                 p.nutritional_status = "Error"
         else:
             p.nutritional_status = None
 
         # Delivery place color coding
         delivery_place = getattr(p, 'place_of_delivery', None)
-        print(f"Debug: {p.first_name} {p.last_name} - Place of delivery: '{delivery_place}'")
+        print("Debug: {p.first_name} {p.last_name} - Place of delivery: '{delivery_place}'")
 
         if delivery_place == 'Home':
             p.delivery_class = 'delivery-home'
@@ -3951,7 +3951,7 @@ def preschoolers(request):
         else:
             p.delivery_class = 'delivery-na'
 
-        print(f"Debug: Assigned class: '{p.delivery_class}'")
+        print("Debug: Assigned class: '{p.delivery_class}'")
 
     # Determine user role for template
     if raw_role in ['bhw', 'bns', 'midwife', 'nurse']:
@@ -3967,12 +3967,12 @@ def preschoolers(request):
         'barangay_name': barangay_name,
     }
 
-    print(f"Template context:")
-    print(f"  - user_role: '{template_user_role}'")
-    print(f"  - original_role: '{raw_role}'")
-    print(f"  - preschoolers count: {len(page_obj.object_list)}")
-    print(f"  - barangay: '{barangay_name}'")
-    print(f"=== END PRESCHOOLERS DEBUG ===")
+    print("Template context:")
+    print("  - user_role: '{template_user_role}'")
+    print("  - original_role: '{raw_role}'")
+    print("  - preschoolers count: {len(page_obj.object_list)}")
+    print("  - barangay: '{barangay_name}'")
+    print("=== END PRESCHOOLERS DEBUG ===")
 
     return render(request, 'HTML/preschoolers.html', context)
 
@@ -4001,13 +4001,13 @@ def profile(request):
 
         address_parts = []
         if account.house_number and str(account.house_number).strip().lower() not in invalid_values:
-            address_parts.append(f"House {account.house_number}")
+            address_parts.append("House {account.house_number}")
         if account.block and str(account.block).strip().lower() not in invalid_values:
-            address_parts.append(f"Block {account.block}")
+            address_parts.append("Block {account.block}")
         if account.lot and str(account.lot).strip().lower() not in invalid_values:
-            address_parts.append(f"Lot {account.lot}")
+            address_parts.append("Lot {account.lot}")
         if account.phase and str(account.phase).strip().lower() not in invalid_values:
-            address_parts.append(f"Phase {account.phase}")
+            address_parts.append("Phase {account.phase}")
         if account.street and str(account.street).strip().lower() not in invalid_values:
             address_parts.append(account.street.strip())
         if account.subdivision and str(account.subdivision).strip().lower() not in invalid_values:
@@ -4110,29 +4110,29 @@ def profile(request):
                             if old_barangay:  
                                 ParentActivityLog.objects.create(
                                     parent=parent,
-                                    activity=f"Transferred to {barangay.name}",
+                                    activity="Transferred to {barangay.name}",
                                     barangay=old_barangay,
                                     timestamp=timezone.now()
                                 )
                                 ParentActivityLog.objects.create(
                                     parent=parent,
-                                    activity=f"Recently transferred from {old_barangay.name}",
+                                    activity="Recently transferred from {old_barangay.name}",
                                     barangay=barangay,
                                     timestamp=timezone.now()
                                 )
 
                                 for p in Preschooler.objects.filter(parent_id=parent):
                                     PreschoolerActivityLog.objects.create(
-                                        preschooler_name=f"{p.first_name} {p.last_name}",
+                                        preschooler_name="{p.first_name} {p.last_name}",
                                         performed_by=parent.full_name,
-                                        activity=f"Transferred to {barangay.name}",
+                                        activity="Transferred to {barangay.name}",
                                         barangay=old_barangay,
                                         timestamp=timezone.now()
                                     )
                                     PreschoolerActivityLog.objects.create(
-                                        preschooler_name=f"{p.first_name} {p.last_name}",
+                                        preschooler_name="{p.first_name} {p.last_name}",
                                         performed_by=parent.full_name,
-                                        activity=f"Recently transferred from {old_barangay.name}",
+                                        activity="Recently transferred from {old_barangay.name}",
                                         barangay=barangay,
                                         timestamp=timezone.now()
                                     )
@@ -4177,8 +4177,8 @@ def registered_parents(request):
     account = get_object_or_404(Account, email=request.user.email)
     raw_role = (account.user_role or '').strip().lower()
 
-    print(f"=== REGISTERED PARENTS VIEW DEBUG ===")
-    print(f"User: {account.full_name} ({account.user_role})")
+    print("=== REGISTERED PARENTS VIEW DEBUG ===")
+    print("User: {account.full_name} ({account.user_role})")
 
     # ✅ Query parents
     if raw_role == 'admin':
@@ -4189,7 +4189,7 @@ def registered_parents(request):
             barangay=account.barangay
         ).order_by('-created_at')
         barangay_name = account.barangay.name if account.barangay else "No Barangay"
-        print(f"Showing parents for barangay: {barangay_name}")
+        print("Showing parents for barangay: {barangay_name}")
 
     # ✅ Pagination
     paginator = Paginator(parents_qs, 10)  # 10 parents per page
@@ -4208,7 +4208,7 @@ def registered_parents(request):
             if months < 0:
                 years -= 1
                 months += 12
-            child.age_display = f"{years} year(s) and {months} month(s)"
+            child.age_display = "{years} year(s) and {months} month(s)"
         parent.children = preschoolers
 
     context = {
@@ -4218,8 +4218,8 @@ def registered_parents(request):
         'has_parents': parents_qs.exists(),  # ✅ para sa "No parents registered"
     }
 
-    print(f"Parents count: {parents_qs.count()}")
-    print(f"=== END REGISTERED PARENTS DEBUG ===")
+    print("Parents count: {parents_qs.count()}")
+    print("=== END REGISTERED PARENTS DEBUG ===")
 
     return render(request, 'HTML/registered_parent.html', context)
 
@@ -4245,7 +4245,7 @@ def register(request):
         barangay_id  = request.POST.get("barangay_id")   # already snake_case in HTML
         role         = request.POST.get("role")
 
-        print(f"[DEBUG] Registration attempt for: {first_name, last_name} ({role})")
+        print("[DEBUG] Registration attempt for: {first_name, last_name} ({role})")
 
         # --- VALIDATIONS ---
         if not all([first_name, last_name, email, contact, password, confirm, birthdate, house_number, block , lot, phase, street, subdivision, city , province , barangay_id, role]):
@@ -4263,9 +4263,9 @@ def register(request):
         # Convert birthdate string to date object
         try:
             birthdate_obj = datetime.strptime(birthdate, '%Y-%m-%d').date()
-            print(f"[DEBUG] Birthdate converted: {birthdate} -> {birthdate_obj}")
+            print("[DEBUG] Birthdate converted: {birthdate} -> {birthdate_obj}")
         except ValueError as e:
-            print(f"[DEBUG] ❌ Birthdate conversion error: {e}")
+            print("[DEBUG] ❌ Birthdate conversion error: {e}")
             messages.error(request, "Invalid birthdate format. Please try again.")
             return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
 
@@ -4279,11 +4279,11 @@ def register(request):
                 first_name=first_name,
                 last_name=last_name
             )
-            print(f"[DEBUG] ✅ Django User created: {user.id}")
+            print("[DEBUG] ✅ Django User created: {user.id}")
 
             # Step 2: Get Barangay
             barangay = Barangay.objects.get(id=int(barangay_id))
-            print(f"[DEBUG] ✅ Barangay found: {barangay.name}")
+            print("[DEBUG] ✅ Barangay found: {barangay.name}")
 
             # Step 3: Create Account
             print("[DEBUG] Creating Account with all info...")
@@ -4309,17 +4309,17 @@ def register(request):
                 is_rejected=False,
                 barangay=barangay
             )
-            print(f"[DEBUG] ✅ Account created successfully: {account.account_id}")
-            print(f"[DEBUG] 🎉 REGISTRATION COMPLETED! Role: {role}")
+            print("[DEBUG] ✅ Account created successfully: {account.account_id}")
+            print("[DEBUG] 🎉 REGISTRATION COMPLETED! Role: {role}")
 
         except Barangay.DoesNotExist:
-            print(f"[DEBUG] ❌ Barangay not found: {barangay_id}")
+            print("[DEBUG] ❌ Barangay not found: {barangay_id}")
             messages.error(request, "Invalid barangay selected.")
             return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
             
         except Exception as e:
-            print(f"[DEBUG] ❌ Registration error: {e}")
-            messages.error(request, f"Registration failed: {str(e)}")
+            print("[DEBUG] ❌ Registration error: {e}")
+            messages.error(request, "Registration failed: {str(e)}")
             return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
 
         # Send Clean Email Confirmation
@@ -4354,7 +4354,7 @@ def register(request):
             
             subject = f'PPMS Registration Confirmation - {role}'
             
-            html_message = f"""
+            html_message = """
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -4599,7 +4599,7 @@ def register(request):
             </html>
             """
 
-            plain_message = f"""
+            plain_message = """
 PPMS Registration Confirmation
 
 Hello {full_name},
@@ -4624,9 +4624,9 @@ This is an automated message. Please do not reply.
             """
 
             # ✅ FIX 2: Enhanced error handling and debug info
-            print(f"[DEBUG] 📧 Attempting to send email to: {email}")
-            print(f"[DEBUG] 📧 Email settings: {settings.EMAIL_BACKEND}")
-            print(f"[DEBUG] 📧 From email: {settings.DEFAULT_FROM_EMAIL}")
+            print("[DEBUG] 📧 Attempting to send email to: {email}")
+            print("[DEBUG] 📧 Email settings: {settings.EMAIL_BACKEND}")
+            print("[DEBUG] 📧 From email: {settings.DEFAULT_FROM_EMAIL}")
             
             send_mail(
                 subject,
@@ -4636,16 +4636,16 @@ This is an automated message. Please do not reply.
                 html_message=html_message,
                 fail_silently=False,  # ✅ Changed to False to see actual errors
             )
-            print(f"[DEBUG] ✅ Clean email sent successfully to {email}")
+            print("[DEBUG] ✅ Clean email sent successfully to {email}")
 
         except Exception as email_error:
-            print(f"[DEBUG] ❌ Email error: {email_error}")
-            print(f"[DEBUG] ❌ Email error type: {type(email_error).__name__}")
+            print("[DEBUG] ❌ Email error: {email_error}")
+            print("[DEBUG] ❌ Email error type: {type(email_error).__name__}")
             # Don't fail registration if email fails
             pass
 
         # Success!
-        messages.success(request, f"{role} registration successful. Pending admin approval.")
+        messages.success(request, "{role} registration successful. Pending admin approval.")
         return redirect('login')
 
     return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
@@ -4660,14 +4660,14 @@ def register_preschooler(request):
         # AUTO-ARCHIVE CHECK - Run before showing registration
     auto_archived_count = auto_archive_aged_preschoolers()
     if auto_archived_count > 0:
-        print(f"AUTO-ARCHIVED: {auto_archived_count} preschoolers during registration view")
+        print("AUTO-ARCHIVED: {auto_archived_count} preschoolers during registration view")
 
     # Get user's barangay using consistent logic
     user_barangay = get_user_barangay(request.user)
     current_user_info = None
     
-    print(f"DEBUG: Current user email: {request.user.email}")
-    print(f"DEBUG: User authenticated: {request.user.is_authenticated}")
+    print("DEBUG: Current user email: {request.user.email}")
+    print("DEBUG: User authenticated: {request.user.is_authenticated}")
     
     if request.user.is_authenticated:
         # Try each model to find the user and get their info
@@ -4680,7 +4680,7 @@ def register_preschooler(request):
                 'role': account.user_role,
                 'object': account
             }
-            print(f"DEBUG: Found in Account: {account.email}, Role: {account.user_role}, Barangay: {user_barangay}")
+            print("DEBUG: Found in Account: {account.email}, Role: {account.user_role}, Barangay: {user_barangay}")
         except Account.DoesNotExist:
             try:
                 # Try BHW model
@@ -4691,7 +4691,7 @@ def register_preschooler(request):
                     'role': 'BHW',
                     'object': bhw
                 }
-                print(f"DEBUG: Found in BHW: {bhw.email}, Barangay: {user_barangay}")
+                print("DEBUG: Found in BHW: {bhw.email}, Barangay: {user_barangay}")
             except BHW.DoesNotExist:
                 try:
                     # Try BNS model
@@ -4702,7 +4702,7 @@ def register_preschooler(request):
                         'role': 'BNS',
                         'object': bns
                     }
-                    print(f"DEBUG: Found in BNS: {bns.email}, Barangay: {user_barangay}")
+                    print("DEBUG: Found in BNS: {bns.email}, Barangay: {user_barangay}")
                 except BNS.DoesNotExist:
                     try:
                         # Try Midwife model
@@ -4713,7 +4713,7 @@ def register_preschooler(request):
                             'role': 'Midwife',
                             'object': midwife
                         }
-                        print(f"DEBUG: Found in Midwife: {midwife.email}, Barangay: {user_barangay}")
+                        print("DEBUG: Found in Midwife: {midwife.email}, Barangay: {user_barangay}")
                     except Midwife.DoesNotExist:
                         try:
                             # Try Nurse model
@@ -4724,7 +4724,7 @@ def register_preschooler(request):
                                 'role': 'Nurse',
                                 'object': nurse
                             }
-                            print(f"DEBUG: Found in Nurse: {nurse.email}, Barangay: {user_barangay}")
+                            print("DEBUG: Found in Nurse: {nurse.email}, Barangay: {user_barangay}")
                         except Nurse.DoesNotExist:
                             print("DEBUG: User not found in any authorized user model")
 
@@ -4735,7 +4735,7 @@ def register_preschooler(request):
 
     # Validate that user has a barangay assigned
     if not user_barangay:
-        messages.error(request, f"No barangay assigned to your {current_user_info['role']} account. Please contact the administrator to assign a barangay before registering preschoolers.")
+        messages.error(request, "No barangay assigned to your {current_user_info['role']} account. Please contact the administrator to assign a barangay before registering preschoolers.")
         return redirect('dashboard')
 
     # Validate user role permissions (only for Account model)
@@ -4753,18 +4753,18 @@ def register_preschooler(request):
         )
         
         if not is_authorized:
-            messages.error(request, f"Your role '{current_user_info['role']}' is not authorized to register preschoolers. Only BHW, BNS, Midwife, or Admin roles can register preschoolers.")
+            messages.error(request, "Your role '{current_user_info['role']}' is not authorized to register preschoolers. Only BHW, BNS, Midwife, or Admin roles can register preschoolers.")
             return redirect('dashboard')
 
-    print(f"DEBUG: Authorization passed - Role: {current_user_info['role']}, Barangay: {user_barangay}")
+    print("DEBUG: Authorization passed - Role: {current_user_info['role']}, Barangay: {user_barangay}")
 
     # Get parents from the SAME barangay only - no cross-barangay registration
     parents_qs = Parent.objects.filter(barangay=user_barangay).order_by('-created_at')
-    print(f"DEBUG: Found {parents_qs.count()} parents in {user_barangay}")
+    print("DEBUG: Found {parents_qs.count()} parents in {user_barangay}")
 
     # Debug: Show which parents were found
     for parent in parents_qs[:5]:  # Show first 5 for debugging
-        print(f"DEBUG: Parent: {parent.full_name} ({parent.email}) - Barangay: {parent.barangay}")
+        print("DEBUG: Parent: {parent.full_name} ({parent.email}) - Barangay: {parent.barangay}")
 
     # Pagination
     paginator = Paginator(parents_qs, 10)  # Show 10 parents per page
@@ -4846,7 +4846,7 @@ def register_preschooler_entry(request):
 
             parent.registered_preschoolers.add(preschooler)
 
-            print(f"DEBUG: Successfully registered preschooler {preschooler.full_name} for parent {parent.full_name} in barangay {user_barangay}")
+            print("DEBUG: Successfully registered preschooler {preschooler.full_name} for parent {parent.full_name} in barangay {user_barangay}")
 
             return JsonResponse({
                 'status': 'success', 
@@ -4863,7 +4863,7 @@ def register_preschooler_entry(request):
         except ValueError as e:
             return JsonResponse({'status': 'error', 'message': f'Invalid date format: {str(e)}'})
         except Exception as e:
-            print(f"DEBUG: Error in preschooler registration: {e}")
+            print("DEBUG: Error in preschooler registration: {e}")
             return JsonResponse({'status': 'error', 'message': f'Registration failed: {str(e)}'})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
@@ -4887,9 +4887,9 @@ def registered_bhw(request):
     )
 
     # Debug: Print what we found
-    print(f"Found {bhw_list.count()} validated BHW accounts:")
+    print("Found {bhw_list.count()} validated BHW accounts:")
     for bhw in bhw_list:
-        print(f"- {bhw.full_name} (role: '{bhw.user_role}', validated: {bhw.is_validated})")
+        print("- {bhw.full_name} (role: '{bhw.user_role}', validated: {bhw.is_validated})")
 
     for bhw in bhw_list:
         bhw.bhw_data = BHW.objects.filter(email=bhw.email).first()
@@ -4899,7 +4899,7 @@ def registered_bhw(request):
                 bhw.last_activity_display = "🟢 Online"
             else:
                 time_diff = timesince(bhw.last_activity, timezone.now())
-                bhw.last_activity_display = f"{time_diff} ago"
+                bhw.last_activity_display = "{time_diff} ago"
         else:
             bhw.last_activity_display = "No activity"
 
@@ -4927,9 +4927,9 @@ def registered_bns(request):
     )
 
     # Debug: Print what we found
-    print(f"Found {bns_list.count()} validated BNS accounts:")
+    print("Found {bns_list.count()} validated BNS accounts:")
     for bns in bns_list:
-        print(f"- {bns.full_name} (role: '{bns.user_role}', validated: {bns.is_validated})")
+        print("- {bns.full_name} (role: '{bns.user_role}', validated: {bns.is_validated})")
 
     for bns in bns_list:
         if bns.last_activity:
@@ -4937,7 +4937,7 @@ def registered_bns(request):
                 bns.last_activity_display = "🟢 Online"
             else:
                 time_diff = timesince(bns.last_activity, timezone.now())
-                bns.last_activity_display = f"{time_diff} ago"
+                bns.last_activity_display = "{time_diff} ago"
         else:
             bns.last_activity_display = "No activity"
 
@@ -4983,7 +4983,7 @@ def registered_preschoolers(request):
                 p.nutritional_status = classify_bmi_for_age(z)
 
             except Exception as e:
-                print(f"⚠️ BMI classification error for preschooler {p.id}: {e}")
+                print("⚠️ BMI classification error for preschooler {p.id}: {e}")
                 p.nutritional_status = "N/A"
         else:
             p.nutritional_status = "N/A"
@@ -5127,7 +5127,7 @@ def reportTemplate(request):
         pdf = html.write_pdf()
         
         response = HttpResponse(pdf, content_type='application/pdf')
-        response['Content-Disposition'] = 'inline; filename="Overall-Barangay-Summary-Report.pdf"'
+        response['Content-Disposition'] = 'inline; filename="Overall-Barangay-Summary-Report.pd"'
         return response
     
     # Default behavior - just render the template for preview
@@ -5165,7 +5165,7 @@ def forgot_password(request):
         # Compose email
         subject = '🔐 Password Reset OTP - PPMS Cluster 4'
 
-        text_message = f"""
+        text_message = """
         Hello {user.first_name or user.username},
 
         You requested a password reset. Your OTP code is: {otp_instance.otp_code}
@@ -5175,7 +5175,7 @@ def forgot_password(request):
         If you didn't request this, please ignore this email.
         """
 
-        html_message = f"""
+        html_message = """
         <!DOCTYPE html>
         <html>
         <head>
@@ -5254,7 +5254,7 @@ def forgot_password(request):
             messages.success(request, 'OTP sent to your email address.')
             return redirect('verify_otp', user_id=user.id)
         except Exception as e:
-            print(f"[ERROR] Email send failed: {e}")
+            print("[ERROR] Email send failed: {e}")
             messages.error(request, 'Failed to send email. Please try again.')
 
     return render(request, 'HTML/forgot_password.html')
@@ -5389,7 +5389,7 @@ def remove_bns(request, account_id):
             if not any(keyword in bns.user_role.lower() for keyword in bns_role_keywords):
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({'success': False, 'error': 'Not a BNS worker'})
-                messages.error(request, f"Cannot remove {bns.full_name}: Not a BNS worker.")
+                messages.error(request, "Cannot remove {bns.full_name}: Not a BNS worker.")
                 return redirect('healthcare_workers')
             
             name = bns.full_name
@@ -5401,7 +5401,7 @@ def remove_bns(request, account_id):
             # Prepare email
             subject = 'PPMS Cluster 4 – Account Removal Notification'
             
-            html_message = f"""
+            html_message = """
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -5611,7 +5611,7 @@ def remove_bns(request, account_id):
             </html>
             """
 
-            plain_message = f"""
+            plain_message = """
 PPMS Account Removal Notification
 
 Hello {name},
@@ -5641,7 +5641,7 @@ This is an automated message. Please do not reply.
                 html_message=html_message,
                 fail_silently=True,
             )
-            print(f"[DEBUG] ✅ Removal email sent to {email}")
+            print("[DEBUG] ✅ Removal email sent to {email}")
 
             # Delete account
             bns.delete()
@@ -5651,14 +5651,14 @@ This is an automated message. Please do not reply.
                 return JsonResponse({'success': True, 'name': name, 'type': 'BNS'})
             
             # Fallback for regular form submission
-            messages.success(request, f"{name} has been successfully removed and notified via email.")
+            messages.success(request, "{name} has been successfully removed and notified via email.")
             
         except Account.DoesNotExist:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'error': 'Worker no longer exists'})
             messages.error(request, "The worker you're trying to remove no longer exists.")
         except Exception as e:
-            print(f"[ERROR] Failed to remove BNS: {e}")
+            print("[ERROR] Failed to remove BNS: {e}")
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'error': 'An error occurred while removing the worker'})
             messages.error(request, "An error occurred while removing the BNS.")
@@ -5675,7 +5675,7 @@ def remove_bhw(request, account_id):
             if not any(keyword in bhw.user_role.lower() for keyword in bhw_role_keywords):
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({'success': False, 'error': 'Not a BHW worker'})
-                messages.error(request, f"Cannot remove {bhw.full_name}: Not a BHW worker.")
+                messages.error(request, "Cannot remove {bhw.full_name}: Not a BHW worker.")
                 return redirect('healthcare_workers')
             
             name = bhw.full_name
@@ -5687,7 +5687,7 @@ def remove_bhw(request, account_id):
             # Prepare email
             subject = 'PPMS Cluster 4 – Account Removal Notification'
             
-            html_message = f"""
+            html_message = """
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -5897,7 +5897,7 @@ def remove_bhw(request, account_id):
             </html>
             """
 
-            plain_message = f"""
+            plain_message = """
 PPMS Account Removal Notification
 
 Hello {name},
@@ -5927,7 +5927,7 @@ This is an automated message. Please do not reply.
                 html_message=html_message,
                 fail_silently=True,
             )
-            print(f"[DEBUG] ✅ Removal email sent to {email}")
+            print("[DEBUG] ✅ Removal email sent to {email}")
 
             # Delete account
             bhw.delete()
@@ -5937,14 +5937,14 @@ This is an automated message. Please do not reply.
                 return JsonResponse({'success': True, 'name': name, 'type': 'BHW'})
             
             # Fallback for regular form submission
-            messages.success(request, f"{name} has been successfully removed and notified via email.")
+            messages.success(request, "{name} has been successfully removed and notified via email.")
             
         except Account.DoesNotExist:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'error': 'Worker no longer exists'})
             messages.error(request, "The worker you're trying to remove no longer exists.")
         except Exception as e:
-            print(f"[ERROR] Failed to remove BHW: {e}")
+            print("[ERROR] Failed to remove BHW: {e}")
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'error': 'An error occurred while removing the worker'})
             messages.error(request, "An error occurred while removing the BHW.")
@@ -5964,7 +5964,7 @@ def registered_midwife(request):
                 midwife.last_activity_display = "🟢 Online"
             else:
                 time_diff = timesince(midwife.last_activity, timezone.now())
-                midwife.last_activity_display = f"{time_diff} ago"
+                midwife.last_activity_display = "{time_diff} ago"
         else:
             midwife.last_activity_display = "No activity"
 
@@ -5983,7 +5983,7 @@ def remove_midwife(request, account_id):
             if 'midwife' not in midwife.user_role.lower():
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({'success': False, 'error': 'Not a Midwife worker'})
-                messages.error(request, f"Cannot remove {midwife.full_name}: Not a Midwife worker.")
+                messages.error(request, "Cannot remove {midwife.full_name}: Not a Midwife worker.")
                 return redirect('healthcare_workers')
             
             name = midwife.full_name
@@ -5995,7 +5995,7 @@ def remove_midwife(request, account_id):
             # Prepare email
             subject = 'PPMS Cluster 4 – Account Removal Notification'
             
-            html_message = f"""
+            html_message = """
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -6205,7 +6205,7 @@ def remove_midwife(request, account_id):
             </html>
             """
 
-            plain_message = f"""
+            plain_message = """
 PPMS Account Removal Notification
 
 Hello {name},
@@ -6235,7 +6235,7 @@ This is an automated message. Please do not reply.
                 html_message=html_message,
                 fail_silently=True,
             )
-            print(f"[DEBUG] ✅ Removal email sent to {email}")
+            print("[DEBUG] ✅ Removal email sent to {email}")
 
             # Delete account
             midwife.delete()
@@ -6245,14 +6245,14 @@ This is an automated message. Please do not reply.
                 return JsonResponse({'success': True, 'name': name, 'type': 'Midwife'})
             
             # Fallback for regular form submission
-            messages.success(request, f"{name} has been successfully removed and notified via email.")
+            messages.success(request, "{name} has been successfully removed and notified via email.")
             
         except Account.DoesNotExist:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'error': 'Worker no longer exists'})
             messages.error(request, "The worker you're trying to remove no longer exists.")
         except Exception as e:
-            print(f"[ERROR] Failed to remove Midwife: {e}")
+            print("[ERROR] Failed to remove Midwife: {e}")
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'error': 'An error occurred while removing the worker'})
             messages.error(request, "An error occurred while removing the midwife.")
@@ -6391,7 +6391,7 @@ def validate_account(request, account_id):
 
             subject = 'Account Validated - PPMS Cluster 4'
 
-            html_message = f"""
+            html_message = """
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -6483,7 +6483,7 @@ def validate_account(request, account_id):
             </html>
             """
 
-            plain_message = f"""
+            plain_message = """
 Hello {account.full_name},
 
 Your PPMS account has been successfully validated. 
@@ -6509,7 +6509,7 @@ Thank you for being part of the Preschooler Profiling and Monitoring System (PPM
 
         messages.success(
             request,
-            f"{account.full_name} ({account.user_role}) has been validated and notified."
+            "{account.full_name} ({account.user_role}) has been validated and notified."
         )
         return redirect('validate')
 
@@ -6527,7 +6527,7 @@ def reject_account(request, account_id):
 
         subject = 'PPMS Account Rejected'
 
-        plain_message = f"""
+        plain_message = """
 Hello {account.full_name},
 
 We regret to inform you that your registration to the PPMS Cluster 4 Imus City platform has been rejected.
@@ -6540,7 +6540,7 @@ Thank you,
 PPMS Admin
         """
 
-        html_message = f"""
+        html_message = """
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -6643,7 +6643,7 @@ PPMS Admin
         except Exception as e:
             print("[EMAIL ERROR]", e)
 
-    messages.success(request, f"{account.full_name} has been rejected and notified.")
+    messages.success(request, "{account.full_name} has been rejected and notified.")
     return redirect('validate')
 
 def registered_nurse(request):
@@ -6656,7 +6656,7 @@ def registered_nurse(request):
                 nurse.last_activity_display = "🟢 Online"
             else:
                 time_diff = timesince(nurse.last_activity, timezone.now())
-                nurse.last_activity_display = f"{time_diff} ago"
+                nurse.last_activity_display = "{time_diff} ago"
         else:
             nurse.last_activity_display = "No activity"
     paginator = Paginator(nurse_list, 10)  # 10 nurses per page
@@ -6674,7 +6674,7 @@ def remove_nurse(request, account_id):
             if 'nurse' not in nurse.user_role.lower():
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({'success': False, 'error': 'Not a Nurse worker'})
-                messages.error(request, f"Cannot remove {nurse.full_name}: Not a Nurse worker.")
+                messages.error(request, "Cannot remove {nurse.full_name}: Not a Nurse worker.")
                 return redirect('healthcare_workers')
             
             name = nurse.full_name
@@ -6686,7 +6686,7 @@ def remove_nurse(request, account_id):
             # Prepare email
             subject = 'PPMS Cluster 4 – Account Removal Notification'
             
-            html_message = f"""
+            html_message = """
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -6896,7 +6896,7 @@ def remove_nurse(request, account_id):
             </html>
             """
 
-            plain_message = f"""
+            plain_message = """
 PPMS Account Removal Notification
 
 Hello {name},
@@ -6926,7 +6926,7 @@ This is an automated message. Please do not reply.
                 html_message=html_message,
                 fail_silently=True,
             )
-            print(f"[DEBUG] ✅ Removal email sent to {email}")
+            print("[DEBUG] ✅ Removal email sent to {email}")
 
             # Delete account
             nurse.delete()
@@ -6936,14 +6936,14 @@ This is an automated message. Please do not reply.
                 return JsonResponse({'success': True, 'name': name, 'type': 'Nurse'})
             
             # Fallback for regular form submission
-            messages.success(request, f"{name} has been successfully removed and notified via email.")
+            messages.success(request, "{name} has been successfully removed and notified via email.")
             
         except Account.DoesNotExist:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'error': 'Worker no longer exists'})
             messages.error(request, "The worker you're trying to remove no longer exists.")
         except Exception as e:
-            print(f"[ERROR] Failed to remove Nurse: {e}")
+            print("[ERROR] Failed to remove Nurse: {e}")
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': False, 'error': 'An error occurred while removing the worker'})
             messages.error(request, "An error occurred while removing the nurse.")
@@ -6969,13 +6969,13 @@ def fix_existing_bns_records():
                 account.user_role = 'Barangay Nutritional Scholar'
                 account.save()
                 count += 1
-                print(f"Fixed account: {account.full_name} - {account.email}")
+                print("Fixed account: {account.full_name} - {account.email}")
         
-        print(f"Fixed {count} BNS accounts")
+        print("Fixed {count} BNS accounts")
         return count
         
     except Exception as e:
-        print(f"Error fixing BNS records: {e}")
+        print("Error fixing BNS records: {e}")
         return 0
     
 
@@ -7181,13 +7181,13 @@ def register_parent(request):
             # Build complete address
             address_parts = []
             if house_number and house_number.lower() != 'n/a':
-                address_parts.append(f"House {house_number}")
+                address_parts.append("House {house_number}")
             if block and block.lower() != 'n/a':
-                address_parts.append(f"Block {block}")
+                address_parts.append("Block {block}")
             if lot and lot.lower() != 'n/a':
-                address_parts.append(f"Lot {lot}")
+                address_parts.append("Lot {lot}")
             if phase and phase.lower() != 'n/a':
-                address_parts.append(f"Phase {phase}")
+                address_parts.append("Phase {phase}")
             if street:
                 address_parts.append(street)
             if subdivision:
@@ -7217,7 +7217,7 @@ def register_parent(request):
             user_barangay = get_user_barangay(request.user)
             current_user_info = None
             
-            logger.info(f"Registration attempt by user: {request.user.email}")
+            logger.info("Registration attempt by user: {request.user.email}")
             
             if request.user.is_authenticated:
                 # Try each model to find the user and their barangay
@@ -7265,14 +7265,14 @@ def register_parent(request):
 
             # Validate that user exists and has proper authorization
             if not current_user_info:
-                logger.error(f"Unauthorized registration attempt by {request.user.email}")
+                logger.error("Unauthorized registration attempt by {request.user.email}")
                 messages.error(request, "You are not authorized to register parents. Please contact the administrator.")
                 return redirect('register_parent')
 
             # Validate that user has a barangay assigned
             if not user_barangay:
-                logger.error(f"No barangay assigned to user {request.user.email}")
-                messages.error(request, f"No barangay assigned to your {current_user_info['role']} account. Please contact the administrator.")
+                logger.error("No barangay assigned to user {request.user.email}")
+                messages.error(request, "No barangay assigned to your {current_user_info['role']} account. Please contact the administrator.")
                 return redirect('register_parent')
 
             # Validate user role permissions (only for Account model)
@@ -7280,11 +7280,11 @@ def register_parent(request):
                 allowed_roles = ['bhw', 'bns', 'barangay nutritional scholar', 'barangay nutrition scholar', 
                                'nutritional scholar', 'nutrition scholar', 'midwife', 'nurse', 'admin', 'administrator']
                 if current_user_info['role'].lower() not in [role.lower() for role in allowed_roles]:
-                    logger.error(f"Unauthorized role: {current_user_info['role']}")
-                    messages.error(request, f"Your role '{current_user_info['role']}' is not authorized to register parents.")
+                    logger.error("Unauthorized role: {current_user_info['role']}")
+                    messages.error(request, "Your role '{current_user_info['role']}' is not authorized to register parents.")
                     return redirect('register_parent')
 
-            logger.info(f"Authorization passed - Role: {current_user_info['role']}, Barangay: {user_barangay}")
+            logger.info("Authorization passed - Role: {current_user_info['role']}, Barangay: {user_barangay}")
 
             # Check if email already exists
             if Parent.objects.filter(email__iexact=email).exists():
@@ -7297,15 +7297,15 @@ def register_parent(request):
 
             # Check if contact number already exists in same barangay
             if Parent.objects.filter(contact_number=contact_number, barangay=user_barangay).exists():
-                messages.error(request, f"A parent with this contact number already exists in {user_barangay.name}.")
+                messages.error(request, "A parent with this contact number already exists in {user_barangay.name}.")
                 return redirect('register_parent')
 
             # Parse and validate birthdate
             try:
                 birthdate_obj = datetime.strptime(birthdate, '%Y-%m-%d').date()
-                logger.info(f"Birthdate parsed successfully: {birthdate_obj}")
+                logger.info("Birthdate parsed successfully: {birthdate_obj}")
             except ValueError as e:
-                logger.error(f"Birthdate parsing error: {e}")
+                logger.error("Birthdate parsing error: {e}")
                 messages.error(request, "Invalid birthdate format.")
                 return redirect('register_parent')
 
@@ -7314,19 +7314,19 @@ def register_parent(request):
 
             # Use database transaction for atomicity
             with transaction.atomic():
-                logger.info(f"Starting database transaction for {full_name}")
+                logger.info("Starting database transaction for {full_name}")
                 
                 # Create Django User with hashed password
-                logger.info(f"Creating Django User for {email}")
+                logger.info("Creating Django User for {email}")
                 user = User.objects.create_user(
                     username=email,
                     email=email,
                     password=raw_password
                 )
-                logger.info(f"Django User created successfully")
+                logger.info("Django User created successfully")
 
                 # Create Parent with correct field names
-                logger.info(f"Creating Parent record")
+                logger.info("Creating Parent record")
                 parent = Parent.objects.create(
                     first_name=first_name,
                     middle_name=middle_name,
@@ -7341,10 +7341,10 @@ def register_parent(request):
                     password=raw_password,
                     created_at=timezone.now()
                 )
-                logger.info(f"Parent created successfully")
+                logger.info("Parent created successfully")
 
                 # Create Account - also assign to same barangay
-                logger.info(f"Creating Account record")
+                logger.info("Creating Account record")
                 account = Account.objects.create(
                     email=email,
                     first_name=first_name,
@@ -7361,13 +7361,13 @@ def register_parent(request):
                     password=raw_password,
                     must_change_password=True
                 )
-                logger.info(f"Account created successfully")
+                logger.info("Account created successfully")
 
             # Send email (outside transaction to prevent rollback on email failure)
             try:
                 subject = "PPMS Cluster 4 – Parent Registration Successful"
                 
-                html_message = f"""
+                html_message = """
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -7409,7 +7409,7 @@ def register_parent(request):
                 </html>
                 """
 
-                plain_message = f"""
+                plain_message = """
 PPMS Parent Registration Successful
 
 Hello {full_name},
@@ -7433,22 +7433,22 @@ PPMS Cluster 4 - Imus City Healthcare Management
                     html_message=html_message,
                     fail_silently=True,
                 )
-                logger.info(f"Email sent successfully to {email}")
+                logger.info("Email sent successfully to {email}")
 
             except Exception as email_error:
-                logger.warning(f"Email sending failed (non-critical): {email_error}")
+                logger.warning("Email sending failed (non-critical): {email_error}")
 
             # Success message
-            messages.success(request, f"Parent '{full_name}' registered successfully in {user_barangay.name}!\nEmail: {email}\nPassword: {raw_password}")
+            messages.success(request, "Parent '{full_name}' registered successfully in {user_barangay.name}!\nEmail: {email}\nPassword: {raw_password}")
             return redirect('register_parent')
 
         except IntegrityError as e:
-            logger.error(f"IntegrityError: {e}")
+            logger.error("IntegrityError: {e}")
             messages.error(request, "Registration failed due to duplicate data. Please check email and contact number.")
             return redirect('register_parent')
         
         except Exception as e:
-            logger.error(f"Unexpected error during registration: {e}")
+            logger.error("Unexpected error during registration: {e}")
             messages.error(request, "An unexpected error occurred during registration. Please try again.")
             return redirect('register_parent')
 
@@ -7546,7 +7546,7 @@ def history(request):
     user_barangay = get_user_barangay(request.user)
     current_user_info = None
     
-    print(f"DEBUG: History - Current user email: {request.user.email}")
+    print("DEBUG: History - Current user email: {request.user.email}")
     
     if request.user.is_authenticated:
         # Try each model to find the user
@@ -7559,7 +7559,7 @@ def history(request):
                 'role': account.user_role,
                 'object': account
             }
-            print(f"DEBUG: Found in Account: {account.email}, Barangay: {user_barangay}")
+            print("DEBUG: Found in Account: {account.email}, Barangay: {user_barangay}")
         except Account.DoesNotExist:
             try:
                 # Try BHW model
@@ -7570,7 +7570,7 @@ def history(request):
                     'role': 'BHW',
                     'object': bhw
                 }
-                print(f"DEBUG: Found in BHW: {bhw.email}, Barangay: {user_barangay}")
+                print("DEBUG: Found in BHW: {bhw.email}, Barangay: {user_barangay}")
             except BHW.DoesNotExist:
                 try:
                     # Try BNS model
@@ -7581,7 +7581,7 @@ def history(request):
                         'role': 'BNS',
                         'object': bns
                     }
-                    print(f"DEBUG: Found in BNS: {bns.email}, Barangay: {user_barangay}")
+                    print("DEBUG: Found in BNS: {bns.email}, Barangay: {user_barangay}")
                 except BNS.DoesNotExist:
                     try:
                         # Try Midwife model
@@ -7592,7 +7592,7 @@ def history(request):
                             'role': 'Midwife',
                             'object': midwife
                         }
-                        print(f"DEBUG: Found in Midwife: {midwife.email}, Barangay: {user_barangay}")
+                        print("DEBUG: Found in Midwife: {midwife.email}, Barangay: {user_barangay}")
                     except Midwife.DoesNotExist:
                         try:
                             # Try Nurse model
@@ -7603,7 +7603,7 @@ def history(request):
                                 'role': 'Nurse',
                                 'object': nurse
                             }
-                            print(f"DEBUG: Found in Nurse: {nurse.email}, Barangay: {user_barangay}")
+                            print("DEBUG: Found in Nurse: {nurse.email}, Barangay: {user_barangay}")
                         except Nurse.DoesNotExist:
                             try:
                                 # Try Parent model
@@ -7614,13 +7614,13 @@ def history(request):
                                     'role': 'Parent',
                                     'object': parent
                                 }
-                                print(f"DEBUG: Found in Parent: {parent.email}, Barangay: {user_barangay}")
+                                print("DEBUG: Found in Parent: {parent.email}, Barangay: {user_barangay}")
                             except Parent.DoesNotExist:
                                 print("DEBUG: User not found in any model")
 
     # If no user found or no barangay assigned, show empty history
     if not current_user_info or not user_barangay:
-        print(f"DEBUG: No user info or barangay found. User info: {current_user_info}, Barangay: {user_barangay}")
+        print("DEBUG: No user info or barangay found. User info: {current_user_info}, Barangay: {user_barangay}")
         return render(request, 'HTML/history.html', {
             'account': None,
             'parent_logs': [],
@@ -7629,7 +7629,7 @@ def history(request):
             'error_message': 'No barangay assigned to your account or user not found.'
         })
 
-    print(f"DEBUG: History access authorized for {current_user_info['role']} in {user_barangay}")
+    print("DEBUG: History access authorized for {current_user_info['role']} in {user_barangay}")
 
     # Calculate time boundaries for log cleanup
     now = timezone.now()
@@ -7640,20 +7640,20 @@ def history(request):
     deleted_preschooler_logs = PreschoolerActivityLog.objects.filter(barangay=user_barangay, timestamp__lt=yesterday).delete()
     
     if deleted_parent_logs[0] > 0 or deleted_preschooler_logs[0] > 0:
-        print(f"DEBUG: Cleaned up {deleted_parent_logs[0]} parent logs and {deleted_preschooler_logs[0]} preschooler logs older than yesterday")
+        print("DEBUG: Cleaned up {deleted_parent_logs[0]} parent logs and {deleted_preschooler_logs[0]} preschooler logs older than yesterday")
 
     # Get logs ONLY from user's barangay
     parent_logs = ParentActivityLog.objects.filter(barangay=user_barangay).select_related('parent', 'barangay').order_by('-timestamp')
     preschooler_logs = PreschoolerActivityLog.objects.filter(barangay=user_barangay).select_related('barangay').order_by('-timestamp')
 
-    print(f"DEBUG: Found {parent_logs.count()} parent logs and {preschooler_logs.count()} preschooler logs for {user_barangay}")
+    print("DEBUG: Found {parent_logs.count()} parent logs and {preschooler_logs.count()} preschooler logs for {user_barangay}")
 
     # Debug: Show some sample logs
     for log in parent_logs[:3]:
-        print(f"DEBUG: Parent log: {log.activity} - {log.timestamp} - Barangay: {log.barangay}")
+        print("DEBUG: Parent log: {log.activity} - {log.timestamp} - Barangay: {log.barangay}")
     
     for log in preschooler_logs[:3]:
-        print(f"DEBUG: Preschooler log: {log.activity} - {log.timestamp} - Barangay: {log.barangay}")
+        print("DEBUG: Preschooler log: {log.activity} - {log.timestamp} - Barangay: {log.barangay}")
 
     # Paginate each log type
     parent_paginator = Paginator(parent_logs, 10)
@@ -7688,13 +7688,13 @@ def create_parent_activity_log(parent, activity, performed_by_user):
             user_info = None
             try:
                 account = Account.objects.get(email=performed_by_user.email)
-                user_info = f"{account.full_name} ({account.user_role})"
+                user_info = "{account.full_name} ({account.user_role})"
             except Account.DoesNotExist:
                 # Try other user models
                 for model_class in [BHW, BNS, Midwife, Nurse]:
                     try:
                         user_obj = model_class.objects.get(email=performed_by_user.email)
-                        user_info = f"{user_obj.full_name} ({model_class.__name__})"
+                        user_info = "{user_obj.full_name} ({model_class.__name__})"
                         break
                     except model_class.DoesNotExist:
                         continue
@@ -7708,9 +7708,9 @@ def create_parent_activity_log(parent, activity, performed_by_user):
                 activity=activity,
                 performed_by=user_info  # Assuming you have this field
             )
-            print(f"DEBUG: Created parent activity log: {activity} for {parent.full_name} in {user_barangay}")
+            print("DEBUG: Created parent activity log: {activity} for {parent.full_name} in {user_barangay}")
         except Exception as e:
-            print(f"DEBUG: Error creating parent activity log: {e}")
+            print("DEBUG: Error creating parent activity log: {e}")
 
 
 def create_preschooler_activity_log(preschooler, activity, performed_by_user):
@@ -7724,13 +7724,13 @@ def create_preschooler_activity_log(preschooler, activity, performed_by_user):
             user_info = None
             try:
                 account = Account.objects.get(email=performed_by_user.email)
-                user_info = f"{account.full_name} ({account.user_role})"
+                user_info = "{account.full_name} ({account.user_role})"
             except Account.DoesNotExist:
                 # Try other user models
                 for model_class in [BHW, BNS, Midwife, Nurse]:
                     try:
                         user_obj = model_class.objects.get(email=performed_by_user.email)
-                        user_info = f"{user_obj.full_name} ({model_class.__name__})"
+                        user_info = "{user_obj.full_name} ({model_class.__name__})"
                         break
                     except model_class.DoesNotExist:
                         continue
@@ -7739,14 +7739,14 @@ def create_preschooler_activity_log(preschooler, activity, performed_by_user):
                 user_info = performed_by_user.email
             
             PreschoolerActivityLog.objects.create(
-                preschooler_name=f"{preschooler.first_name} {preschooler.last_name}",
+                preschooler_name="{preschooler.first_name} {preschooler.last_name}",
                 barangay=user_barangay,
                 activity=activity,
                 performed_by=user_info
             )
-            print(f"DEBUG: Created preschooler activity log: {activity} for {preschooler.first_name} {preschooler.last_name} in {user_barangay}")
+            print("DEBUG: Created preschooler activity log: {activity} for {preschooler.first_name} {preschooler.last_name} in {user_barangay}")
         except Exception as e:
-            print(f"DEBUG: Error creating preschooler activity log: {e}")
+            print("DEBUG: Error creating preschooler activity log: {e}")
 
 
 def admin_logs(request):
@@ -8014,7 +8014,7 @@ def admin_nutritional_overview(request):
                         nutritional_summary['obese'] += 1
 
                 except Exception as e:
-                    print(f"⚠️ Error processing preschooler {p.id}: {e}")
+                    print("⚠️ Error processing preschooler {p.id}: {e}")
                     continue
 
         return Response({
@@ -8122,7 +8122,7 @@ def get_user_profile(request):
         import re
         email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(email_regex, email):
-            logger.warning(f"Invalid email format: {email}")
+            logger.warning("Invalid email format: {email}")
             return Response({
                 'success': False,
                 'error': 'Invalid email format'
@@ -8154,17 +8154,17 @@ def get_user_profile(request):
             }
         }
         
-        logger.info(f"Profile retrieved successfully for email: {email}")
+        logger.info("Profile retrieved successfully for email: {email}")
         return Response(response_data, status=status.HTTP_200_OK)
         
     except Account.DoesNotExist:
-        logger.warning(f"Account not found for email: {email}")
+        logger.warning("Account not found for email: {email}")
         return Response({
             'success': False,
             'error': 'Account not found'
         }, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        logger.error(f"Error retrieving profile for {email}: {str(e)}")
+        logger.error("Error retrieving profile for {email}: {str(e)}")
         return Response({
             'success': False,
             'error': f'Server error: {str(e)}'
@@ -8209,7 +8209,7 @@ def update_user_profile(request):
         import re
         email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(email_regex, email):
-            logger.warning(f"Invalid email format in update: {email}")
+            logger.warning("Invalid email format in update: {email}")
             return Response({
                 'success': False,
                 'error': 'Invalid email format'
@@ -8271,7 +8271,7 @@ def update_user_profile(request):
 
         # Stop early if validation fails
         if validation_errors:
-            logger.warning(f"Validation errors for {email}: {validation_errors}")
+            logger.warning("Validation errors for {email}: {validation_errors}")
             return Response({
                 'success': False,
                 'error': '; '.join(validation_errors)
@@ -8290,12 +8290,12 @@ def update_user_profile(request):
                         parent.barangay = barangay
                         parent.save()
                         Preschooler.objects.filter(parent_id=parent).update(barangay=barangay)
-                        logger.info(f"Updated barangay for parent and children: {email}")
+                        logger.info("Updated barangay for parent and children: {email}")
                     except Parent.DoesNotExist:
-                        logger.warning(f"Parent record not found for account: {email}")
+                        logger.warning("Parent record not found for account: {email}")
                         pass
             except (Barangay.DoesNotExist, ValueError, TypeError):
-                logger.warning(f"Invalid barangay_id: {data.get('barangay_id')}")
+                logger.warning("Invalid barangay_id: {data.get('barangay_id')}")
                 return Response({
                     'success': False,
                     'error': 'Selected barangay does not exist'
@@ -8303,7 +8303,7 @@ def update_user_profile(request):
 
         # ---------------- SAVE ----------------
         account.save()
-        logger.info(f"Profile updated successfully for: {email}")
+        logger.info("Profile updated successfully for: {email}")
 
         # Serialize updated account
         serializer = ProfileSerializer(account, context={'request': request})
@@ -8333,7 +8333,7 @@ def update_user_profile(request):
         return Response(response_data, status=status.HTTP_200_OK)
 
     except Account.DoesNotExist:
-        logger.warning(f"Account not found for update: {request.GET.get('email', data.get('email', 'unknown'))}")
+        logger.warning("Account not found for update: {request.GET.get('email', data.get('email', 'unknown'))}")
         return Response({
             'success': False,
             'error': 'Account not found'
@@ -8345,7 +8345,7 @@ def update_user_profile(request):
             'error': 'Invalid JSON format'
         }, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
-        logger.error(f"Unexpected error updating profile: {str(e)}")
+        logger.error("Unexpected error updating profile: {str(e)}")
         return Response({
             'success': False,
             'error': f'Server error: {str(e)}'
@@ -8417,7 +8417,7 @@ def parent_dashboard_api(request):
                     z = bmi_zscore(p.sex, total_age_months, bmi_value)
                     nutritional_status = classify_bmi_for_age(z)
                 except Exception as e:
-                    print(f"⚠️ Error classifying preschooler {p.id}: {e}")
+                    print("⚠️ Error classifying preschooler {p.id}: {e}")
                     nutritional_status = "N/A"
 
             preschooler_data = {
@@ -8627,7 +8627,7 @@ def preschooler_detail_api(request, preschooler_id):
                 z = bmi_zscore(preschooler.sex, total_age_months, bmi_value)
                 nutritional_status = classify_bmi_for_age(z)
             except Exception as e:
-                print(f"⚠️ Error classifying preschooler {preschooler.preschooler_id}: {e}")
+                print("⚠️ Error classifying preschooler {preschooler.preschooler_id}: {e}")
                 nutritional_status = "N/A"
 
         preschooler_data = {
@@ -8745,7 +8745,7 @@ def edit_announcement(request, announcement_id):
                         os.remove(announcement.image.path)
                 except Exception as e:
                     # Log the error but don't fail the update
-                    print(f"Error deleting old image: {str(e)}")
+                    print("Error deleting old image: {str(e)}")
             
             # Assign new image
             announcement.image = new_image
@@ -8776,7 +8776,7 @@ def delete_announcement(request, announcement_id):
                     if os.path.exists(announcement.image.path):
                         os.remove(announcement.image.path)
                 except Exception as e:
-                    print(f"Error deleting image file: {str(e)}")
+                    print("Error deleting image file: {str(e)}")
             
             announcement.delete()
             messages.success(request, 'Announcement deleted successfully!')
@@ -8841,7 +8841,7 @@ def healthcare_workers(request):
     
     # Get all barangays for the filter dropdown
     barangays = Barangay.objects.all().order_by('name')
-    print(f"DEBUG: Found {barangays.count()} barangays")
+    print("DEBUG: Found {barangays.count()} barangays")
     
     # ===== BHW DATA =====
     bhw_list = Account.objects.filter(
@@ -8849,13 +8849,13 @@ def healthcare_workers(request):
         is_validated=True
     ).select_related('barangay')
     
-    print(f"DEBUG: Found {bhw_list.count()} BHW accounts")
+    print("DEBUG: Found {bhw_list.count()} BHW accounts")
     
     for bhw in bhw_list:
         try:
             bhw.bhw_data = BHW.objects.filter(email=bhw.email).first()
         except Exception as e:
-            print(f"Error getting BHW data for {bhw.full_name}: {str(e)}")
+            print("Error getting BHW data for {bhw.full_name}: {str(e)}")
             bhw.bhw_data = None
         
         # Activity status
@@ -8870,7 +8870,7 @@ def healthcare_workers(request):
     ).values_list('user_role', flat=True).distinct()
     print("All user roles in validated accounts:")
     for role in all_user_roles:
-        print(f"  - '{role}'")
+        print("  - '{role}'")
     
     # Try multiple query strategies
     bns_queries = [
@@ -8900,28 +8900,28 @@ def healthcare_workers(request):
         is_validated=True
     ).select_related('barangay').distinct()  # Use distinct to avoid duplicates
     
-    print(f"DEBUG: Found {bns_list.count()} BNS accounts with comprehensive query")
+    print("DEBUG: Found {bns_list.count()} BNS accounts with comprehensive query")
     
     # Debug: Show what we found
     for bns in bns_list:
-        print(f"  - {bns.full_name} (role: '{bns.user_role}')")
+        print("  - {bns.full_name} (role: '{bns.user_role}')")
     
     # If still no results, let's check if there are ANY BNS records in the BNS table
     if bns_list.count() == 0:
         print("\nNo BNS found in Account table. Checking BNS table directly...")
         direct_bns = BNS.objects.all()
-        print(f"Direct BNS table has {direct_bns.count()} records:")
+        print("Direct BNS table has {direct_bns.count()} records:")
         for bns in direct_bns[:5]:  # Show first 5
-            print(f"  - {bns.full_name} | {bns.email}")
+            print("  - {bns.full_name} | {bns.email}")
             # Try to find corresponding Account
             account = Account.objects.filter(
                 Q(email=bns.email) | Q(full_name__iexact=bns.full_name),
                 is_validated=True
             ).first()
             if account:
-                print(f"    -> Found Account: {account.user_role}")
+                print("    -> Found Account: {account.user_role}")
             else:
-                print(f"    -> No matching validated Account found")
+                print("    -> No matching validated Account found")
     
     # Process BNS data
     for bns in bns_list:
@@ -8932,12 +8932,12 @@ def healthcare_workers(request):
             # Method 1: By email
             try:
                 bns.bns_data = BNS.objects.get(email=bns.email)
-                print(f"Found BNS data by email for {bns.full_name}")
+                print("Found BNS data by email for {bns.full_name}")
             except BNS.DoesNotExist:
                 # Method 2: By name
                 try:
                     bns.bns_data = BNS.objects.get(full_name__iexact=bns.full_name)
-                    print(f"Found BNS data by name for {bns.full_name}")
+                    print("Found BNS data by name for {bns.full_name}")
                 except BNS.DoesNotExist:
                     # Method 3: Partial name match
                     bns.bns_data = BNS.objects.filter(
@@ -8945,16 +8945,16 @@ def healthcare_workers(request):
                         Q(full_name__icontains=bns.full_name.split()[-1])   # Last name
                     ).first()
                     if bns.bns_data:
-                        print(f"Found BNS data by partial name match for {bns.full_name}")
+                        print("Found BNS data by partial name match for {bns.full_name}")
                 except BNS.MultipleObjectsReturned:
                     bns.bns_data = BNS.objects.filter(full_name__iexact=bns.full_name).first()
-                    print(f"Multiple BNS found by name for {bns.full_name}, using first")
+                    print("Multiple BNS found by name for {bns.full_name}, using first")
             except BNS.MultipleObjectsReturned:
                 bns.bns_data = BNS.objects.filter(email=bns.email).first()
-                print(f"Multiple BNS found by email for {bns.full_name}, using first")
+                print("Multiple BNS found by email for {bns.full_name}, using first")
                 
         except Exception as e:
-            print(f"Error processing BNS {bns.full_name}: {str(e)}")
+            print("Error processing BNS {bns.full_name}: {str(e)}")
             bns.bns_data = None
         
         # Activity status
@@ -8966,13 +8966,13 @@ def healthcare_workers(request):
         is_validated=True
     ).select_related('barangay')
     
-    print(f"DEBUG: Found {midwife_list.count()} Midwife accounts")
+    print("DEBUG: Found {midwife_list.count()} Midwife accounts")
     
     for midwife in midwife_list:
         try:
             midwife.midwife_data = Midwife.objects.filter(email=midwife.email).first()
         except Exception as e:
-            print(f"Error getting Midwife data for {midwife.full_name}: {str(e)}")
+            print("Error getting Midwife data for {midwife.full_name}: {str(e)}")
             midwife.midwife_data = None
         
         set_activity_status(midwife)
@@ -8983,24 +8983,24 @@ def healthcare_workers(request):
         is_validated=True
     ).select_related('barangay')
     
-    print(f"DEBUG: Found {nurse_list.count()} Nurse accounts")
+    print("DEBUG: Found {nurse_list.count()} Nurse accounts")
     
     for nurse in nurse_list:
         try:
             nurse.nurse_data = Nurse.objects.filter(email=nurse.email).first()
         except Exception as e:
-            print(f"Error getting Nurse data for {nurse.full_name}: {str(e)}")
+            print("Error getting Nurse data for {nurse.full_name}: {str(e)}")
             nurse.nurse_data = None
         
         set_activity_status(nurse)
     
     # ===== FINAL SUMMARY =====
-    print(f"\n=== FINAL SUMMARY ===")
-    print(f"Total BHWs: {bhw_list.count()}")
-    print(f"Total BNS: {bns_list.count()}")  
-    print(f"Total Midwives: {midwife_list.count()}")
-    print(f"Total Nurses: {nurse_list.count()}")
-    print(f"Total Barangays: {barangays.count()}")
+    print("\n=== FINAL SUMMARY ===")
+    print("Total BHWs: {bhw_list.count()}")
+    print("Total BNS: {bns_list.count()}")  
+    print("Total Midwives: {midwife_list.count()}")
+    print("Total Nurses: {nurse_list.count()}")
+    print("Total Barangays: {barangays.count()}")
     
     context = {
         'barangays': barangays,
@@ -9024,7 +9024,7 @@ def set_activity_status(user):
             user.last_activity_display = "🟢 Online"
         else:
             time_diff = timesince(user.last_activity, timezone.now())
-            user.last_activity_display = f"{time_diff} ago"
+            user.last_activity_display = "{time_diff} ago"
     else:
         user.last_activity_display = "No activity"
 
@@ -9151,8 +9151,8 @@ import traceback
 @csrf_exempt
 def generate_report(request):
     print("=== GENERATE REPORT DEBUG ===")
-    print(f"User: {request.user}")
-    print(f"Method: {request.method}")
+    print("User: {request.user}")
+    print("Method: {request.method}")
     
     try:
         # Check if WeasyPrint is available
@@ -9160,7 +9160,7 @@ def generate_report(request):
             from weasyprint import HTML
             print("✓ WeasyPrint imported successfully")
         except ImportError as e:
-            print(f"✗ WeasyPrint import failed: {e}")
+            print("✗ WeasyPrint import failed: {e}")
             messages.error(request, "WeasyPrint is not installed. Please install it with: pip install weasyprint")
             return redirect('Admindashboard')
         
@@ -9171,9 +9171,9 @@ def generate_report(request):
         if user.is_authenticated:
             try:
                 account = Account.objects.select_related('barangay').get(email=user.email)
-                print(f"✓ Account found from authenticated user: {account.email}")
+                print("✓ Account found from authenticated user: {account.email}")
             except Account.DoesNotExist:
-                print(f"✗ Account not found for authenticated user: {user.email}")
+                print("✗ Account not found for authenticated user: {user.email}")
         
         if not account:
             class MockAccount:
@@ -9185,14 +9185,14 @@ def generate_report(request):
                 
                 @property
                 def full_name(self):
-                    return f"{self.first_name} {self.last_name}"
+                    return "{self.first_name} {self.last_name}"
             
             account = MockAccount()
             print("✓ Using hardcoded admin account")
 
         # Get all barangays and their data
         barangays = Barangay.objects.all()
-        print(f"✓ Found {barangays.count()} barangays")
+        print("✓ Found {barangays.count()} barangays")
         
         # Overall summary counters - matching template expectations
         overall_summary = {
@@ -9270,7 +9270,7 @@ def generate_report(request):
                             overall_summary['Obese'] += 1
 
                     except Exception as e:
-                        print(f"⚠️ BMI classification error for preschooler {p.id}: {e}")
+                        print("⚠️ BMI classification error for preschooler {p.id}: {e}")
 
             # Calculate at-risk percentage (severely underweight + underweight + obese)
             at_risk_count = (nutritional_counts['severely_underweight'] + 
@@ -9295,8 +9295,8 @@ def generate_report(request):
                 'at_risk_percentage': at_risk_percentage,
             })
 
-        print(f"✓ Processed {len(barangay_details)} barangays")
-        print(f"✓ Overall summary: {overall_summary}")
+        print("✓ Processed {len(barangay_details)} barangays")
+        print("✓ Overall summary: {overall_summary}")
 
         # Total barangays count
         total_barangays = barangays.count()
@@ -9319,17 +9319,17 @@ def generate_report(request):
         template_path = 'HTML/reportTemplate.html'  # Updated to use your new template
         try:
             html_string = render_to_string(template_path, context)
-            print(f"✓ Template rendered successfully, length: {len(html_string)}")
+            print("✓ Template rendered successfully, length: {len(html_string)}")
         except Exception as e:
-            print(f"✗ Template rendering failed: {e}")
+            print("✗ Template rendering failed: {e}")
             # Fall back to the admin comprehensive report
             template_path = 'HTML/admin_comprehensive_report.html'
             try:
                 html_string = render_to_string(template_path, context)
-                print(f"✓ Fallback template rendered, length: {len(html_string)}")
+                print("✓ Fallback template rendered, length: {len(html_string)}")
             except Exception as e2:
-                print(f"✗ Fallback template also failed: {e2}")
-                messages.error(request, f"Template rendering failed: {e}")
+                print("✗ Fallback template also failed: {e2}")
+                messages.error(request, "Template rendering failed: {e}")
                 return redirect('Admindashboard')
         
         # Generate PDF with better error handling
@@ -9340,11 +9340,11 @@ def generate_report(request):
             
             # Add CSS for better PDF rendering
             pdf = html.write_pdf(stylesheets=[])
-            print(f"✓ PDF generated successfully, size: {len(pdf)} bytes")
+            print("✓ PDF generated successfully, size: {len(pdf)} bytes")
         except Exception as e:
-            print(f"✗ PDF generation failed: {e}")
-            print(f"Error type: {type(e)}")
-            print(f"Traceback: {traceback.format_exc()}")
+            print("✗ PDF generation failed: {e}")
+            print("Error type: {type(e)}")
+            print("Traceback: {traceback.format_exc()}")
             
             # Try to provide more specific error info
             if "font" in str(e).lower():
@@ -9352,23 +9352,23 @@ def generate_report(request):
             elif "css" in str(e).lower():
                 messages.error(request, "PDF generation failed due to CSS issues.")
             else:
-                messages.error(request, f"PDF generation failed: {e}")
+                messages.error(request, "PDF generation failed: {e}")
             return redirect('Admindashboard')
 
         # Create response
         response = HttpResponse(pdf, content_type='application/pdf')
-        filename = f"PPMS-Cluster4-Overall-Barangay-Report-{date.today().strftime('%Y%m%d')}.pdf"
+        filename = "PPMS-Cluster4-Overall-Barangay-Report-{date.today().strftime('%Y%m%d')}.pd"
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         
-        print(f"✓ Response created with filename: {filename}")
+        print("✓ Response created with filename: {filename}")
         print("=== DEBUG COMPLETE ===")
         return response
 
     except Exception as e:
-        print(f"✗ Unexpected error: {str(e)}")
-        print(f"Traceback: {traceback.format_exc()}")
-        logger.error(f"Error generating report: {str(e)}")
-        messages.error(request, f"Error generating report: {str(e)}")
+        print("✗ Unexpected error: {str(e)}")
+        print("Traceback: {traceback.format_exc()}")
+        logger.error("Error generating report: {str(e)}")
+        messages.error(request, "Error generating report: {str(e)}")
         return redirect('Admindashboard')
     
 from openpyxl import Workbook
@@ -9384,7 +9384,7 @@ def generate_nutrition_excel(request):
     user_barangay = get_user_barangay(request.user)
     current_user_info = None
     
-    print(f"DEBUG: Nutrition Excel - Current user email: {request.user.email}")
+    print("DEBUG: Nutrition Excel - Current user email: {request.user.email}")
     
     if request.user.is_authenticated:
         # Try each model to find the user
@@ -9397,7 +9397,7 @@ def generate_nutrition_excel(request):
                 'role': account.user_role,
                 'object': account
             }
-            print(f"DEBUG: Found in Account: {account.email}, Barangay: {user_barangay}")
+            print("DEBUG: Found in Account: {account.email}, Barangay: {user_barangay}")
         except Account.DoesNotExist:
             try:
                 # Try BHW model
@@ -9408,7 +9408,7 @@ def generate_nutrition_excel(request):
                     'role': 'BHW',
                     'object': bhw
                 }
-                print(f"DEBUG: Found in BHW: {bhw.email}, Barangay: {user_barangay}")
+                print("DEBUG: Found in BHW: {bhw.email}, Barangay: {user_barangay}")
             except BHW.DoesNotExist:
                 try:
                     # Try BNS model
@@ -9419,7 +9419,7 @@ def generate_nutrition_excel(request):
                         'role': 'BNS',
                         'object': bns
                     }
-                    print(f"DEBUG: Found in BNS: {bns.email}, Barangay: {user_barangay}")
+                    print("DEBUG: Found in BNS: {bns.email}, Barangay: {user_barangay}")
                 except BNS.DoesNotExist:
                     try:
                         # Try Midwife model
@@ -9430,7 +9430,7 @@ def generate_nutrition_excel(request):
                             'role': 'Midwife',
                             'object': midwife
                         }
-                        print(f"DEBUG: Found in Midwife: {midwife.email}, Barangay: {user_barangay}")
+                        print("DEBUG: Found in Midwife: {midwife.email}, Barangay: {user_barangay}")
                     except Midwife.DoesNotExist:
                         try:
                             # Try Nurse model
@@ -9441,7 +9441,7 @@ def generate_nutrition_excel(request):
                                 'role': 'Nurse',
                                 'object': nurse
                             }
-                            print(f"DEBUG: Found in Nurse: {nurse.email}, Barangay: {user_barangay}")
+                            print("DEBUG: Found in Nurse: {nurse.email}, Barangay: {user_barangay}")
                         except Nurse.DoesNotExist:
                             try:
                                 # Try Parent model
@@ -9452,7 +9452,7 @@ def generate_nutrition_excel(request):
                                     'role': 'Parent',
                                     'object': parent
                                 }
-                                print(f"DEBUG: Found in Parent: {parent.email}, Barangay: {user_barangay}")
+                                print("DEBUG: Found in Parent: {parent.email}, Barangay: {user_barangay}")
                             except Parent.DoesNotExist:
                                 print("DEBUG: User not found in any model")
 
@@ -9462,7 +9462,7 @@ def generate_nutrition_excel(request):
         from django.http import HttpResponseForbidden
         return HttpResponseForbidden("Access denied: No barangay assigned to your account or user not found.")
 
-    print(f"DEBUG: Excel generation authorized for {current_user_info['role']} in {user_barangay}")
+    print("DEBUG: Excel generation authorized for {current_user_info['role']} in {user_barangay}")
     
     # Parse month if provided
     selected_month = None
@@ -9472,7 +9472,7 @@ def generate_nutrition_excel(request):
     if month:
         try:
             selected_year, selected_month = map(int, month.split('-'))
-            month_name = f"{calendar.month_name[selected_month]} {selected_year}"
+            month_name = "{calendar.month_name[selected_month]} {selected_year}"
         except (ValueError, IndexError):
             month = None
     
@@ -9482,14 +9482,14 @@ def generate_nutrition_excel(request):
         barangay=user_barangay  # Only preschoolers from user's barangay
     )
     
-    print(f"DEBUG: Base query found {preschoolers_query.count()} preschoolers in {user_barangay}")
+    print("DEBUG: Base query found {preschoolers_query.count()} preschoolers in {user_barangay}")
     
     if month and selected_month and selected_year:
         preschoolers_query = preschoolers_query.filter(
             bmi__date_recorded__year=selected_year,
             bmi__date_recorded__month=selected_month
         ).distinct()
-        print(f"DEBUG: After month filter: {preschoolers_query.count()} preschoolers")
+        print("DEBUG: After month filter: {preschoolers_query.count()} preschoolers")
     
     # Use correct relationship with barangay filtering
     preschoolers = preschoolers_query.prefetch_related('bmi_set').select_related('parent_id', 'barangay')
@@ -9513,21 +9513,21 @@ def generate_nutrition_excel(request):
     # Add title with barangay information
     ws.merge_cells('A1:J1')
     title_cell = ws['A1']
-    title_cell.value = f"Nutrition Report - {user_barangay.name} - {month_name}"
+    title_cell.value = "Nutrition Report - {user_barangay.name} - {month_name}"
     title_cell.font = Font(bold=True, size=16)
     title_cell.alignment = center_alignment
     
     # Add generation info with user details
     ws.merge_cells('A2:J2')
     info_cell = ws['A2']
-    info_cell.value = f"Generated on: {datetime.now().strftime('%B %d, %Y at %I:%M %p')} by {current_user_info['name']} ({current_user_info['role']})"
+    info_cell.value = "Generated on: {datetime.now().strftime('%B %d, %Y at %I:%M %p')} by {current_user_info['name']} ({current_user_info['role']})"
     info_cell.font = Font(italic=True)
     info_cell.alignment = center_alignment
     
     # Add barangay info
     ws.merge_cells('A3:J3')
     barangay_cell = ws['A3']
-    barangay_cell.value = f"Barangay: {user_barangay.name}"
+    barangay_cell.value = "Barangay: {user_barangay.name}"
     barangay_cell.font = Font(bold=True)
     barangay_cell.alignment = center_alignment
     
@@ -9560,7 +9560,7 @@ def generate_nutrition_excel(request):
     for preschooler in preschoolers:
         # Double-check barangay (security measure)
         if preschooler.barangay != user_barangay:
-            print(f"DEBUG: Skipping preschooler {preschooler.first_name} {preschooler.last_name} - wrong barangay")
+            print("DEBUG: Skipping preschooler {preschooler.first_name} {preschooler.last_name} - wrong barangay")
             continue
             
         bmi_query = preschooler.bmi_set.all()
@@ -9585,7 +9585,7 @@ def generate_nutrition_excel(request):
                 parent = preschooler.parent_id
                 # Verify parent is also in same barangay
                 if parent.barangay != user_barangay:
-                    print(f"DEBUG: Skipping preschooler {preschooler.first_name} {preschooler.last_name} - parent in different barangay")
+                    print("DEBUG: Skipping preschooler {preschooler.first_name} {preschooler.last_name} - parent in different barangay")
                     continue
                     
                 if hasattr(parent, 'mother_name') and parent.mother_name:
@@ -9599,9 +9599,9 @@ def generate_nutrition_excel(request):
             
             data = [
                 processed_count + 1,  # Child sequence number
-                preschooler.address or f"{user_barangay.name}",  # Include barangay in address
+                preschooler.address or "{user_barangay.name}",  # Include barangay in address
                 mother_name,
-                f"{preschooler.last_name}, {preschooler.first_name}",
+                "{preschooler.last_name}, {preschooler.first_name}",
                 'NO',  # IP Group
                 preschooler.sex,
                 preschooler.birth_date.strftime('%b-%d-%Y') if preschooler.birth_date else 'N/A',
@@ -9624,10 +9624,10 @@ def generate_nutrition_excel(request):
             processed_count += 1
             
         except Exception as e:
-            print(f"Error processing preschooler {preschooler.preschooler_id} for Excel: {e}")
+            print("Error processing preschooler {preschooler.preschooler_id} for Excel: {e}")
             continue
     
-    print(f"DEBUG: Processed {processed_count} preschoolers for Excel export")
+    print("DEBUG: Processed {processed_count} preschoolers for Excel export")
     
     # Add empty rows to match template (up to row 482)
     for empty_row in range(row_num, 487):  # Adjusted for shifted rows
@@ -9655,14 +9655,14 @@ def generate_nutrition_excel(request):
     output.seek(0)
     
     # Create HTTP response with barangay in filename
-    filename = f"Nutrition-Report-{user_barangay.name}-{month_name.replace(' ', '-')}.xlsx"
+    filename = "Nutrition-Report-{user_barangay.name}-{month_name.replace(' ', '-')}.xlsx"
     response = HttpResponse(
         output,
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     
-    print(f"DEBUG: Generated Excel file: {filename} with {processed_count} preschoolers")
+    print("DEBUG: Generated Excel file: {filename} with {processed_count} preschoolers")
     return response
 
 
@@ -9689,10 +9689,10 @@ def save_fcm_token(request):
             source = request.POST.get('source', 'form')
             supports_nutrition = True
 
-        logger.info(f"🔥 Attempting to save FCM token for nutrition services")
-        logger.info(f"📧 Email: {email}")
-        logger.info(f"🔑 FCM Token: {fcm_token[:20] if fcm_token else 'None'}...")
-        logger.info(f"🍎 Source: {source}, Supports Nutrition: {supports_nutrition}")
+        logger.info("🔥 Attempting to save FCM token for nutrition services")
+        logger.info("📧 Email: {email}")
+        logger.info("🔑 FCM Token: {fcm_token[:20] if fcm_token else 'None'}...")
+        logger.info("🍎 Source: {source}, Supports Nutrition: {supports_nutrition}")
 
         if not email or not fcm_token:
             logger.warning("❌ Missing email or FCM token")
@@ -9703,13 +9703,13 @@ def save_fcm_token(request):
             from .models import Account, FCMToken  # Adjust import path as needed
             
             account = Account.objects.get(email=email)
-            logger.info(f"✅ Found account: {account.email}")
+            logger.info("✅ Found account: {account.email}")
             
             # Update account FCM token
             old_token = account.fcm_token
             account.fcm_token = fcm_token
             account.save(update_fields=['fcm_token'])
-            logger.info(f"🔄 Updated token from {old_token[:20] if old_token else 'None'}... to {fcm_token[:20]}...")
+            logger.info("🔄 Updated token from {old_token[:20] if old_token else 'None'}... to {fcm_token[:20]}...")
 
             # Also create/update FCMToken record if you have this model
             try:
@@ -9724,17 +9724,17 @@ def save_fcm_token(request):
                         'registration_source': source
                     }
                 )
-                logger.info(f"✅ FCMToken record {'created' if created else 'updated'}")
+                logger.info("✅ FCMToken record {'created' if created else 'updated'}")
             except Exception as fcm_model_error:
-                logger.warning(f"⚠️ FCMToken model update failed (this may be OK): {fcm_model_error}")
+                logger.warning("⚠️ FCMToken model update failed (this may be OK): {fcm_model_error}")
 
-            logger.info(f"✅ FCM token saved successfully for {email}")
+            logger.info("✅ FCM token saved successfully for {email}")
             
             # Send test notification specifically for nutrition services
             test_result = PushNotificationService.send_push_notification(
                 token=fcm_token,
                 title="🍎 Nutrition Services Notifications Enabled",
-                body=f"Your device is now registered for nutrition service notifications!",
+                body="Your device is now registered for nutrition service notifications!",
                 data={
                     "type": "registration_success",
                     "email": email,
@@ -9747,20 +9747,20 @@ def save_fcm_token(request):
                 'success': True, 
                 'message': f'FCM token saved for {email} - Nutrition notifications enabled',
                 'email': email,
-                'token_preview': f"{fcm_token[:20]}...",
+                'token_preview': "{fcm_token[:20]}...",
                 'supports_nutrition': supports_nutrition,
                 'test_notification': test_result
             })
 
         except Account.DoesNotExist:
-            logger.error(f"❌ Account not found: {email}")
+            logger.error("❌ Account not found: {email}")
             return JsonResponse({'success': False, 'error': f'Account not found for {email}'})
 
     except json.JSONDecodeError as e:
-        logger.error(f"❌ JSON decode error: {e}")
+        logger.error("❌ JSON decode error: {e}")
         return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
     except Exception as e:
-        logger.error(f"❌ FCM save error: {e}")
+        logger.error("❌ FCM save error: {e}")
         return JsonResponse({'success': False, 'error': str(e)})
 
 
@@ -9775,11 +9775,11 @@ def register_fcm_token(request):
         supports_nutrition = data.get('supports_nutrition_notifications', True)
         source = data.get('source', 'app_startup')
 
-        logger.info(f"🔥 Enhanced FCM token registration attempt")
-        logger.info(f"🔑 Token: {token[:20] if token else 'None'}...")
-        logger.info(f"📱 Device: {device_type}")
-        logger.info(f"🍎 Supports Nutrition: {supports_nutrition}")
-        logger.info(f"📍 Source: {source}")
+        logger.info("🔥 Enhanced FCM token registration attempt")
+        logger.info("🔑 Token: {token[:20] if token else 'None'}...")
+        logger.info("📱 Device: {device_type}")
+        logger.info("🍎 Supports Nutrition: {supports_nutrition}")
+        logger.info("📍 Source: {source}")
 
         if not token:
             return JsonResponse({'success': False, 'message': 'FCM token required'})
@@ -9798,7 +9798,7 @@ def register_fcm_token(request):
                 existing_token.updated_at = timezone.now()
                 existing_token.is_active = True
                 existing_token.save()
-                logger.info(f"✅ Updated existing FCM token record")
+                logger.info("✅ Updated existing FCM token record")
             else:
                 # Create temporary token record without account association
                 FCMToken.objects.create(
@@ -9811,23 +9811,23 @@ def register_fcm_token(request):
                     updated_at=timezone.now()
                     # account will be null until login
                 )
-                logger.info(f"✅ Created temporary FCM token record")
+                logger.info("✅ Created temporary FCM token record")
                 
         except Exception as model_error:
-            logger.warning(f"⚠️ Could not create FCMToken model (this may be OK): {model_error}")
+            logger.warning("⚠️ Could not create FCMToken model (this may be OK): {model_error}")
         
-        logger.info(f"✅ FCM token received and processed: {token[:20]}...")
+        logger.info("✅ FCM token received and processed: {token[:20]}...")
         
         return JsonResponse({
             'success': True, 
             'message': 'FCM token registered successfully for nutrition services',
-            'token_preview': f"{token[:20]}...",
+            'token_preview': "{token[:20]}...",
             'supports_nutrition': supports_nutrition,
             'device_type': device_type
         })
         
     except Exception as e:
-        logger.error(f"❌ FCM token registration error: {e}")
+        logger.error("❌ FCM token registration error: {e}")
         return JsonResponse({'success': False, 'message': str(e)})
     
 import requests
@@ -9885,7 +9885,7 @@ def check_notification_status(request):
         })
         
     except Exception as e:
-        logger.error(f"Error checking notification status: {e}")
+        logger.error("Error checking notification status: {e}")
         return JsonResponse({
             'success': False,
             'error': str(e)
@@ -9919,8 +9919,8 @@ def test_push_notification(request):
                 'error': f'No FCM token found for {email}'
             })
         
-        logger.info(f"🧪 Testing push notification for {email}")
-        logger.info(f"🔑 Using FCM token: {account.fcm_token[:20]}...")
+        logger.info("🧪 Testing push notification for {email}")
+        logger.info("🔑 Using FCM token: {account.fcm_token[:20]}...")
         
         # Send test notification
         result = PushNotificationService.send_push_notification(
@@ -9934,7 +9934,7 @@ def test_push_notification(request):
             }
         )
         
-        logger.info(f"🧪 Test notification result: {result}")
+        logger.info("🧪 Test notification result: {result}")
         
         return JsonResponse({
             'success': result.get('success', False),
@@ -9945,7 +9945,7 @@ def test_push_notification(request):
         })
         
     except Exception as e:
-        logger.error(f"❌ Test notification error: {e}")
+        logger.error("❌ Test notification error: {e}")
         return JsonResponse({
             'success': False,
             'error': str(e)
@@ -10018,7 +10018,7 @@ def save_temperature(request):
             # Create temperature record without BHW if not found
             pass
         except Exception as e:
-            print(f"Error finding BHW: {e}")
+            print("Error finding BHW: {e}")
         
         # Create temperature record
         temperature_record = Temperature.objects.create(
@@ -10035,7 +10035,7 @@ def save_temperature(request):
         })
         
     except Exception as e:
-        print(f"Temperature save error: {e}")  # For debugging
+        print("Temperature save error: {e}")  # For debugging
         return JsonResponse({
             'status': 'error',
             'message': 'An unexpected error occurred while saving temperature'
