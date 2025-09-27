@@ -165,19 +165,17 @@ if os.environ.get("DATABASE_URL"):
         )
     }
 else:
-    # Local development database (MySQL)
+    # Local development database (PostgreSQL)
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
+            'ENGINE': 'django.db.backends.postgresql',
             'NAME': 'ppms',
-            'USER': 'root',
-            'PASSWORD': '',
+            'USER': 'postgres',  # Default PostgreSQL user
+            'PASSWORD': '',      # Set your local PostgreSQL password
             'HOST': '127.0.0.1',
-            'PORT': '3307',
+            'PORT': '5432',      # Default PostgreSQL port
             'OPTIONS': {
-                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-                'charset': 'utf8mb4',
-                'use_unicode': True,
+                'charset': 'utf8',
             },
             'TIME_ZONE': 'Asia/Manila',
         }
