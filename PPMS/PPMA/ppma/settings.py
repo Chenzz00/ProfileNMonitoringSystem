@@ -41,6 +41,9 @@ ALLOWED_HOSTS = [
     ".railway.app",
     "localhost",
     "127.0.0.1",
+    "myppma.com",       # ✅ your custom domain
+    "www.myppma.com",   # ✅ with www
+    "ppma.myppma.com",  # ✅ subdomain
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -48,6 +51,9 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.railway.app",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "https://myppma.com",
+    "https://www.myppma.com",
+    "https://ppma.myppma.com",
 ]
 
 # =======================
