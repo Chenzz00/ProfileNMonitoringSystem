@@ -26,10 +26,10 @@ RUN apt-get update && apt-get install -y \
     shared-mime-info \
  && rm -rf /var/lib/apt/lists/*
 
-# Create working directory
+# Set working directory
 WORKDIR /app
 
-# Copy requirements and install
+# Copy and install dependencies
 COPY requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
@@ -37,8 +37,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Expose port
+# Expose container port
 EXPOSE 8000
 
-# Start the app
+# Collect static files (optional: run in Docker build)
+RUN python manage.py collectstatic --noinput
+
+# Start the app using Gunicorn (static port 8000 for simplicity)
 CMD ["gunicorn", "PPMA.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
