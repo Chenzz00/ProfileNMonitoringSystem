@@ -11,12 +11,12 @@ ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=PPMA.settings
 
 # =======================
-# Install system libraries (WeasyPrint + MySQL dev headers + compiler)
+# Install system libraries
 # =======================
 RUN apt-get update && apt-get install -y \
     build-essential \
     pkg-config \
-    default-libmysqlclient-dev \
+    libpq-dev \
     libpango-1.0-0 \
     libpangoft2-1.0-0 \
     libpangocairo-1.0-0 \
@@ -57,11 +57,9 @@ EXPOSE 8080
 
 # =======================
 # Start the app
-# Runs migrations, collects static files, checks tables, then starts Gunicorn
 # =======================
 CMD bash -c "\
-    python manage.py migrate --verbosity=2 && \
+    python manage.py migrate --noinput && \
     python manage.py collectstatic --noinput && \
-    python -c \"import os,django; os.environ.setdefault('DJANGO_SETTINGS_MODULE','PPMA.settings'); django.setup(); print('=== Migration Complete - Checking Tables ===')\" && \
     gunicorn PPMA.wsgi:application --bind 0.0.0.0:8080 --workers 4\
 "
