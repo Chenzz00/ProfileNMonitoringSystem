@@ -37,8 +37,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Expose port (Railway uses $PORT automatically)
+# Expose port (Railway sets $PORT automatically)
 EXPOSE 8000
 
-# Start with Gunicorn - use shell to properly expand environment variables
-CMD ["sh", "-c", "gunicorn PPMA.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 4"]
+# Copy entrypoint script and make it executable
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Use entrypoint to start Gunicorn
+ENTRYPOINT ["/entrypoint.sh"]
