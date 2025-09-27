@@ -133,12 +133,21 @@ ASGI_APPLICATION = "PPMA.asgi.application"
 # =======================
 # Database (Railway MySQL)
 # =======================
+
+# Debug print for Railway env variables
+print("🔎 Railway DB Config:")
+print("  MYSQLDATABASE:", os.environ.get("MYSQLDATABASE"))
+print("  MYSQLUSER:", os.environ.get("MYSQLUSER"))
+print("  MYSQLPASSWORD:", "***HIDDEN***" if os.environ.get("MYSQLPASSWORD") else None)
+print("  MYSQLHOST:", os.environ.get("MYSQLHOST"))
+print("  MYSQLPORT:", os.environ.get("MYSQLPORT"))
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("MYSQLDATABASE"),
-        "USER": os.environ.get("MYSQLUSER"),
-        "PASSWORD": os.environ.get("MYSQLPASSWORD"),
+        "NAME": os.environ.get("MYSQLDATABASE", "railway"),
+        "USER": os.environ.get("MYSQLUSER", "root"),
+        "PASSWORD": os.environ.get("MYSQLPASSWORD", ""),  # ensure it’s never None
         "HOST": os.environ.get("MYSQLHOST", "mysql.railway.internal"),
         "PORT": os.environ.get("MYSQLPORT", "3306"),
         "OPTIONS": {
@@ -146,6 +155,7 @@ DATABASES = {
         },
     }
 }
+
 # =======================
 # Password validation
 # =======================
@@ -225,5 +235,3 @@ SECURE_SSL_REDIRECT = not DEBUG
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-
-
