@@ -28,23 +28,13 @@ FIREBASE_KEY_PATH = BASE_DIR / "PPMA" / "firebase-key.json"
 def initialize_firebase():
     """Initialize Firebase Admin SDK if not already initialized."""
     if not firebase_admin._apps:
-        try:
-            if FIREBASE_KEY_PATH.exists():
-                cred = credentials.Certificate(str(FIREBASE_KEY_PATH))
-                firebase_admin.initialize_app(cred)
-                print("✅ Firebase initialized successfully")
-                return True
-            else:
-                print(f"⚠️ Firebase key not found at: {FIREBASE_KEY_PATH}")
-                return False
-        except Exception as e:
-            print(f"❌ Firebase initialization failed: {e}")
-            return False
-    else:
-        print("ℹ️ Firebase already initialized")
-        return True
-
-FIREBASE_INITIALIZED = initialize_firebase()
+        if FIREBASE_KEY_PATH.exists():
+            cred = credentials.Certificate(str(FIREBASE_KEY_PATH))
+            firebase_admin.initialize_app(cred)
+            print("✅ Firebase initialized successfully")
+        else:
+            print(f"⚠️ Firebase key not found at: {FIREBASE_KEY_PATH}")
+initialize_firebase()
 
 # =======================
 # Security
@@ -53,9 +43,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-CHANGE_THIS_IN_PRODUC
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = [
-    os.environ.get("RAILWAY_APP_DOMAIN", "*"),
-    "localhost",
-    "127.0.0.1",
+    os.environ.get("RAILWAY_APP_DOMAIN", "profilenmonitoringsystem-production.up.railway.app"),
 ]
 
 # =======================
@@ -145,8 +133,9 @@ ASGI_APPLICATION = "PPMA.asgi.application"
 # =======================
 # Database
 # =======================
-DATABASE_URL = os.environ.get("DATABASE_URL") or \
-    "postgresql://postgres:ZqCjqbJboopmLzzClMETuWfgOqfyoubI@postgres.railway.internal:5432/railway"
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if not DATABASE_URL:
+    raise Exception("❌ DATABASE_URL not set! Add PostgreSQL plugin in Railway.")
 
 DATABASES = {
     "default": dj_database_url.config(
@@ -216,4 +205,3 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
-
