@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import firebase_admin
 from firebase_admin import credentials
+import dj_database_url
 
 # =======================
 # Base Directory
@@ -137,17 +138,9 @@ ASGI_APPLICATION = "PPMA.asgi.application"
 # Database (Railway MySQL)
 # =======================
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("MYSQLDATABASE"),
-        "USER": os.environ.get("MYSQLUSER"),
-        "PASSWORD": os.environ.get("MYSQLPASSWORD"),
-        "HOST": os.environ.get("MYSQLHOST", "mysql.railway.internal"),
-        "PORT": os.environ.get("MYSQLPORT", "3306"),
-        "OPTIONS": {
-            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
-    }
+    'default': dj_database_url.config(
+        default=f"mysql://{os.environ.get('MYSQLUSER')}:{os.environ.get('MYSQLPASSWORD')}@{os.environ.get('MYSQLHOST')}:{os.environ.get('MYSQLPORT')}/{os.environ.get('MYSQLDATABASE')}"
+    )
 }
 
 # =======================
@@ -236,4 +229,3 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-
