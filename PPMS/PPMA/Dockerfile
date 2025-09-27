@@ -40,4 +40,4 @@ COPY . .
 EXPOSE 8000
 
 # Start with Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "PPMA.wsgi:application"]
+CMD gunicorn PPMA.wsgi:application --bind 0.0.0.0:$PORT
