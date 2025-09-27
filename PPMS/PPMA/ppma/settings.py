@@ -174,9 +174,6 @@ else:
             'PASSWORD': '',      # Set your local PostgreSQL password
             'HOST': '127.0.0.1',
             'PORT': '5432',      # Default PostgreSQL port
-            'OPTIONS': {
-                'charset': 'utf8',
-            },
             'TIME_ZONE': 'Asia/Manila',
         }
     }
