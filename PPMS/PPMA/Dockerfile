@@ -40,5 +40,5 @@ COPY . .
 # Expose port (Railway uses $PORT automatically)
 EXPOSE 8000
 
-# Start with Gunicorn (use default 8000 if $PORT not set)
-CMD ["sh", "-c", "gunicorn PPMA.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
+# Start with Gunicorn - use shell to properly expand environment variables
+CMD ["sh", "-c", "gunicorn PPMA.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 4"]
