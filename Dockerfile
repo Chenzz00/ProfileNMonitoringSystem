@@ -40,5 +40,5 @@ COPY . .
 # Expose container port
 EXPOSE 8080
 
-# Start the app (run migrations first, then Gunicorn)
-CMD bash -c "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn PPMA.wsgi:application --bind 0.0.0.0:8080 --workers 4"
+# Start the app (makemigrations first, then migrate, collectstatic, then Gunicorn)
+CMD bash -c "python manage.py makemigrations WebApp && python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn PPMA.wsgi:application --bind 0.0.0.0:8080 --workers 4"
