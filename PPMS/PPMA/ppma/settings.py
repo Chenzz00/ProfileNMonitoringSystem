@@ -138,7 +138,7 @@ ROOT_URLCONF = 'PPMA.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "WebApp" / "Templates" / "HTML"],
+        'DIRS': [BASE_DIR / "WebApp" / "Templates"],  # Remove the "HTML" part
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -150,7 +150,6 @@ TEMPLATES = [
         },
     },
 ]
-
 WSGI_APPLICATION = 'PPMA.wsgi.application'
 ASGI_APPLICATION = "PPMA.asgi.application"
 
@@ -234,4 +233,5 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
+
 
