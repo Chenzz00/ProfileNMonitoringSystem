@@ -37,7 +37,7 @@ SECRET_KEY = os.environ.get(
 )
 
 # Production settings
-DEBUG = False  # Always False in production
+DEBUG = True  # Always False in production
 
 # Trust Railway proxy headers for HTTPS
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -236,3 +236,4 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
