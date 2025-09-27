@@ -136,10 +136,10 @@ ASGI_APPLICATION = "PPMA.asgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("MYSQLDATABASE", "railway"),
-        "USER": os.environ.get("MYSQLUSER", "root"),
-        "PASSWORD": os.environ.get("MYSQLPASSWORD", ""),
-        "HOST": os.environ.get("MYSQLHOST", "localhost"),
+        "NAME": os.environ.get("MYSQLDATABASE"),
+        "USER": os.environ.get("MYSQLUSER"),
+        "PASSWORD": os.environ.get("MYSQLPASSWORD"),
+        "HOST": os.environ.get("MYSQLHOST"),
         "PORT": os.environ.get("MYSQLPORT", "3306"),
         "OPTIONS": {
             "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
@@ -190,7 +190,6 @@ EMAIL_TIMEOUT = 20
 # =======================
 # Channels (WebSockets)
 # =======================
-# If Redis is not available on Railway, use in-memory layer to avoid crashes
 if os.environ.get("REDIS_URL"):
     CHANNEL_LAYERS = {
         "default": {
