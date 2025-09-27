@@ -92,7 +92,7 @@ tzdata==2024.2
 tzlocal==5.2
 uritools==4.0.3
 urllib3==2.3.0
-weasyprint==65.1
+
 webencodings==0.5.1
 xhtml2pdf==0.2.16
 zopfli==0.2.3.post1
