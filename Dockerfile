@@ -1,8 +1,9 @@
 # Use slim Python base image
 FROM python:3.11-slim
 
-# Install system libraries required for WeasyPrint
+# Install system libraries required for WeasyPrint + compiler for pycairo
 RUN apt-get update && apt-get install -y \
+    build-essential \
     libpango-1.0-0 \
     libpangoft2-1.0-0 \
     libpangocairo-1.0-0 \
@@ -17,16 +18,3 @@ RUN apt-get update && apt-get install -y \
     fonts-dejavu-core \
     shared-mime-info \
  && rm -rf /var/lib/apt/lists/*
-
-# Set working directory inside container
-WORKDIR /app
-
-# Copy Python dependencies and install
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy your entire project into the container
-COPY . .
-
-# Command for running Django with Gunicorn on Railway
-CMD ["gunicorn", "PPMA.wsgi:application", "--bind", "0.0.0.0:$PORT", "--workers", "4"]
