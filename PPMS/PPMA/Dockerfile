@@ -30,19 +30,15 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 # Copy and install dependencies
-COPY requirements.txt .
+COPY requirements.txt ./
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project files
 COPY . .
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
 # Expose container port
 EXPOSE 8080
 
-# Start the app using Gunicorn
-# Using static port 8080 for simplicity
-CMD ["gunicorn", "PPMA.wsgi:application", "--bind", "0.0.0.0:8080", "--workers", "4"]
+# Start the app (run migrations first, then Gunicorn)
+CMD bash -c "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn PPMA.wsgi:application --bind 0.0.0.0:8080 --workers 4"
