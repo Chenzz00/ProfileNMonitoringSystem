@@ -1,2 +1,5 @@
 [build]
 apt = "apt.txt"
+
+[deploy]
+start = "python manage.py migrate && gunicorn PPMA.wsgi:application --bind 0.0.0.0:$PORT --workers 4"
