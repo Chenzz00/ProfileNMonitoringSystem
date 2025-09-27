@@ -37,11 +37,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY . .
 
-# Expose container port
-EXPOSE 8000
-
-# Collect static files (optional: run in Docker build)
+# Collect static files
 RUN python manage.py collectstatic --noinput
 
-# Start the app using Gunicorn (static port 8000 for simplicity)
-CMD ["gunicorn", "PPMA.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
+# Expose container port
+EXPOSE 8080
+
+# Start the app using Gunicorn
+# Using static port 8080 for simplicity
+CMD ["gunicorn", "PPMA.wsgi:application", "--bind", "0.0.0.0:8080", "--workers", "4"]
