@@ -125,8 +125,10 @@ WSGI_APPLICATION = 'PPMA.wsgi.application'
 ASGI_APPLICATION = "PPMA.asgi.application"
 
 # =======================
-# Database (Railway-ready)
+# Database (Railway-ready / local fallback)
 # =======================
+
+
 PGDATABASE = os.environ.get("PGDATABASE")
 PGHOST = os.environ.get("PGHOST")
 PGPASSWORD = os.environ.get("PGPASSWORD")
@@ -134,19 +136,8 @@ PGPORT = os.environ.get("PGPORT")
 PGUSER = os.environ.get("PGUSER")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
-if not DATABASE_URL:
-    if all([PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE]):
-        DATABASE_URL = f"postgres://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}"
-    else:
-        print("⚠️ DATABASE_URL not set! Falling back to local SQLite for development.")
-        DATABASES = {
-            "default": {
-                "ENGINE": "django.db.backends.sqlite3",
-                "NAME": BASE_DIR / "db.sqlite3",
-            }
-        }
-
 if DATABASE_URL:
+    # Use DATABASE_URL if available (Railway)
     DATABASES = {
         "default": dj_database_url.config(
             default=DATABASE_URL,
@@ -154,6 +145,26 @@ if DATABASE_URL:
             ssl_require=True
         )
     }
+elif all([PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE]):
+    # Assemble DATABASE_URL from individual PG vars
+    DATABASE_URL = f"postgres://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}"
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True
+        )
+    }
+else:
+    # Fallback to local SQLite for development
+    print("⚠️ DATABASE_URL not set! Falling back to local SQLite for development.")
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+
 
 # =======================
 # Password validation
@@ -215,3 +226,4 @@ SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
+
