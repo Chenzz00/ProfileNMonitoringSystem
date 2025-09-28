@@ -179,23 +179,33 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # =======================
 EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND",
-    "django.core.mail.backends.console.EmailBackend"  # default if env var not set
+    "django.core.mail.backends.smtp.EmailBackend"  # use SMTP by default
 )
 
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
 
-# Convert string "True"/"False" from env to actual boolean
+# Use TLS for Gmail; do not enable SSL at the same time
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() in ["true", "1", "yes"]
 EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() in ["true", "1", "yes"]
 
+# Credentials from Railway environment variables
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+
+# Default sender
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 
-# Optional: add timeout and fail silently
+# Optional: timeout
 EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 30))
-EMAIL_FAIL_SILENTLY = False  # Set to False to see errors in Railway logs
+
+# Show errors in logs (important for debugging in deployment)
+EMAIL_FAIL_SILENTLY = False
+
+# Safety check: warn if credentials are missing
+if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
+    import warnings
+    warnings.warn("⚠️ EMAIL_HOST_USER or EMAIL_HOST_PASSWORD is not set! Emails will fail.")
 
 
 
@@ -232,6 +242,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
 
 
