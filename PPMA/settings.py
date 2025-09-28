@@ -35,7 +35,7 @@ initialize_firebase()
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY", "django-insecure-CHANGE_THIS_IN_PRODUCTION"
 )
-DEBUG = True  # Always False in production
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'  # Better production handling
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
@@ -181,9 +181,14 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'ppms.cluster4imus@gmail.com'
-EMAIL_HOST_PASSWORD = 'aaoy txgi vfra cule'  # Use app password for Gmail
-DEFAULT_FROM_EMAIL = 'ppms.cluster4imus@gmail.com'
+EMAIL_USE_SSL = False
+EMAIL_TIMEOUT = 30  # Add timeout to prevent worker hangs
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'ppms.cluster4imus@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'aaoy txgi vfra cule')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'ppms.cluster4imus@gmail.com')
+
+# Email fail silently in production to prevent crashes
+EMAIL_FAIL_SILENTLY = not DEBUG
 
 # =======================
 # Channels (WebSockets)
