@@ -5134,14 +5134,7 @@ def reportTemplate(request):
     return render(request, 'HTML/reportTemplate.html')
 
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.core.mail import EmailMultiAlternatives
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
-from django.utils.crypto import get_random_string
-from django.conf import settings
-from .models import User, PasswordResetOTP
+
 
 def forgot_password(request):
     if request.method == 'POST':
@@ -10014,5 +10007,6 @@ def save_temperature(request):
             'status': 'error',
             'message': 'An unexpected error occurred while saving temperature'
         })
+
 
 
