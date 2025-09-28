@@ -35,7 +35,7 @@ initialize_firebase()
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY", "django-insecure-CHANGE_THIS_IN_PRODUCTION"
 )
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'  # Better production handling
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
@@ -76,7 +76,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # serves static files
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -138,7 +138,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("POSTGRES_DB", "railway"),
         "USER": os.environ.get("PGUSER", "postgres"),
-        "PASSWORD": os.environ.get("PGPASSWORD", "QxMDpAiAAIcEwQtzWcatKMKPsdIpEXQF"),
+        "PASSWORD": os.environ.get("PGPASSWORD", ""),
         "HOST": os.environ.get("PGHOST", "turntable.proxy.rlwy.net"),
         "PORT": os.environ.get("PGPORT", "44683"),
     }
@@ -177,13 +177,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # =======================
 # Email Configuration
 # =======================
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ['EMAIL_HOST_USER']
-EMAIL_HOST_PASSWORD = os.environ['EMAIL_HOST_PASSWORD']
-DEFAULT_FROM_EMAIL = os.environ['DEFAULT_FROM_EMAIL']
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend"
+)
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() == "true"
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() == "true"
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 EMAIL_FAIL_SILENTLY = not DEBUG
 
 # =======================
@@ -193,23 +196,17 @@ if os.environ.get("REDIS_URL"):
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels_redis.core.RedisChannelLayer",
-            "CONFIG": {
-                "hosts": [os.environ["REDIS_URL"]],
-            },
+            "CONFIG": {"hosts": [os.environ["REDIS_URL"]]},
         },
     }
 else:
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels.layers.InMemoryChannelLayer"
-        }
-    }
+    CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
 # =======================
 # Sessions
 # =======================
 LOGIN_URL = '/login/'
-SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 days
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_SAVE_EVERY_REQUEST = True
@@ -217,15 +214,11 @@ SESSION_SAVE_EVERY_REQUEST = True
 # =======================
 # Security (Production)
 # =======================
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-SECURE_SSL_REDIRECT = True
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-
+SECURE_SSL_REDIRECT = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-
