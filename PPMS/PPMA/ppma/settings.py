@@ -178,19 +178,25 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Email Configuration
 # =======================
 EMAIL_BACKEND = os.environ.get(
-    "EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend"
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.console.EmailBackend"  # default if env var not set
 )
+
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
-EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() == "true"
-EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() == "true"
+
+# Convert string "True"/"False" from env to actual boolean
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() in ["true", "1", "yes"]
+EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() in ["true", "1", "yes"]
+
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 
 # Optional: add timeout and fail silently
-EMAIL_TIMEOUT = 30
-EMAIL_FAIL_SILENTLY = False  # Set to False to see errors in logs
+EMAIL_TIMEOUT = int(os.environ.get("EMAIL_TIMEOUT", 30))
+EMAIL_FAIL_SILENTLY = False  # Set to False to see errors in Railway logs
+
 
 
 # =======================
@@ -226,5 +232,6 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
 
