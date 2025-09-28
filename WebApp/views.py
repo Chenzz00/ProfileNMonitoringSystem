@@ -5134,6 +5134,15 @@ def reportTemplate(request):
     return render(request, 'HTML/reportTemplate.html')
 
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.core.mail import EmailMultiAlternatives
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+from django.utils.crypto import get_random_string
+from django.conf import settings
+from .models import User, PasswordResetOTP
+
 def forgot_password(request):
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
@@ -5160,11 +5169,11 @@ def forgot_password(request):
         PasswordResetOTP.objects.filter(user=user, is_used=False).delete()
 
         # Create new OTP
-        otp_instance = PasswordResetOTP.objects.create(user=user)
+        otp_code = get_random_string(length=6, allowed_chars='0123456789')
+        otp_instance = PasswordResetOTP.objects.create(user=user, otp_code=otp_code)
 
         # Compose email
         subject = '🔐 Password Reset OTP - PPMS Cluster 4'
-
         text_message = f"""
 Hello {user.first_name or user.username},
 
@@ -5174,7 +5183,6 @@ This code will expire in 10 minutes.
 
 If you didn't request this, please ignore this email.
 """
-
         html_message = f"""
 <!DOCTYPE html>
 <html>
@@ -5212,16 +5220,18 @@ body {{ font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px
                 to=[email]
             )
             email_msg.attach_alternative(html_message, "text/html")
-            email_msg.send(fail_silently=False)
+            email_msg.send(fail_silently=False)  # Important for logging email errors
 
             messages.success(request, 'OTP sent to your email address.')
             return redirect('verify_otp', user_id=user.id)
 
         except Exception as e:
+            # Print error to Railway logs
             print(f"[ERROR] Email send failed: {e}")
-            messages.error(request, 'Failed to send email. Please try again.')
+            messages.error(request, 'Failed to send email. Please try again later.')
 
     return render(request, 'HTML/forgot_password.html')
+
 
 def admin_registered_parents(request):
     # Ensure user is authenticated and is admin
@@ -10004,4 +10014,5 @@ def save_temperature(request):
             'status': 'error',
             'message': 'An unexpected error occurred while saving temperature'
         })
+
 
