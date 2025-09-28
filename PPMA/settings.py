@@ -178,13 +178,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Email
 # =======================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST = 'smtp.gmail.com'  # Use your email provider's SMTP
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "ppms.cluster4imus@gmail.com")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-EMAIL_TIMEOUT = 20
+EMAIL_HOST_USER = 'ppms.cluster4imus@gmail.com'
+EMAIL_HOST_PASSWORD = 'aaoy txgi vfra cule'  # Use app password for Gmail
+DEFAULT_FROM_EMAIL = 'ppms.cluster4imus@gmail.com'
 
 # =======================
 # Channels (WebSockets)
@@ -228,4 +227,5 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
