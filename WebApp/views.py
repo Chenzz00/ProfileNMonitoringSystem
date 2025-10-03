@@ -5139,71 +5139,109 @@ def reportTemplate(request):
 def forgot_password(request):
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
-
+        
         # Validate email
         if not email:
             messages.error(request, 'Email address is required.')
             return render(request, 'HTML/forgot_password.html')
-
+        
         try:
             validate_email(email)
         except ValidationError:
             messages.error(request, 'Please enter a valid email address.')
             return render(request, 'HTML/forgot_password.html')
-
+        
         # Check if user exists
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             messages.error(request, 'No account found with this email address.')
             return render(request, 'HTML/forgot_password.html')
-
+        
         # Delete existing OTPs
         PasswordResetOTP.objects.filter(user=user, is_used=False).delete()
-
+        
         # Create new OTP
-        otp_code = get_random_string(length=6, allowed_chars='0123456789')
-        otp_instance = PasswordResetOTP.objects.create(user=user, otp_code=otp_code)
-
+        otp_instance = PasswordResetOTP.objects.create(user=user)
+        
         # Compose email
         subject = '🔐 Password Reset OTP - PPMS Cluster 4'
+
         text_message = f"""
-Hello {user.first_name or user.username},
+        Hello {user.first_name or user.username},
 
-You requested a password reset. Your OTP code is: {otp_instance.otp_code}
+        You requested a password reset. Your OTP code is: {otp_instance.otp_code}
 
-This code will expire in 10 minutes.
+        This code will expire in 10 minutes.
 
-If you didn't request this, please ignore this email.
-"""
+        If you didn't request this, please ignore this email.
+        """
+
         html_message = f"""
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<style>
-body {{ font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; color: #333; }}
-.container {{ background-color: #fff; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }}
-.header {{ background-color: #007bff; padding: 10px 20px; border-radius: 10px 10px 0 0; color: white; text-align: center; }}
-.otp {{ font-size: 28px; font-weight: bold; color: #007bff; text-align: center; margin: 30px 0; }}
-.footer {{ font-size: 12px; text-align: center; color: #777; margin-top: 30px; }}
-</style>
-</head>
-<body>
-<div class="container">
-<div class="header">
-<h2>PPMS Cluster 4 – Password Reset</h2>
-</div>
-<p>Hello <strong>{user.first_name or user.username}</strong>,</p>
-<p>You requested to reset your password. Please use the following OTP:</p>
-<div class="otp">{otp_instance.otp_code}</div>
-<p>This OTP is valid for <strong>10 minutes</strong>.</p>
-<p>If you did not make this request, you can safely ignore this email.</p>
-<div class="footer">&copy; 2025 PPMS Cluster 4 Imus City</div>
-</div>
-</body>
-</html>
-"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body {{
+              font-family: Arial, sans-serif;
+              background-color: #f9f9f9;
+              padding: 20px;
+              color: #333;
+            }}
+            .container {{
+              background-color: #fff;
+              padding: 20px;
+              border-radius: 10px;
+              max-width: 600px;
+              margin: auto;
+              box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            }}
+            .header {{
+              background-color: #007bff;
+              padding: 10px 20px;
+              border-radius: 10px 10px 0 0;
+              color: white;
+              text-align: center;
+            }}
+            .otp {{
+              font-size: 28px;
+              font-weight: bold;
+              color: #007bff;
+              text-align: center;
+              margin: 30px 0;
+            }}
+            .footer {{
+              font-size: 12px;
+              text-align: center;
+              color: #777;
+              margin-top: 30px;
+            }}
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2>PPMS Cluster 4 – Password Reset</h2>
+            </div>
+
+            <p>Hello <strong>{user.first_name or user.username}</strong>,</p>
+
+            <p>You requested to reset your password. Please use the following OTP:</p>
+
+            <div class="otp">{otp_instance.otp_code}</div>
+
+            <p>This OTP is valid for <strong>10 minutes</strong>.</p>
+
+            <p>If you did not make this request, you can safely ignore this email.</p>
+
+            <div class="footer">
+              &copy; 2025 PPMS Cluster 4 Imus City
+            </div>
+          </div>
+        </body>
+        </html>
+        """
 
         try:
             email_msg = EmailMultiAlternatives(
@@ -5213,15 +5251,13 @@ body {{ font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px
                 to=[email]
             )
             email_msg.attach_alternative(html_message, "text/html")
-            email_msg.send(fail_silently=False)  # Important for logging email errors
+            email_msg.send()
 
             messages.success(request, 'OTP sent to your email address.')
             return redirect('verify_otp', user_id=user.id)
-
         except Exception as e:
-            # Print error to Railway logs
             print(f"[ERROR] Email send failed: {e}")
-            messages.error(request, 'Failed to send email. Please try again later.')
+            messages.error(request, 'Failed to send email. Please try again.')
 
     return render(request, 'HTML/forgot_password.html')
 
@@ -10007,6 +10043,7 @@ def save_temperature(request):
             'status': 'error',
             'message': 'An unexpected error occurred while saving temperature'
         })
+
 
 
 
