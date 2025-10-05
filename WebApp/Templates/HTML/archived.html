@@ -18,98 +18,306 @@
     body {
       font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #333;
-      padding: 20px;
       min-height: 100vh;
       margin: 0;
       overflow-x: hidden;
       font-size: 14px;
       font-weight: 400;
-      background: url('{% static "media/loginbg.png" %}') center/cover no-repeat fixed;
+      background: #f8f9fa;
+    }
+
+    .background-image {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      background-image: url('{% static "media/loginbg.png" %}');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 280px;
+      height: 100vh;
+      background: linear-gradient(180deg, #1e1e2f 0%, #2a2a3e 100%);
+      z-index: 1000;
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      padding: 25px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .sidebar-title {
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin: 0;
+    }
+
+    /* Profile Section in Sidebar */
+    .sidebar-profile {
+      padding: 20px 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: white;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .sidebar-profile:hover {
+      background-color: rgba(91, 218, 179, 0.1);
+    }
+
+    .profile-image {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .profile-info h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .profile-info p {
+      margin: 2px 0 0 0;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .nav-menu {
+      padding: 20px 0 0 0;
+      display: flex;
+      flex-direction: column;
+      height: calc(100% - 140px);
+      flex: 1;
+    }
+
+    .nav-item {
+      margin: 0;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 16px 25px;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      border: none;
+      background: none;
+      width: 100%;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .nav-link:hover {
+      background: rgba(91, 218, 179, 0.1);
+      color: #5bdab3;
+      padding-left: 30px;
+    }
+
+    .nav-link.active {
+      background: rgba(91, 218, 179, 0.2);
+      color: #5bdab3;
+      border-right: 3px solid #5bdab3;
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      margin-right: 12px;
+      opacity: 0.8;
+    }
+
+    .nav-link:hover .nav-icon {
+      opacity: 1;
+    }
+
+    /* Logout at bottom of navigation */
+    .logout-nav-item {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: auto;
+    }
+
+    .logout-nav-item .nav-link {
+      color: #ff6b6b;
+    }
+
+    .logout-nav-item .nav-link:hover {
+      background-color: rgba(255, 107, 107, 0.1);
+      color: #ff6b6b;
+    }
+
+    /* Main Content Area */
+    .main-content {
+      margin-left: 280px;
+      min-height: 100vh;
+      transition: margin-left 0.3s ease;
+      width: calc(100% - 280px);
     }
 
     .topbar {
-      position: relative;
-      height: 100px;
       background-color: rgba(30, 30, 47, 0.95);
       backdrop-filter: blur(10px);
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      margin: 0 auto 30px auto;
-      max-width: 1100px;
-    }
-
-    .logo-title {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 20px;
-      font-weight: 600;
       color: white;
-      white-space: nowrap;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    .rtn-btn {
-      position: absolute;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 56px;
-      height: 56px;
-      background-color: transparent;
+    .top-icons {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .greeting {
+      font-size: 20px;
+      font-weight: 500;
+      color: #fff;
+      margin: 0;
+    }
+
+    .icon-btn {
+      background: none;
       border: none;
       cursor: pointer;
-    }
-
-    .rtn-btn:before,
-    .rtn-btn:after {
-      content: "";
-      position: absolute;
-      border-radius: 50%;
-      inset: 7px;
-    }
-
-    .rtn-btn:before {
-      border: 4px solid #f0eeef;
-      transition: opacity 0.4s, transform 0.5s;
-    }
-
-    .rtn-btn:after {
-      border: 4px solid #96daf0;
-      transform: scale(1.3);
-      opacity: 0;
-      transition: opacity 0.4s, transform 0.5s;
-    }
-
-    .rtn-btn:hover:before {
-      opacity: 0;
-      transform: scale(0.7);
-    }
-
-    .rtn-btn:hover:after {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    .button-box {
+      font-size: 20px;
       display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      animation: shake 500ms ease-in-out;
+      color: #5bdab3;
+    }
+
+    @keyframes shake {
+      0% { rotate: 0deg }
+      25% { rotate: 25deg }
+      50% { rotate: -25deg }
+      75% { rotate: 25deg }
+      100% { rotate: 10deg }
+    }
+
+    /* Mobile Hamburger */
+    .mobile-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 5px;
+    }
+
+    /* Notification Dropdown */
+    .notif-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    
+    #notifMenu {
+      display: none;
       position: absolute;
+      right: -10px;
+      top: calc(100% + 8px);
+      background-color: #fff;
+      min-width: 320px;
+      max-width: 350px;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      z-index: 1000;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #e0e4e7;
+    }
+
+    #notifMenu .dropdown-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #333;
+      text-decoration: none;
+      display: block;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      transition: background-color 0.2s ease;
+    }
+
+    #notifMenu .dropdown-item:hover {
+      background-color: #f8f9fa;
+    }
+
+    #notifDot {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 10px;
+      height: 10px;
+      background-color: #ff4444;
+      border-radius: 50%;
+      display: none;
+      border: 2px solid #1e1e2f;
+    }
+
+    /* Sidebar overlay for mobile */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
       top: 0;
       left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
     }
 
-    .button-elem {
+    .sidebar-overlay.active {
       display: block;
-      width: 20px;
-      height: 20px;
-      margin: 17px 18px 0 18px;
-      transform: rotate(180deg);
-      fill: #f0eeef;
     }
 
-    .main-section {
-      max-width: 1100px;
-      margin: 0 auto;
+    .content-wrapper {
+      padding: 30px;
+      max-width: 100%;
+      overflow-x: hidden;
     }
 
     .table-wrapper {
@@ -403,37 +611,47 @@
     }
 
     /* Mobile Responsive */
+    @media (max-width: 1024px) {
+      .sidebar {
+        width: 260px;
+      }
+      
+      .main-content {
+        margin-left: 260px;
+        width: calc(100% - 260px);
+      }
+      
+      .content-wrapper {
+        padding: 25px;
+      }
+    }
+
     @media (max-width: 768px) {
-      body {
-        padding: 15px;
+      .sidebar {
+        transform: translateX(-100%);
+        width: 280px;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .mobile-toggle {
+        display: block;
       }
 
       .topbar {
-        height: 70px;
-        margin-bottom: 20px;
+        padding: 15px 20px;
       }
 
-      .rtn-btn {
-        width: 45px;
-        height: 45px;
-        left: 15px;
-      }
-
-      .rtn-btn:before,
-      .rtn-btn:after {
-        inset: 6px;
-      }
-
-      .button-elem {
-        width: 18px;
-        height: 18px;
-        margin: 13px 13px 0 13px;
-      }
-      
-      .logo-title {
-        font-size: 16px;
-        padding: 0 80px;
-        text-align: center;
+      .greeting {
+        font-size: 18px;
       }
       
       .table-wrapper {
@@ -491,40 +709,27 @@
         padding-left: 23px;
       }
 
-      /* Add scroll hint for mobile */
-      .table-container {
-        position: relative;
-      }
-
-      .scroll-hint {
-        position: absolute;
-        bottom: -25px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 11px;
-        color: #999;
-        font-style: italic;
-        opacity: 0.8;
-        text-align: center;
-        pointer-events: none;
-        white-space: nowrap;
+      /* Notification dropdown adjustments */
+      #notifMenu {
+        right: -20px;
+        left: auto;
+        min-width: 280px;
+        max-width: calc(100vw - 40px);
+        margin-right: 10px;
       }
     }
 
-    /* Small Mobile */
     @media (max-width: 480px) {
-      body {
-        padding: 10px;
+      .content-wrapper {
+        padding: 15px 10px;
       }
 
       .topbar {
-        height: 60px;
-        margin-bottom: 15px;
+        padding: 15px 20px;
       }
 
-      .logo-title {
-        font-size: 14px;
-        padding: 0 70px;
+      .greeting {
+        font-size: 16px;
       }
 
       .table-wrapper {
@@ -559,8 +764,11 @@
       }
     }
 
-    /* Extra Small Mobile */
     @media (max-width: 375px) {
+      .content-wrapper {
+        padding: 10px 8px;
+      }
+
       .table-wrapper {
         padding: 12px;
       }
@@ -574,78 +782,214 @@
       table {
         min-width: 400px;
       }
-    }
 
-    /* Landscape orientation on mobile */
-    @media (max-width: 768px) and (orientation: landscape) {
-      .topbar {
-        height: 60px;
-        margin-bottom: 15px;
-      }
-
-      .logo-title {
+      .greeting {
         font-size: 14px;
       }
-
-      .table-wrapper {
-        padding: 15px;
+      
+      .sidebar-title {
+        font-size: 16px;
+      }
+      
+      .nav-link {
+        padding: 14px 20px;
+        font-size: 13px;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Top Bar -->
-  <div class="topbar">
-    <button class="rtn-btn" onclick="location.href='/dashboard'">
-      <div class="button-box">
-        <span class="button-elem">
-          <svg viewBox="0 0 46 40" xmlns="http://www.w3.org/2000/svg">
-            <path d="M46 20.038c0-.7-.3-1.5-.8-2.1l-16-17c-1.1-1-3.2-1.4-4.4-.3-1.2 1.1-1.2 3.3 0 4.4l11.3 11.9H3c-1.7 0-3 1.3-3 3s1.3 3 3 3h33.1l-11.3 11.9c-1 1-1.2 3.3 0 4.4 1.2 1.1 3.3.8 4.4-.3l16-17c.5-.5.8-1.1.8-1.9z"></path>
-          </svg>
-        </span>
-      </div>
-    </button>
-    <div class="logo-title">PPMS CLUSTER 4 IMUS CITY</div>
-  </div>
 
-  <!-- Main Table Section -->
-  <div class="main-section">
-    <div class="table-wrapper">
-      <div class="table-header">
-        <h2>Archived Preschoolers</h2>
-      </div>
-      
-      <!-- Enhanced Responsive Table Container -->
-      <div class="table-container">
-        <table id="archivedTable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Age</th>
-              <th>Barangay</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Rows will be populated by JavaScript or Django template -->
-          </tbody>
-        </table>
-       
+
+
+  <!-- Background Image -->
+  <div class="background-image"></div>
+
+  <!-- Sidebar Overlay for Mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Left Sidebar Navigation -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1 class="sidebar-title">PPMS {{ account.barangay.name }}</h1>
+    </div>
+    
+    <!-- Profile Section in Sidebar -->
+    <div class="sidebar-profile" onclick="location.href='{% url 'profile' %}'">
+      {% if account.profile_photo and account.profile_photo.image %}
+        <img src="{{ account.profile_photo.image.url }}" alt="Profile" class="profile-image">
+      {% else %}
+        <img src="{% static 'media/default-profile.jpg' %}" alt="Default Profile" class="profile-image">
+      {% endif %}
+      <div class="profile-info">
+        <h3>{{ account.first_name }} {{ account.last_name }}</h3>
+        <p>{{ account.barangay.name }}</p>
       </div>
     </div>
+    
+    <nav class="nav-menu">
+      <div class="nav-item">
+        <a href="{% url 'dashboard' %}" class="nav-link">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+          </svg>
+          Dashboard
+        </a>
+      </div>
+      
+
+      <div class="nav-item">
+        <a href="{% url 'register_parent' %}" class="nav-link">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+          </svg>
+          Register Parent
+        </a>
+      </div>
+      
+      <div class="nav-item">
+        <a href="{% url 'register_preschooler' %}" class="nav-link">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+          </svg>
+          Register Preschooler
+        </a>
+      </div>
+      
+      <div class="nav-item">
+        <a href="{% url 'email_endorsement' %}" class="nav-link">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+          </svg>
+          Email Endorsement
+        </a>
+      </div>
+      
+      <div class="nav-item">
+        <a href="{% url 'history' %}" class="nav-link">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+          </svg>
+          View Parent Logs
+        </a>
+      </div>
+
+      <div class="nav-item">
+        <button class="nav-link" id="nutritionReportBtn">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+          Nutrition Report
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" id="immunizationReportBtn">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+          Immunization Report
+        </button>
+      </div>
+      
+      <!-- Logout at bottom of navigation -->
+      <div class="nav-item logout-nav-item">
+        <button class="nav-link" id="logoutLink">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+          </svg>
+          Logout
+        </button>
+      </div>
+    </nav>
   </div>
 
-  <div class="pagination-section">
-    {% if archived_page.has_previous %}
-      <a href="?page={{ archived_page.previous_page_number }}" class="btn">Previous</a>
-    {% endif %}
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <button class="mobile-toggle" id="mobileToggle">☰</button>
+        <div class="greeting">PPMS CLUSTER 4 IMUS CITY</div>
+      </div>
+      <div class="top-icons">
+        <!-- Notification -->
+        <div class="notif-dropdown">
+          <button class="icon-btn" id="notifBtn" style="position: relative;">
+            <img src="{% static 'media/notification.png' %}" alt="Notifications" style="width: 2.5rem; height: 2.5rem;">
+            <span id="notifDot"></span>
+          </button>
 
-    <span>
-      Page {{ archived_page.number }} of {{ archived_page.paginator.num_pages }}
-    </span>
+          <div class="dropdown" id="notifMenu" style="max-height: 400px; overflow-y: auto; width: 320px; min-width: 280px;">
+            {% if notifications %}
+              {% for notif in notifications %}
+                {% if notif.type == 'account' %}
+                  <a href="{% url 'register_preschooler' %}" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="account" style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; align-items: center;">
+                      <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      <span class="notif-text">
+                        New Registered
+                        {% if notif.user_role|lower == "parent" %}
+                          <strong>Parent</strong>
+                        {% else %}
+                          <strong>{{ notif.user_role }}</strong>
+                        {% endif %}
+                        account named <strong>{{ notif.full_name }}</strong>.
+                      </span>
+                    </div>
+                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
+                  </a>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <div class="dropdown-item">No notifications available.</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
 
-    {% if archived_page.has_next %}
-      <a href="?page={{ archived_page.next_page_number }}" class="btn">Next</a>
-    {% endif %}
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+      <!-- Main Table Section -->
+      <div class="table-wrapper">
+        <div class="table-header">
+          <h2>Archived Preschoolers</h2>
+        </div>
+        
+        <!-- Enhanced Responsive Table Container -->
+        <div class="table-container">
+          <table id="archivedTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Barangay</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rows will be populated by JavaScript or Django template -->
+            </tbody>
+          </table>
+         
+        </div>
+      </div>
+
+      <div class="pagination-section">
+        {% if archived_page.has_previous %}
+          <a href="?page={{ archived_page.previous_page_number }}" class="btn">Previous</a>
+        {% endif %}
+
+        <span>
+          Page {{ archived_page.number }} of {{ archived_page.paginator.num_pages }}
+        </span>
+
+        {% if archived_page.has_next %}
+          <a href="?page={{ archived_page.next_page_number }}" class="btn">Next</a>
+        {% endif %}
+      </div>
+    </div>
   </div>
 
   <!-- Modal -->
@@ -664,128 +1008,292 @@
     </ul>
   </div>
 
-  <script>
-    // JavaScript for handling the archived preschoolers functionality
-    document.addEventListener('DOMContentLoaded', function() {
-      const archivedPreschoolers = JSON.parse('{{ archived_preschoolers_json|escapejs }}');
-      const customMenu = document.getElementById('customMenu');
-      const archivedModal = document.getElementById('archivedModal');
-      const closeModal = document.getElementById('closeArchivedModal');
-      const viewProfile = document.getElementById('viewArchivedProfile');
-      
-      let selectedRow = null;
-      let selectedPreschooler = null;
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-      // Populate table with archived preschoolers
-      function populateTable() {
-        const tableBody = document.querySelector('#archivedTable tbody');
-        
-        // Clear existing content
-        tableBody.innerHTML = '';
-
-        if (archivedPreschoolers.length === 0) {
-          // No archived preschoolers
-          tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:40px; color: #999;">No archived preschoolers found.</td></tr>';
-          return;
-        }
-
-        archivedPreschoolers.forEach((preschooler, index) => {
-          // Create table row
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${preschooler.first_name} ${preschooler.last_name}</td>
-            <td>${preschooler.age || 'N/A'}</td>
-            <td>${preschooler.barangay || 'N/A'}</td>
-          `;
-          row.addEventListener('click', function(e) {
-            selectPreschooler(this, preschooler, e);
-          });
-          tableBody.appendChild(row);
+  <!-- Django Messages -->
+  {% if messages %}
+    <ul id="django-messages" style="display: none;">
+      {% for message in messages %}
+        <li data-message="{{ message }}" data-tag="{{ message.tags }}"></li>
+      {% endfor %}
+    </ul>
+    
+    <script>
+      {% for message in messages %}
+        Swal.fire({
+          title: '{% if message.tags == "success" %}Success{% elif message.tags == "error" %}Error{% else %}Info{% endif %}',
+          text: '{{ message|escapejs }}',
+          icon: '{% if message.tags == "success" %}success{% elif message.tags == "error" %}error{% else %}info{% endif %}',
+          timer: 3000,
+          showConfirmButton: false
         });
-      }
+      {% endfor %}
+    </script>
+  {% endif %}
 
-      // Select preschooler and show context menu
-      function selectPreschooler(element, preschooler, event) {
-        // Remove previous selection
-        document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
-        
-        // Select current element
-        element.classList.add('selected');
-        selectedRow = element;
-        selectedPreschooler = preschooler;
+  <script>
+  // Initialize everything when DOM is loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    initializeNotifications();
+    initializeEventListeners();
+    initializeMobileToggle();
+    initializeArchivedPreschoolers(); // ✅ added archived preschoolers init
+  });
 
-        // Show context menu
-        customMenu.style.top = `${event.pageY}px`;
-        customMenu.style.left = `${event.pageX}px`;
-        customMenu.style.display = 'block';
-      }
+  // -------------------
+  // Mobile sidebar toggle
+  // -------------------
+  function initializeMobileToggle() {
+    const mobileToggle = document.getElementById("mobileToggle");
+    const sidebar = document.getElementById("sidebar");
+    const sidebarOverlay = document.getElementById("sidebarOverlay");
 
-      // View profile handler
-      viewProfile.addEventListener('click', function() {
-        if (selectedPreschooler) {
-          // Show modal with preschooler details
-          const detailContent = document.getElementById('archivedDetailContent');
-          detailContent.innerHTML = `
-            <p><strong>Name:</strong> ${selectedPreschooler.first_name} ${selectedPreschooler.last_name}</p>
-            <p><strong>Age:</strong> ${selectedPreschooler.age || 'N/A'}</p>
-            <p><strong>Barangay:</strong> ${selectedPreschooler.barangay || 'N/A'}</p>
-            <p><strong>Parent:</strong> ${selectedPreschooler.parent_name || 'N/A'}</p>
-            <p><strong>Archived Date:</strong> ${selectedPreschooler.archived_date || 'N/A'}</p>
-          `;
-          archivedModal.style.display = 'block';
-        }
-        customMenu.style.display = 'none';
+    if (mobileToggle) {
+      mobileToggle.addEventListener("click", () => {
+        sidebar.classList.toggle("open");
+        sidebarOverlay.classList.toggle("active");
       });
 
-      // Close modal
-      closeModal.addEventListener('click', function() {
-        archivedModal.style.display = 'none';
+      sidebarOverlay.addEventListener("click", () => {
+        sidebar.classList.remove("open");
+        sidebarOverlay.classList.remove("active");
+      });
+    }
+  }
+
+  // -------------------
+  // Notifications
+  // -------------------
+  function initializeNotifications() {
+    const notifBtn = document.getElementById("notifBtn");
+    const notifMenu = document.getElementById("notifMenu");
+    const notifDot = document.getElementById("notifDot");
+
+    const latestNotifTimestampStr = "{{ latest_notif_timestamp|default:'' }}";
+    const latestNotifTimestamp = latestNotifTimestampStr ? new Date(latestNotifTimestampStr) : null;
+    const lastReadStr = localStorage.getItem("lastReadNotifTimestamp");
+    const lastRead = lastReadStr ? new Date(lastReadStr) : null;
+
+    if (latestNotifTimestamp && (!lastRead || latestNotifTimestamp > lastRead)) {
+      notifDot.style.display = "inline-block";
+    }
+
+    if (notifBtn && notifMenu) {
+      notifBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        notifMenu.style.display = notifMenu.style.display === "block" ? "none" : "block";
+        notifDot.style.display = "none";
+        if (latestNotifTimestamp) {
+          localStorage.setItem('lastReadNotifTimestamp', latestNotifTimestamp.toISOString());
+        }
       });
 
-      // Hide menu when clicking outside
-      window.addEventListener('click', function(e) {
-        if (!customMenu.contains(e.target) && !e.target.closest('tr')) {
-          customMenu.style.display = 'none';
-          document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
-        }
-        
-        // Close modal when clicking outside
-        if (e.target === archivedModal) {
-          archivedModal.style.display = 'none';
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".notif-dropdown")) {
+          notifMenu.style.display = "none";
         }
       });
+    }
+  }
 
-      // Add scroll hint visibility control for mobile
-      function handleScrollHint() {
-        const tableContainer = document.querySelector('.table-container');
-        const scrollHint = document.querySelector('.scroll-hint');
-        
-        if (window.innerWidth <= 768 && scrollHint) {
-          const isScrollable = tableContainer.scrollWidth > tableContainer.clientWidth;
-          scrollHint.style.display = isScrollable ? 'block' : 'none';
-          
-          // Hide hint after user scrolls
-          let hasScrolled = false;
-          tableContainer.addEventListener('scroll', function() {
-            if (!hasScrolled) {
-              hasScrolled = true;
-              scrollHint.style.opacity = '0.3';
-              setTimeout(() => {
-                scrollHint.style.display = 'none';
-              }, 2000);
+  // -------------------
+  // Event Listeners (sidebar buttons)
+  // -------------------
+  function initializeEventListeners() {
+    // Logout confirmation
+    document.getElementById("logoutLink")?.addEventListener("click", function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Are you sure you want to logout?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, logout',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "/logout/";
+        }
+      });
+    });
+
+    // Nutrition Report
+    document.getElementById("nutritionReportBtn")?.addEventListener("click", function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Select Month for Nutrition Report',
+        input: 'month',
+        showCancelButton: true,
+        confirmButtonColor: '#3498db',
+        cancelButtonColor: '#aaa',
+        confirmButtonText: 'Download Excel',
+        cancelButtonText: 'Cancel',
+        inputValidator: (value) => {
+          if (!value) {
+            return 'Please select a month first!';
+          }
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire({
+            title: 'Generating Report...',
+            text: 'Please wait while we prepare your Excel file.',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+              Swal.showLoading();
             }
           });
+
+          const downloadUrl = "/generate-nutrition-excel/?month=" + result.value;
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = 'nutrition-report.xlsx';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          setTimeout(() => {
+            Swal.fire({
+              title: 'Download Started!',
+              text: 'Your nutrition report Excel file is being downloaded.',
+              icon: 'success',
+              timer: 3000,
+              showConfirmButton: false
+            });
+          }, 2000);
         }
+      });
+    });
+
+    // Immunization Report
+    document.getElementById("immunizationReportBtn")?.addEventListener("click", function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Select Month for Immunization Report',
+        input: 'month',
+        showCancelButton: true,
+        confirmButtonColor: '#e74c3c',
+        cancelButtonColor: '#aaa',
+        confirmButtonText: 'Generate Report',
+        cancelButtonText: 'Cancel',
+        inputValidator: (value) => {
+          if (!value) {
+            return 'Please select a month first!';
+          }
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const url = "{% url 'generate_immunization_report' %}?month=" + result.value;
+          window.open(url, "_blank");
+        }
+      });
+    });
+  }
+
+  // -------------------
+  // Archived Preschoolers
+  // -------------------
+  function initializeArchivedPreschoolers() {
+    const archivedPreschoolers = JSON.parse('{{ archived_preschoolers_json|escapejs }}');
+    const customMenu = document.getElementById('customMenu');
+    const archivedModal = document.getElementById('archivedModal');
+    const closeModal = document.getElementById('closeArchivedModal');
+    const viewProfile = document.getElementById('viewArchivedProfile');
+
+    let selectedRow = null;
+    let selectedPreschooler = null;
+
+    function populateTable() {
+      const tableBody = document.querySelector('#archivedTable tbody');
+      tableBody.innerHTML = '';
+
+      if (archivedPreschoolers.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:40px; color: #999;">No archived preschoolers found.</td></tr>';
+        return;
       }
 
-      // Call on load and resize
-      handleScrollHint();
-      window.addEventListener('resize', handleScrollHint);
+      archivedPreschoolers.forEach((preschooler) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${preschooler.first_name} ${preschooler.last_name}</td>
+          <td>${
+            preschooler.age
+              ? preschooler.age + (preschooler.age == 1 ? " month" : " months")
+              : "N/A"
+          }</td>
+          <td>${preschooler.barangay || 'N/A'}</td>
+        `;
+        row.addEventListener('click', function(e) {
+          selectPreschooler(this, preschooler, e);
+        });
+        tableBody.appendChild(row);
+      });
+    }
 
-      // Initialize table
-      populateTable();
+    function selectPreschooler(element, preschooler, event) {
+      document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+      element.classList.add('selected');
+      selectedRow = element;
+      selectedPreschooler = preschooler;
+
+      customMenu.style.top = `${event.pageY}px`;
+      customMenu.style.left = `${event.pageX}px`;
+      customMenu.style.display = 'block';
+    }
+
+    // ✅ Updated: redirect to preschooler detail instead of modal
+    viewProfile.addEventListener('click', function() {
+      if (selectedPreschooler) {
+        window.location.href = `/preschooler/${selectedPreschooler.id}/`;
+      }
+      customMenu.style.display = 'none';
     });
-  </script>
+
+    closeModal?.addEventListener('click', function() {
+      archivedModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', function(e) {
+      if (!customMenu.contains(e.target) && !e.target.closest('tr')) {
+        customMenu.style.display = 'none';
+        document.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+      }
+      if (e.target === archivedModal) {
+        archivedModal.style.display = 'none';
+      }
+    });
+
+    function handleScrollHint() {
+      const tableContainer = document.querySelector('.table-container');
+      const scrollHint = document.querySelector('.scroll-hint');
+      if (window.innerWidth <= 768 && scrollHint) {
+        const isScrollable = tableContainer.scrollWidth > tableContainer.clientWidth;
+        scrollHint.style.display = isScrollable ? 'block' : 'none';
+        let hasScrolled = false;
+        tableContainer.addEventListener('scroll', function() {
+          if (!hasScrolled) {
+            hasScrolled = true;
+            scrollHint.style.opacity = '0.3';
+            setTimeout(() => {
+              scrollHint.style.display = 'none';
+            }, 2000);
+          }
+        });
+      }
+    }
+
+    handleScrollHint();
+    window.addEventListener('resize', handleScrollHint);
+    populateTable();
+  }
+</script>
+
+
+
   
   <!-- External script if needed -->
   <script src="{% static 'Javascript/archived.js' %}" defer></script>
