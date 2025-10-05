@@ -384,6 +384,16 @@ def clear_esp32_data(request):
         })
 
 
+def update_device_online_status():
+    global DEVICE_STATUS
+    now = timezone.now()
+    for device_id, status in DEVICE_STATUS.items():
+        if status['last_seen'] and (now - status['last_seen']) > OFFLINE_THRESHOLD:
+            DEVICE_STATUS[device_id]['is_online'] = False
+
+def check_device_online_status():
+    update_device_online_status()
+    
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_device_status(request):
@@ -9293,6 +9303,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
