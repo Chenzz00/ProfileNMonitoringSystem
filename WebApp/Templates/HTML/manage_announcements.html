@@ -1,1 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PPMS Cluster 4 Imus City - Manage Announcements</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: url('{% static "media/loginbg.png" %}') center/cover no-repeat fixed;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, #1e1e2f 0%, #2a2a3e 100%);
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+    overflow: hidden; /* Changed from overflow-y: auto */
+  }
+
+    .sidebar-header {
+      padding: 25px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      flex-shrink: 0;
+    }
+
+    .sidebar-title {
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 1px;
+      margin: 0;
+    }
+
+    .sidebar-profile {
+      padding: 20px 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: white;
+    }
+
+    .profile-image {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .profile-info h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .profile-info p {
+      margin: 2px 0 0 0;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      height: calc(100% - 140px);
+      padding: 20px 0 0 0;
+      overflow: hidden;
+    }
+
+    .nav-item {
+      margin: 0;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px 20px;
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration: none;
+      background: none;
+      border: none;
+      width: 100%;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .nav-link:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+      transform: translateX(5px);
+    }
+
+    .nav-link.active {
+      background-color: rgba(91, 218, 179, 0.2);
+      color: #5bdab3;
+      border-right: 3px solid #5bdab3;
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .logout-nav-item {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: auto;
+    }
+
+    .logout-nav-item .nav-link {
+      color: #ff6b6b;
+    }
+
+    .logout-nav-item .nav-link:hover {
+      background-color: rgba(255, 107, 107, 0.1);
+      color: #ff6b6b;
+    }
+
+    /* Main Content Area */
+    .main-content {
+      margin-left: 280px;
+      width: calc(100% - 280px);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Bar Styles */
+    .topbar {
+      background-color: rgba(30, 30, 47, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .greeting {
+      font-size: 20px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .mobile-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #fff;
+      padding: 5px;
+    }
+
+    .top-icons {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .notif-dropdown {
+      position: relative;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background-color 0.3s ease;
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    #notifDot {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 10px;
+      height: 10px;
+      background-color: #ff4444;
+      border-radius: 50%;
+      display: none;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .dropdown {
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+      display: none;
+      z-index: 1000;
+      min-width: 280px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .dropdown-item {
+      display: block;
+      padding: 15px;
+      text-decoration: none;
+      color: #333;
+      border-bottom: 1px solid #f0f0f0;
+      transition: background-color 0.2s ease;
+    }
+
+    .dropdown-item:hover {
+      background-color: #f8f9fa;
+    }
+
+    .dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    /* Content Wrapper */
+    .content-wrapper {
+      flex: 1;
+      padding: 30px;
+    }
+
+    /* Sidebar Overlay for Mobile */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    .sidebar-overlay.active {
+      display: block;
+    }
+
+    /* Announcement specific styles */
+    .main-section {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 30px;
+    }
+
+    .section-title {
+      font-size: 2em;
+      margin-bottom: 30px;
+      font-weight: 400;
+      color: #333;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+
+    .add-btn {
+      background-color: #5bdab3;
+      color: #1e1e2f;
+      border: none;
+      font-weight: 500;
+      box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .add-btn:hover {
+      background-color: #1565c0;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    }
+
+    .announcement-card {
+      background: #f8f9fa;
+      border: 1px solid #e0e4e7;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      min-height: 300px;
+      overflow: hidden;
+    }
+
+    .announcement-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .announcement-image img {
+      transition: transform 0.3s ease;
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .announcement-image img:hover {
+      transform: scale(1.05);
+    }
+
+    .announcement-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1e1e2f;
+      margin-bottom: 10px;
+    }
+
+    .announcement-content {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 15px;
+      line-height: 1.5;
+      max-height: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .announcement-meta {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 15px;
+    }
+
+    .status-active {
+      background-color: #e8f5e8;
+      color: #2e7d32;
+    }
+
+    .status-inactive {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+
+    .btn-edit {
+      background-color: #1565c0;
+      border-color: #1565c0;
+    }
+
+    .btn-edit:hover {
+      background-color: #0d47a1;
+      border-color: #0d47a1;
+    }
+
+    .btn-delete {
+      background-color: #d32f2f;
+      border-color: #d32f2f;
+    }
+
+    .btn-delete:hover {
+      background-color: #b71c1c;
+      border-color: #b71c1c;
+    }
+
+    .no-announcements {
+      text-align: center;
+      color: #666;
+      padding: 60px 20px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      border: 2px dashed #ddd;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+      border-color: #5bdab3;
+      box-shadow: 0 0 0 0.2rem rgba(91, 218, 179, 0.25);
+    }
+
+    .image-upload-area {
+      border: 2px dashed #5bdab3;
+      border-radius: 8px;
+      background: #f8f9ff;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .image-upload-area:hover {
+      background: #f0f8ff;
+      border-color: #4bc99b;
+    }
+
+    .image-preview {
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .image-preview img {
+      max-width: 100%;
+      max-height: 250px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Modal improvements */
+    .modal-content {
+      border-radius: 12px;
+      border: none;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #5bdab3, #1565c0);
+      color: white;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .modal-header .btn-close {
+      filter: invert(1);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        width: 100%;
+      }
+
+      .mobile-toggle {
+        display: block;
+      }
+
+      .topbar {
+        padding: 12px 20px;
+      }
+
+      .greeting {
+        font-size: 18px;
+      }
+
+      .content-wrapper {
+        padding: 20px;
+      }
+
+      .main-section {
+        padding: 20px;
+      }
+
+      .section-title {
+        font-size: 1.6em;
+        margin-bottom: 25px;
+      }
+
+      .announcement-card {
+        margin-bottom: 20px;
+        min-height: 250px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .content-wrapper {
+        padding: 15px;
+      }
+
+      .main-section {
+        padding: 15px;
+      }
+
+      .announcement-card {
+        min-height: 250px;
+      }
+    }
+
+    
+  </style>
+</head>
+<body>
+  <!-- Sidebar Overlay for Mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Left Sidebar Navigation -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1 class="sidebar-title">PPMS Admin</h1>
+    </div>
+    
+    <!-- Profile Section in Sidebar -->
+    <div class="sidebar-profile">
+      {% if account.profile_photo and account.profile_photo.image %}
+        <img src="{{ account.profile_photo.image.url }}" alt="Profile" class="profile-image">
+      {% else %}
+        <img src="{% static 'media/default-profile.jpg' %}" alt="Default Profile" class="profile-image">
+      {% endif %}
+      <div class="profile-info">
+        <h3>Admin</h3>
+        <p>Administrator</p>
+      </div>
+    </div>
+    
+    <nav class="nav-menu">
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/admin-dashboard/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+          </svg>
+          Dashboard
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/registered-barangays/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+          </svg>
+          Barangay List
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/registered-preschoolers/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+          </svg>
+          Preschoolers
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/admin-registered-parents/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+          </svg>
+          Parents
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/healthcare-workers/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+          </svg>
+          Registered Workers
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/validate/'">
+          <div class="nav-link-content" style="position: relative; display: inline-flex; align-items: center;">
+            <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span>Account Validation</span>
+            <span id="validation-badge" class="notification-badge">0</span>
+          </div>
+        </button>
+      </div>
+      
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/admin-logs/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+          </svg>
+          Activity Logs
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" id="generateReportBtn">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+          Generate Report
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link active" onclick="location.href='/manage-announcements/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zM9 8a1 1 0 012 0v4a1 1 0 11-2 0V8zM11 8a1 1 0 012 0v4a1 1 0 11-2 0V8z" clip-rule="evenodd"/>
+          </svg>
+          Announcements
+        </button>
+      </div>
+      
+      <!-- Logout at bottom of navigation -->
+      <div class="nav-item logout-nav-item">
+        <button class="nav-link" id="logoutLink">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+          </svg>
+          Logout
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <button class="mobile-toggle" id="mobileToggle">☰</button>
+        <div class="greeting">Manage Announcements</div>
+      </div>
+      <div class="top-icons">
+        <!-- Notification -->
+        <div class="notif-dropdown">
+          <button class="icon-btn" id="notifBtn" style="position: relative;">
+            <img src="{% static 'media/notification.png' %}" alt="Notifications" style="width: 2.5rem; height: 2.5rem;">
+            <span id="notifDot"></span>
+          </button>
+
+          <div class="dropdown" id="notifMenu" style="max-height: 400px; overflow-y: auto; width: 320px; min-width: 280px;">
+            {% if notifications %}
+              {% for notif in notifications %}
+                {% if notif.type == 'account' %}
+                  <a href="/validate/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}" style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; align-items: center;">
+                      <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      <span class="notif-text">New {{ notif.user_role }} account named <strong>{{ notif.full_name }}</strong> requesting for validation.</span>
+                    </div>
+                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
+                  </a>
+                {% elif notif.type == 'preschooler' %}
+                  <a href="/registered-preschoolers/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}" style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; align-items: center;">
+                      {% if notif.bhw_image %}
+                        <img src="{{ notif.bhw_image }}" alt="BHW Profile" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      {% else %}
+                        <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      {% endif %}
+                      <span class="notif-text">
+                        New preschooler is being registered.<br>
+                        Name: <strong>{{ notif.full_name }}</strong>
+                      </span>
+                    </div>
+                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
+                  </a>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <div class="dropdown-item">No notifications available.</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+      <div class="main-section">
+        <h2 class="section-title">Announcements Management</h2>
+        
+        <div class="mb-4">
+          <button class="btn btn-primary add-btn btn-lg" data-bs-toggle="modal" data-bs-target="#announcementModal" onclick="openAddModal()">
+            <i class="bi bi-plus-circle me-2"></i>Add New Announcement
+          </button>
+        </div>
+
+        {% if announcements %}
+          <div class="row">
+            {% for announcement in announcements %}
+              <div class="col-xl-4 col-lg-6 col-md-6 mb-4">
+                <div class="card announcement-card h-100">
+                  {% if announcement.image %}
+                    <div class="announcement-image">
+                      <img src="{{ announcement.image.url }}" alt="{{ announcement.title }}" class="card-img-top">
+                    </div>
+                  {% endif %}
+                  
+                  <div class="card-body d-flex flex-column">
+                    <h5 class="announcement-title card-title">{{ announcement.title }}</h5>
+                    
+                    <p class="announcement-content card-text">{{ announcement.content|truncatechars:100 }}</p>
+                    
+                    <div class="announcement-meta small text-muted mb-3">
+                      <div><i class="bi bi-calendar-plus me-1"></i>Created: {{ announcement.created_at|date:"M d, Y g:i A" }}</div>
+                      {% if announcement.updated_at != announcement.created_at %}
+                        <div><i class="bi bi-calendar-check me-1"></i>Updated: {{ announcement.updated_at|date:"M d, Y g:i A" }}</div>
+                      {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                      <span class="badge rounded-pill fs-6 {% if announcement.is_active %}status-active{% else %}status-inactive{% endif %}">
+                        {% if announcement.is_active %}
+                          <i class="bi bi-check-circle me-1"></i>Active
+                        {% else %}
+                          <i class="bi bi-x-circle me-1"></i>Inactive
+                        {% endif %}
+                      </span>
+                    </div>
+                    
+                    <div class="mt-auto">
+                      <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button class="btn btn-sm btn-edit btn-primary" data-bs-toggle="modal" data-bs-target="#announcementModal" onclick="openEditModal({{ announcement.id }})">
+                          <i class="bi bi-pencil me-1"></i>Edit
+                        </button>
+                        <button class="btn btn-sm btn-delete btn-danger" onclick="confirmDelete({{ announcement.id }}, '{{ announcement.title|escapejs }}')">
+                          <i class="bi bi-trash me-1"></i>Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="no-announcements">
+            <i class="bi bi-megaphone" style="font-size: 3rem; color: #ddd; margin-bottom: 20px;"></i>
+            <h3>No Announcements Found</h3>
+            <p>Click "Add New Announcement" to create your first announcement.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap Modal -->
+  <div class="modal fade" id="announcementModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header sticky-top">
+          <h5 class="modal-title" id="modalTitle">Add New Announcement</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        
+        <form id="announcementForm" method="POST" enctype="multipart/form-data">
+          <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+            {% csrf_token %}
+            <input type="hidden" id="announcementId" name="announcement_id" value="">
+            
+            <div class="mb-3">
+              <label for="title" class="form-label fw-semibold">
+                <i class="bi bi-type me-2"></i>Title <span class="text-danger">*</span>
+              </label>
+              <input type="text" class="form-control form-control-lg" id="title" name="title" required placeholder="Enter announcement title...">
+            </div>
+            
+            <div class="mb-3">
+              <label for="content" class="form-label fw-semibold">
+                <i class="bi bi-file-text me-2"></i>Content <span class="text-danger">*</span>
+              </label>
+              <textarea class="form-control" id="content" name="content" rows="4" required placeholder="Enter announcement content..."></textarea>
+            </div>
+            
+            <div class="mb-3">
+              <label for="image" class="form-label fw-semibold">
+                <i class="bi bi-image me-2"></i>Upload Image <span class="text-danger">*</span>
+              </label>
+              <div class="image-upload-area">
+                <input type="file" class="form-control" id="image" name="image" accept="image/jpeg,image/jpg,image/png,image/gif" onchange="previewImage(this)">
+                <div class="mt-2">
+                  <i class="bi bi-cloud-upload" style="font-size: 2rem; color: #5bdab3;"></i>
+                  <p class="mb-1">Choose an image file</p>
+                  <small class="text-muted">Accepted formats: JPG, JPEG, PNG, GIF (Max size: 5MB)</small>
+                </div>
+              </div>
+              
+              <div id="imagePreview" class="image-preview" style="display: none;">
+                <p class="mb-2 fw-semibold"><i class="bi bi-eye me-2"></i>Image Preview:</p>
+                <div class="text-center">
+                  <img id="previewImg" class="img-fluid" style="max-height: 200px; border-radius: 8px; border: 1px solid #ddd;">
+                </div>
+                <p class="mt-2 small text-muted text-center" id="imageInfo"></p>
+                <div class="text-center mt-2">
+                  <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage()">
+                    <i class="bi bi-trash me-1"></i>Remove Image
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                <label class="form-check-label fw-semibold" for="is_active">
+                  <i class="bi bi-toggle-on me-2"></i>Active (visible to users)
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="modal-footer sticky-bottom bg-white border-top">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <i class="bi bi-x-circle me-2"></i>Cancel
+            </button>
+            <button type="submit" class="btn btn-primary add-btn">
+              <i class="bi bi-check-circle me-2"></i>Save Announcement
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const notifBtn = document.getElementById("notifBtn");
+      const notifMenu = document.getElementById("notifMenu");
+      const notifDot = document.getElementById("notifDot");
+      const mobileToggle = document.getElementById("mobileToggle");
+      const sidebar = document.getElementById("sidebar");
+      const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+      // Mobile sidebar toggle
+      if (mobileToggle) {
+        mobileToggle.addEventListener("click", () => {
+          sidebar.classList.toggle("open");
+          sidebarOverlay.classList.toggle("active");
+        });
+        sidebarOverlay.addEventListener("click", () => {
+          sidebar.classList.remove("open");
+          sidebarOverlay.classList.remove("active");
+        });
+      }
+
+      // Notification red dot
+      const latestNotifTimestampStr = "{{ latest_notif_timestamp }}";
+      const latestNotifTimestamp = latestNotifTimestampStr ? new Date(latestNotifTimestampStr) : null;
+      let lastReadTimestampStr = localStorage.getItem('lastReadNotifTimestamp');
+      let lastReadTimestamp = lastReadTimestampStr ? new Date(lastReadTimestampStr) : null;
+      if (latestNotifTimestamp && (!lastReadTimestamp || latestNotifTimestamp > lastReadTimestamp)) {
+        notifDot.style.display = "inline-block";
+      }
+
+      if (notifBtn && notifMenu) {
+        notifBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          notifMenu.style.display = notifMenu.style.display === "block" ? "none" : "block";
+          notifDot.style.display = "none";
+          if (latestNotifTimestamp) localStorage.setItem('lastReadNotifTimestamp', latestNotifTimestamp.toISOString());
+        });
+        document.addEventListener("click", (e) => {
+          if (!e.target.closest(".notif-dropdown")) notifMenu.style.display = "none";
+        });
+      }
+
+      // Logout confirmation - now for sidebar logout button
+      const logoutLink = document.getElementById("logoutLink");
+      if (logoutLink) {
+        logoutLink.addEventListener("click", function(e) {
+          e.preventDefault();
+          Swal.fire({
+            title: 'Are you sure you want to logout?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, logout',
+            cancelButtonText: 'Cancel'
+          }).then((result) => {
+            if (result.isConfirmed) window.location.href = "/logout/";
+          });
+        });
+      }
+
+      // Notification item click handler
+      document.querySelectorAll('.notif-item').forEach(item => {
+        item.addEventListener('click', function (e) {
+          e.preventDefault();
+          const notifId = this.getAttribute('data-id');
+          const notifType = this.getAttribute('data-type');
+          const targetUrl = this.getAttribute('href');
+          const notifText = this.querySelector('.notif-text');
+
+          fetch('/mark-notif-read/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': '{{ csrf_token }}',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: notifId, type: notifType }),
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status && notifText) notifText.style.fontWeight = 'normal';
+            window.location.href = targetUrl;
+          })
+          .catch(() => window.location.href = targetUrl);
+        });
+      });
+
+      // Set active nav item
+      const currentPath = window.location.pathname;
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+        const onclick = link.getAttribute('onclick');
+        if (onclick && onclick.includes(currentPath)) link.classList.add('active');
+      });
+    });
+
+    // Modal Management
+    const modal = new bootstrap.Modal(document.getElementById('announcementModal'));
+    const form = document.getElementById('announcementForm');
+    const modalTitle = document.getElementById('modalTitle');
+
+    function openAddModal() {
+      modalTitle.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add New Announcement';
+      form.action = '/add-announcement/';
+      document.getElementById('announcementId').value = '';
+      document.getElementById('title').value = '';
+      document.getElementById('content').value = '';
+      document.getElementById('image').value = '';
+      document.getElementById('is_active').checked = true;
+      document.getElementById('imagePreview').style.display = 'none';
+      
+      // Reset upload area
+      const uploadArea = document.querySelector('.image-upload-area');
+      uploadArea.innerHTML = `
+        <input type="file" class="form-control" id="image" name="image" accept="image/jpeg,image/jpg,image/png,image/gif" onchange="previewImage(this)">
+        <div class="mt-2">
+          <i class="bi bi-cloud-upload" style="font-size: 2rem; color: #5bdab3;"></i>
+          <p class="mb-1">Choose an image file</p>
+          <small class="text-muted">Accepted formats: JPG, JPEG, PNG, GIF (Max size: 5MB)</small>
+        </div>
+      `;
+    }
+
+    function openEditModal(announcementId) {
+      modalTitle.innerHTML = '<i class="bi bi-pencil me-2"></i>Edit Announcement';
+      form.action = `/edit-announcement/${announcementId}/`;
+      document.getElementById('announcementId').value = announcementId;
+      
+      // Fetch announcement data
+      fetch(`/get-announcement/${announcementId}/`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            document.getElementById('title').value = data.data.title;
+            document.getElementById('content').value = data.data.content;
+            document.getElementById('is_active').checked = data.data.is_active;
+            
+            // Show existing image if available
+            if (data.data.image_url) {
+              document.getElementById('imagePreview').style.display = 'block';
+              document.getElementById('previewImg').src = data.data.image_url;
+              document.getElementById('imageInfo').textContent = 'Current image';
+            } else {
+              document.getElementById('imagePreview').style.display = 'none';
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching announcement data:', error);
+          Swal.fire('Error', 'Failed to load announcement data', 'error');
+        });
+    }
+
+    function previewImage(input) {
+      const preview = document.getElementById('imagePreview');
+      const previewImg = document.getElementById('previewImg');
+      const imageInfo = document.getElementById('imageInfo');
+      
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Check file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+          Swal.fire('Error', 'Image size should be less than 5MB', 'error');
+          input.value = '';
+          preview.style.display = 'none';
+          return;
+        }
+        
+        // Check file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(file.type)) {
+          Swal.fire('Error', 'Please select a valid image file (JPG, JPEG, PNG, or GIF)', 'error');
+          input.value = '';
+          preview.style.display = 'none';
+          return;
+        }
+        
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+          previewImg.src = e.target.result;
+          imageInfo.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+          preview.style.display = 'block';
+          
+          // Scroll to ensure buttons are visible
+          setTimeout(() => {
+            const modalBody = document.querySelector('.modal-body');
+            modalBody.scrollTop = modalBody.scrollHeight;
+          }, 100);
+        }
+        
+        reader.readAsDataURL(file);
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+
+    function removeImage() {
+      const preview = document.getElementById('imagePreview');
+      const imageInput = document.getElementById('image');
+      const uploadArea = document.querySelector('.image-upload-area');
+      
+      // Clear the file input
+      imageInput.value = '';
+      
+      // Hide preview
+      preview.style.display = 'none';
+      
+      // Reset upload area if needed
+      if (!uploadArea.querySelector('input[type="file"]')) {
+        uploadArea.innerHTML = `
+          <input type="file" class="form-control" id="image" name="image" accept="image/jpeg,image/jpg,image/png,image/gif" onchange="previewImage(this)">
+          <div class="mt-2">
+            <i class="bi bi-cloud-upload" style="font-size: 2rem; color: #5bdab3;"></i>
+            <p class="mb-1">Choose an image file</p>
+            <small class="text-muted">Accepted formats: JPG, JPEG, PNG, GIF (Max size: 5MB)</small>
+          </div>
+        `;
+      }
+    }
+
+    function confirmDelete(announcementId, title) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: `Do you want to delete the announcement "${title}"? This action cannot be undone!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Create a form and submit it
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = `/delete-announcement/${announcementId}/`;
+          
+          const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+          const csrfInput = document.createElement('input');
+          csrfInput.type = 'hidden';
+          csrfInput.name = 'csrfmiddlewaretoken';
+          csrfInput.value = csrfToken;
+          
+          form.appendChild(csrfInput);
+          document.body.appendChild(form);
+          form.submit();
+        }
+      });
+    }
+
+    // Form submission handling
+    form.addEventListener('submit', function(e) {
+      const title = document.getElementById('title').value.trim();
+      const content = document.getElementById('content').value.trim();
+      const imageInput = document.getElementById('image');
+      
+      if (!title || !content) {
+        e.preventDefault();
+        Swal.fire('Error', 'Please fill in all required fields', 'error');
+        return;
+      }
+      
+      // Check if image is required for new announcements
+      if (form.action.includes('/add-announcement/') && (!imageInput.files || imageInput.files.length === 0)) {
+        e.preventDefault();
+        Swal.fire('Error', 'Please upload an image for the announcement', 'error');
+        return;
+      }
+    });
+
+    
+
+    // Display Django messages
+    {% if messages %}
+      {% for message in messages %}
+        Swal.fire({
+          title: '{% if message.tags == "success" %}Success{% elif message.tags == "error" %}Error{% else %}Info{% endif %}',
+          text: '{{ message|escapejs }}',
+          icon: '{% if message.tags == "success" %}success{% elif message.tags == "error" %}error{% else %}info{% endif %}',
+          timer: 3000,
+          showConfirmButton: false
+        });
+      {% endfor %}
+    {% endif %}
+
+    
+  </script>
+
+  <script>
+    function updateValidationBadge() {
+    fetch("{% url 'pending-validation-count' %}")
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById("validation-badge");
+            if (data.pending_count > 0) {
+                badge.textContent = data.pending_count;
+                badge.style.display = "inline-block";
+            } else {
+                badge.style.display = "none";
+            }
+        })
+        .catch(error => console.error("Error fetching pending count:", error));
+}
+
+// Update every 5 seconds
+setInterval(updateValidationBadge, 5000);
+
+// Run immediately on load
+updateValidationBadge();
+  </script>
+
+<script>
+  // Generate Report Button with SweetAlert Modal
+const generateReportBtn = document.getElementById("generateReportBtn");
+if (generateReportBtn) {
+  generateReportBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Select Month for Report',
+      input: 'month',
+      showCancelButton: true,
+      confirmButtonColor: '#3498db',
+      cancelButtonColor: '#95a5a6',
+      confirmButtonText: 'Generate Report',
+      cancelButtonText: 'Cancel',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Please select a month first!';
+        }
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Show loading message briefly
+        Swal.fire({
+          title: 'Generating Report...',
+          text: 'Please wait while we prepare your report.',
+          icon: 'info',
+          allowOutsideClick: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        const reportUrl = `/generate-admin-report/?month=${result.value}`;
+
+        // Open in a new browser tab
+        setTimeout(() => {
+          window.open(reportUrl, '_blank');
+          Swal.close();
+        }, 1000);
+      }
+    });
+  });
+}
+
+
+
+
+</script>
+
+</body>
+</html>
 
