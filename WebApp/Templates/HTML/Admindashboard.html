@@ -6,12 +6,164 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>PPMS Cluster 4 Imus City - Admin Dashboard</title>
 
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
   <link rel="icon" type="image/png" href="{% static 'media/logo.png' %}">
+  
+  <style>
+    body {
+      background: url('{% static "media/loginbg.png" %}') center/cover no-repeat fixed;
+    }
+    
+    .background-image {
+      background-image: url('{% static "media/loginbg.png" %}');
+    }
+
+
+
+    /* Additional styles for the profile in sidebar */
+    .sidebar-profile {
+      padding: 20px 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: white;
+    }
+    
+    .profile-image {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .profile-info h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+    }
+    
+    .profile-info p {
+      margin: 2px 0 0 0;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .logout-nav-item {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: auto;
+    }
+    
+    .logout-nav-item .nav-link {
+      color: #ff6b6b;
+    }
+    
+    .logout-nav-item .nav-link:hover {
+      background-color: rgba(255, 107, 107, 0.1);
+      color: #ff6b6b;
+    }
+    
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      height: calc(100% - 140px); /* Adjust for profile section */
+      padding: 20px 0 0 0;
+    }
+    
+    /* Update sidebar height calculations */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar-header {
+      flex-shrink: 0;
+    }
+    
+    /* Remove profile dropdown from top bar */
+    .profile-dropdown {
+      display: none !important;
+    }
+
+    /* Chart filter controls styling */
+    .chart-filter-controls {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+      margin-bottom: 20px;
+    }
+
+    .chart-filter-controls label {
+      font-weight: 500;
+      color: #495057;
+      margin-right: 8px;
+    }
+
+    .chart-filter-controls input[type="month"] {
+      min-width: 180px;
+  width: 180px;
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 14px;
+      background: white;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .chart-filter-controls input[type="month"]:focus {
+      border-color: #3498db;
+      outline: 0;
+      box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+
+    .chart-filter-controls button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.15s ease-in-out;
+    }
+
+    .chart-filter-controls button:hover {
+      background: #2980b9;
+    }
+
+    .chart-date-range {
+      font-size: 13px;
+      color: #6c757d;
+      font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+      .chart-filter-controls {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px !important;
+      }
+
+      .chart-filter-controls > div {
+        justify-content: center;
+      }
+
+      .chart-date-range {
+        text-align: center;
+        margin-top: 5px;
+      }
+    }
+  </style>
 </head>
 <body>
     <div class="background-image"></div>
@@ -24,6 +176,19 @@
       <h1 class="sidebar-title">PPMS Admin</h1>
     </div>
     
+    <!-- Profile Section in Sidebar -->
+    <div class="sidebar-profile">
+      {% if account.profile_photo and account.profile_photo.image %}
+        <img src="{{ account.profile_photo.image.url }}" alt="Profile" class="profile-image">
+      {% else %}
+        <img src="{% static 'media/default-profile.jpg' %}" alt="Default Profile" class="profile-image">
+      {% endif %}
+      <div class="profile-info">
+        <h3>Admin</h3>
+        <p>Administrator</p>
+      </div>
+    </div>
+    
     <nav class="nav-menu">
       <div class="nav-item">
         <button class="nav-link active" onclick="location.href='/admin-dashboard/'">
@@ -33,15 +198,7 @@
           Dashboard
         </button>
       </div>
-      
-      <div class="nav-item">
-        <button class="nav-link" onclick="location.href='/add-barangay/'">
-          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
-          </svg>
-          Add Barangay
-        </button>
-      </div>
+    
       
       <div class="nav-item">
         <button class="nav-link" onclick="location.href='/registered-barangays/'">
@@ -71,47 +228,23 @@
       </div>
       
       <div class="nav-item">
-        <button class="nav-link" onclick="location.href='/registered_bhw/'">
+        <button class="nav-link" onclick="location.href='/healthcare-workers/'">
           <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
           </svg>
-          Health Workers
-        </button>
-      </div>
-      
-      <div class="nav-item">
-        <button class="nav-link" onclick="location.href='/registered_bns/'">
-          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-          </svg>
-          Nutritional Scholars
-        </button>
-      </div>
-      
-      <div class="nav-item">
-        <button class="nav-link" onclick="location.href='/registered_midwife/'">
-          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-          </svg>
-          Midwives
-        </button>
-      </div>
-      
-      <div class="nav-item">
-        <button class="nav-link" onclick="location.href='/registered_nurse/'">
-          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-          </svg>
-          Nurses
+          Registered Workers
         </button>
       </div>
       
       <div class="nav-item">
         <button class="nav-link" onclick="location.href='/validate/'">
-          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-          </svg>
-          Account Validation
+          <div class="nav-link-content" style="position: relative; display: inline-flex; align-items: center;">
+            <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span>Account Validation</span>
+            <span id="validation-badge" class="notification-badge">0</span>
+          </div>
         </button>
       </div>
       
@@ -125,7 +258,7 @@
       </div>
       
       <div class="nav-item">
-        <button class="nav-link" onclick="confirmGeneratePDF()">
+        <button class="nav-link" id="generateReportBtn">
           <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
           </svg>
@@ -139,6 +272,16 @@
             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zM9 8a1 1 0 012 0v4a1 1 0 11-2 0V8zM11 8a1 1 0 012 0v4a1 1 0 11-2 0V8z" clip-rule="evenodd"/>
           </svg>
           Announcements
+        </button>
+      </div>
+      
+      <!-- Logout at bottom of navigation -->
+      <div class="nav-item logout-nav-item">
+        <button class="nav-link" id="logoutLink">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+          </svg>
+          Logout
         </button>
       </div>
     </nav>
@@ -193,20 +336,6 @@
             {% endif %}
           </div>
         </div>
-
-        <!-- Profile -->
-        <div class="profile-dropdown">
-          <button class="icon-btn" id="profileBtn" style="padding: 0; border: none; background: none;">
-            {% if account.profile_photo and account.profile_photo.image %}
-              <img src="{{ account.profile_photo.image.url }}" alt="Profile" style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover;">
-            {% else %}
-              <img src="{% static 'media/default-profile.jpg' %}" alt="Default Profile" style="width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover;">
-            {% endif %}
-          </button>
-          <div class="dropdown" id="profileMenu">
-            <a href="#" id="logoutLink">Logout</a>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -220,18 +349,44 @@
 
       <div class="charts">
         <!-- Pie Chart Container -->
-        <div class="chart-container pie-container">
-          <div class="pie-chart-wrapper">
-            <canvas id="pieChart"></canvas>
-          </div>
-          <div class="custom-legend" id="customLegend">
-            <!-- Legend items will be populated by JavaScript for mobile -->
-          </div>
-        </div>
+      <div class="chart-container pie-container">
+  <h3 style="font-size: 20px; margin-bottom: 25px; font-weight: 600; color: #1e1e2f; text-align: center;">
+    Overall Nutritional Status
+  </h3>
+  
+  <!-- ADD THIS WRAPPER DIV - This is what's missing! -->
+  <div class="pie-content-wrapper">
+    <div class="pie-chart-wrapper">
+      <canvas id="pieChart"></canvas>
+    </div>
+    <div class="custom-legend" id="customLegend">
+      <!-- Legend items will be populated by JavaScript for mobile -->
+    </div>
+  </div>
+</div>
         
-        <!-- Simple Vaccination Trend Line Chart -->
-        <div class="chart-container">
-          <canvas id="vaccinationTrendChart"></canvas>
+        <!-- Enhanced Vaccination Trend Line Chart with Date Filter -->
+        <div class="chart-container" style="overflow-y: auto; max-height: 500px;">
+          <!-- Date Filter Controls -->
+          <div class="chart-filter-controls" style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label for="monthPicker">Filter by Month:</label>
+              <input 
+                type="month" 
+                id="monthPicker" 
+                value="{{ current_filter_month }}"
+              >
+            </div>
+            <button id="resetToCurrentMonth">
+              Current Month
+            </button>
+            <div style="margin-left: auto;" class="chart-date-range">
+              <span id="chartDateRange">Showing current month ±5 months</span>
+            </div>
+          </div>
+          <div class="chart-content">
+            <canvas id="vaccinationTrendChart"></canvas>
+          </div>
         </div>
       </div>
 
@@ -249,6 +404,9 @@
     </div>
   </div>      
 
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
 <!-- JS Libraries -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -256,8 +414,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const notifBtn = document.getElementById("notifBtn");
   const notifMenu = document.getElementById("notifMenu");
-  const profileBtn = document.getElementById("profileBtn");
-  const profileMenu = document.getElementById("profileMenu");
   const notifDot = document.getElementById("notifDot");
   const mobileToggle = document.getElementById("mobileToggle");
   const sidebar = document.getElementById("sidebar");
@@ -288,7 +444,6 @@ document.addEventListener("DOMContentLoaded", () => {
     notifBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       notifMenu.style.display = notifMenu.style.display === "block" ? "none" : "block";
-      profileMenu.style.display = "none";
       notifDot.style.display = "none";
       if (latestNotifTimestamp) localStorage.setItem('lastReadNotifTimestamp', latestNotifTimestamp.toISOString());
     });
@@ -297,18 +452,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (profileBtn && profileMenu) {
-    profileBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      profileMenu.style.display = profileMenu.style.display === "flex" ? "none" : "flex";
-      notifMenu.style.display = "none";
-    });
-    document.addEventListener("click", (e) => {
-      if (!e.target.closest(".profile-dropdown")) profileMenu.style.display = "none";
-    });
-  }
-
-  // Logout confirmation
+  // Logout confirmation - now for sidebar logout button
   const logoutLink = document.getElementById("logoutLink");
   if (logoutLink) {
     logoutLink.addEventListener("click", function(e) {
@@ -330,131 +474,373 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize Charts
   try {
     // ✅ Pie Chart
-    const pieEl = document.getElementById('pieChart');
-    const customLegendEl = document.getElementById('customLegend');
+    // Complete working pie chart with overall nutritional status data
+const pieEl = document.getElementById('pieChart');
+const customLegendEl = document.getElementById('customLegend');
+
+if (pieEl) {
+  // Use nutritional data for overall status summary
+  let chartData = {};
+  const nutritionalDataElement = document.getElementById('nutritional-data');
+  
+  // Nutritional status colors (same as bar chart)
+  const nutritionalColors = ['#f44336', '#ff9800', '#4caf50', '#2196f3', '#9c27b0', '#795548'];
+  
+  if (nutritionalDataElement) {
+    try {
+      chartData = JSON.parse(nutritionalDataElement.textContent || '{}');
+    } catch (e) {
+      console.error('Error parsing nutritional data');
+      chartData = { labels: [], values: [] };
+    }
+  } else {
+    chartData = { labels: [], values: [] };
+  }
+
+  const isMobile = () => window.innerWidth <= 768;
+
+  const createChart = () => {
+    const mobile = isMobile();
+    const chart = new Chart(pieEl.getContext('2d'), {
+      type: 'pie',
+      data: {
+        labels: chartData.labels || [],
+        datasets: [{
+          data: chartData.values || [],
+          backgroundColor: nutritionalColors,
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { 
+            display: !mobile, 
+            position: 'bottom',
+            labels: {
+              padding: 20,
+              usePointStyle: true,
+              font: {
+                size: 12
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                return `${label}: ${value} preschoolers (${percentage}%)`;
+              }
+            }
+          }
+        },
+        animation: {
+          animateScale: true,
+          animateRotate: true,
+          duration: 1000,
+          easing: 'easeOutQuart'
+        }
+      },
+      plugins: [{
+        id: 'insideLabels',
+        afterDatasetsDraw: function(chart) {
+          const ctx = chart.ctx;
+          const meta = chart.getDatasetMeta(0);
+          const total = chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+          
+          if (total === 0) return; // Don't draw labels if no data
+          
+          ctx.save();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          
+          meta.data.forEach((element, index) => {
+            const value = chart.data.datasets[0].data[index];
+            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+            const label = chart.data.labels[index] || '';
+            
+            // Only show label if percentage is greater than 3%
+            if (parseFloat(percentage) > 3 && value > 0) {
+              const position = element.tooltipPosition();
+              
+              // Use white text for darker colors, black text for lighter colors
+              const bgColor = nutritionalColors[index % nutritionalColors.length];
+              const brightness = getBrightness(bgColor);
+              ctx.fillStyle = brightness > 128 ? '#000000' : '#ffffff';
+              
+              // Draw nutritional status label
+              ctx.font = 'bold 9px Poppins, sans-serif';
+              ctx.fillText(label, position.x, position.y - 10);
+              
+              // Draw percentage
+              ctx.font = 'bold 11px Poppins, sans-serif';
+              ctx.fillText(`${percentage}%`, position.x, position.y + 2);
+              
+              // Draw count
+              ctx.font = '8px Poppins, sans-serif';
+              ctx.fillText(`(${value})`, position.x, position.y + 12);
+            }
+          });
+          
+          ctx.restore();
+        }
+      }]
+    });
+
+    if (mobile && customLegendEl && chartData.labels && chartData.values) {
+      createCustomLegend(chartData.labels, nutritionalColors, chartData.values, customLegendEl);
+    }
+    return chart;
+  };
+
+  // Helper function to calculate color brightness
+  function getBrightness(color) {
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
     
-    if (pieEl) {
-      const nutritionalData = JSON.parse(document.getElementById('nutritional-data').textContent || '{}');
-      const colors = ['#f44336', '#ff9800', '#4caf50', '#2196f3', '#9c27b0'];
+    return (r * 299 + g * 587 + b * 114) / 1000;
+  }
 
-      const isMobile = () => window.innerWidth <= 768;
+  let pieChart = createChart();
 
-      const createChart = () => {
-        const mobile = isMobile();
-        const chart = new Chart(pieEl.getContext('2d'), {
-          type: 'pie',
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      const mobile = isMobile();
+      pieChart.options.plugins.legend.display = !mobile;
+      pieChart.update();
+      if (mobile && customLegendEl && chartData.labels && chartData.values) {
+        createCustomLegend(chartData.labels, nutritionalColors, chartData.values, customLegendEl);
+      } else if (!mobile && customLegendEl) {
+        customLegendEl.innerHTML = '';
+      }
+    }, 250);
+  });
+}
+
+// Enhanced custom legend function for nutritional status
+function createCustomLegend(labels, colors, values, container) {
+  const total = values.reduce((a, b) => a + b, 0);
+  
+  container.innerHTML = labels.map((label, index) => {
+    const value = values[index] || 0;
+    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+    return `
+      <div class="legend-item">
+        <div class="legend-color-box" style="background-color: ${colors[index % colors.length]}"></div>
+        <div class="legend-text">
+          ${label}<br><small>${value} preschoolers (${percentage}%)</small>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+    // ✅ Enhanced Vaccination Trend Line Chart with Dynamic Filtering
+    const vaccinationTrendEl = document.getElementById('vaccinationTrendChart');
+    if (vaccinationTrendEl) {
+      const vaccinationTrendData = JSON.parse(document.getElementById('vaccination-trend-data').textContent || '{}');
+      const monthPicker = document.getElementById('monthPicker');
+      const resetButton = document.getElementById('resetToCurrentMonth');
+      const chartDateRange = document.getElementById('chartDateRange');
+      
+      let vaccinationChart;
+
+      // Function to generate 11-month window data around a center month
+      function generateChartData(centerMonth) {
+        const allMonths = vaccinationTrendData.all_months || [];
+        const centerIndex = allMonths.findIndex(month => month.month === centerMonth);
+        
+        if (centerIndex === -1) {
+          // If center month not found, use current data
+          return {
+            labels: vaccinationTrendData.labels || [],
+            registered: vaccinationTrendData.registered || [],
+            vaccinated: vaccinationTrendData.vaccinated || []
+          };
+        }
+        
+        // Get 5 months before and after (11 total)
+        const startIndex = Math.max(0, centerIndex - 5);
+        const endIndex = Math.min(allMonths.length - 1, centerIndex + 5);
+        const windowData = allMonths.slice(startIndex, endIndex + 1);
+        
+        // Update date range display
+        if (windowData.length > 0) {
+          const firstMonth = windowData[0].label;
+          const lastMonth = windowData[windowData.length - 1].label;
+          chartDateRange.textContent = `Showing ${firstMonth} to ${lastMonth}`;
+        }
+        
+        return {
+          labels: windowData.map(month => month.label),
+          registered: windowData.map(month => month.registered),
+          vaccinated: windowData.map(month => month.vaccinated)
+        };
+      }
+
+      // Function to create/update the chart
+      function createOrUpdateChart(centerMonth) {
+        const chartData = generateChartData(centerMonth);
+        
+        const config = {
+          type: 'line',
           data: {
-            labels: nutritionalData.labels || [],
+            labels: chartData.labels,
             datasets: [{
-              data: nutritionalData.values || [],
-              backgroundColor: colors,
+              label: 'Registered Preschoolers',
+              data: chartData.registered,
+              borderColor: '#3498db',
+              backgroundColor: 'rgba(52, 152, 219, 0.1)',
+              borderWidth: 3,
+              pointRadius: 5,
+              pointHoverRadius: 7,
+              pointBackgroundColor: '#3498db',
+              tension: 0.4,
+              fill: true
+            }, {
+              label: 'Vaccinations Given',
+              data: chartData.vaccinated,
+              borderColor: '#27ae60',
+              backgroundColor: 'rgba(39, 174, 96, 0.1)',
+              borderWidth: 3,
+              pointRadius: 5,
+              pointHoverRadius: 7,
+              pointBackgroundColor: '#27ae60',
+              tension: 0.4,
+              fill: true
             }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+              intersect: false,
+              mode: 'index'
+            },
+            animation: {
+              duration: 300,
+              easing: 'easeInOutQuart'
+            },
             plugins: {
-              legend: { display: !mobile, position: 'bottom' },
+              title: {
+                display: true,
+                text: 'Monthly Vaccination Trend',
+                font: { size: 16, weight: 'bold' },
+                padding: 20
+              },
+              legend: { 
+                display: true, 
+                position: 'bottom',
+                labels: {
+                  usePointStyle: true,
+                  padding: 50
+                }
+              },
               tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    const label = context.label || '';
-                    const value = context.parsed || 0;
-                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
-                    return `${label}: ${value} (${percentage}%)`;
-                  }
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                titleFont: { size: 14 },
+                bodyFont: { size: 13 },
+                cornerRadius: 8,
+                displayColors: true
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: { 
+                  display: true, 
+                  text: 'Count',
+                  font: { size: 14, weight: 'bold' }
+                },
+                grid: {
+                  color: 'rgba(0,0,0,0.1)'
+                }
+              },
+              x: {
+                title: { 
+                  display: true, 
+                  text: 'Months',
+                  font: { size: 14, weight: 'bold' }
+                },
+                grid: {
+                  color: 'rgba(0,0,0,0.1)'
                 }
               }
             }
           }
+        };
+
+        if (vaccinationChart) {
+          // Update existing chart
+          vaccinationChart.data = config.data;
+          vaccinationChart.update('active');
+        } else {
+          // Create new chart
+          vaccinationChart = new Chart(vaccinationTrendEl.getContext('2d'), config);
+        }
+      }
+
+      // Initialize chart with current data
+      createOrUpdateChart(vaccinationTrendData.center_month);
+
+      // Month picker event listener
+      if (monthPicker) {
+        monthPicker.addEventListener('change', function(e) {
+          const selectedMonth = e.target.value; // Format: YYYY-MM
+          if (selectedMonth) {
+            createOrUpdateChart(selectedMonth);
+            
+            // Update URL without page reload for browser history
+            const url = new URL(window.location);
+            url.searchParams.set('filter_month', selectedMonth);
+            window.history.pushState({}, '', url);
+          }
         });
+      }
 
-        if (mobile && customLegendEl && nutritionalData.labels && nutritionalData.values) {
-          createCustomLegend(nutritionalData.labels, colors, nutritionalData.values, customLegendEl);
-        }
-        return chart;
-      };
+      // Reset to current month button
+      if (resetButton) {
+        resetButton.addEventListener('click', function() {
+          const now = new Date();
+          const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+          monthPicker.value = currentMonth;
+          createOrUpdateChart(currentMonth);
+          
+          // Update URL
+          const url = new URL(window.location);
+          url.searchParams.delete('filter_month'); // Remove filter to show current month
+          window.history.pushState({}, '', url);
+          
+          chartDateRange.textContent = 'Showing current month ±5 months';
+        });
+      }
 
-      let pieChart = createChart();
-
-      let resizeTimeout;
-      window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-          const mobile = isMobile();
-          pieChart.options.plugins.legend.display = !mobile;
-          pieChart.update();
-          if (mobile && customLegendEl && nutritionalData.labels && nutritionalData.values) {
-            createCustomLegend(nutritionalData.labels, colors, nutritionalData.values, customLegendEl);
-          } else if (!mobile && customLegendEl) {
-            customLegendEl.innerHTML = '';
-          }
-        }, 250);
-      });
-    }
-
-    // Simple Vaccination Trend Line Chart
-    const vaccinationTrendEl = document.getElementById('vaccinationTrendChart');
-    if (vaccinationTrendEl) {
-      const vaccinationTrendData = JSON.parse(document.getElementById('vaccination-trend-data').textContent || '{}');
-      
-      new Chart(vaccinationTrendEl.getContext('2d'), {
-        type: 'line',
-        data: {
-          labels: vaccinationTrendData.labels || [],
-          datasets: [{
-            label: 'Registered Preschoolers',
-            data: vaccinationTrendData.registered || [],
-            borderColor: '#3498db',
-            backgroundColor: 'rgba(52, 152, 219, 0.1)',
-            borderWidth: 2,
-            pointRadius: 4,
-            tension: 0.3
-          }, {
-            label: 'Vaccinations Given',
-            data: vaccinationTrendData.vaccinated || [],
-            borderColor: '#27ae60',
-            backgroundColor: 'rgba(39, 174, 96, 0.1)',
-            borderWidth: 2,
-            pointRadius: 4,
-            tension: 0.3
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            title: {
-              display: true,
-              text: 'Monthly Vaccination Trend',
-              font: { size: 14, weight: 'bold' }
-            },
-            legend: { 
-              display: true, 
-              position: 'bottom'
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: { 
-                display: true, 
-                text: 'Count'
-              }
-            },
-            x: {
-              title: { 
-                display: true, 
-                text: 'Months'
-              }
-            }
-          }
+      // Handle browser back/forward buttons
+      window.addEventListener('popstate', function(event) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const filterMonth = urlParams.get('filter_month');
+        if (filterMonth) {
+          monthPicker.value = filterMonth;
+          createOrUpdateChart(filterMonth);
+        } else {
+          const now = new Date();
+          const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+          monthPicker.value = currentMonth;
+          createOrUpdateChart(currentMonth);
         }
       });
     }
 
-    // Barangay Nutritional Status Bar Chart
+    // ✅ Barangay Nutritional Status Bar Chart
     const barangayChartEl = document.getElementById('barangayChart');
     if (barangayChartEl) {
       const barangayDataElement = document.getElementById('barangay-chart-data');
@@ -484,7 +870,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 label: 'Risk of Overweight',
                 data: barangayData.risk_overweight || [],
                 backgroundColor: '#2196f3'
-              }, {
+              },{
+               
                 label: 'Overweight',
                 data: barangayData.overweight || [],
                 backgroundColor: '#9c27b0'
@@ -584,7 +971,84 @@ function createCustomLegend(labels, colors, values, container) {
     `;
   }).join('');
 }
+
+
+function updateValidationBadge() {
+    fetch("{% url 'pending-validation-count' %}")
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById("validation-badge");
+            if (data.pending_count > 0) {
+                badge.textContent = data.pending_count;
+                badge.style.display = "inline-block";
+            } else {
+                badge.style.display = "none";
+            }
+        })
+        .catch(error => console.error("Error fetching pending count:", error));
+}
+
+// Update every 5 seconds
+setInterval(updateValidationBadge, 5000);
+
+// Run immediately on load
+updateValidationBadge();
+
+// Generate Report Button with SweetAlert Modal
+// Generate Report Button with SweetAlert Modal
+const generateReportBtn = document.getElementById("generateReportBtn");
+if (generateReportBtn) {
+  generateReportBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Select Month for Report',
+      input: 'month',
+      showCancelButton: true,
+      confirmButtonColor: '#3498db',
+      cancelButtonColor: '#95a5a6',
+      confirmButtonText: 'Generate Report',
+      cancelButtonText: 'Cancel',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Please select a month first!';
+        }
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: 'Generating Report...',
+          text: 'Please wait while we prepare your report.',
+          icon: 'info',
+          allowOutsideClick: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        const reportUrl = `/generate-admin-report/?month=${result.value}`;
+
+        // Instead of window.open, use window.location.href for WebView compatibility
+        setTimeout(() => {
+          window.location.href = reportUrl;
+          
+          // Close the loading dialog after navigation starts
+          setTimeout(() => {
+            Swal.close();
+          }, 1000);
+        }, 500);
+      }
+    });
+  });
+}
+
+
+
+
+
 </script>
+
+
 
 </body>
 </html>
