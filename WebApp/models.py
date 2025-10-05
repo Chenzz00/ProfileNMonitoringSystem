@@ -50,6 +50,7 @@ class Account(models.Model):
 
     # Other details
     birthdate = models.DateField(blank=True, null=True)
+    sex = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female')])
     user_role = models.CharField(max_length=100)
     is_validated = models.BooleanField(default=False)
     is_rejected = models.BooleanField(default=False)
@@ -317,8 +318,9 @@ class Parent(models.Model):
     password = models.CharField(max_length=100)
 
     # Other details
-    age = models.IntegerField(blank=True, null=True)  # Optional: historical record
+    age = models.IntegerField(blank=True, null=True)  # Optpyional: historical record
     birthdate = models.DateField(blank=True, null=True)
+    sex = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female')])
     registered_preschoolers = models.ManyToManyField('Preschooler', blank=True, related_name='parents')
     mother_name = models.CharField(max_length=100, blank=True, null=True)
     father_name = models.CharField(max_length=100, blank=True, null=True)
