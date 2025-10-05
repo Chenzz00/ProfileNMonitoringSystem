@@ -2,29 +2,30 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Overall Barangay Summary Report</title>
+    <title>Overall Barangay Immunization Report</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            font-size: 12px;
+            font-size: 11px;
             margin: 20px;
             line-height: 1.4;
-            color: #333;
             position: relative;
         }
 
-        /* Watermark styles */
+        /* Watermark styling */
         .watermark {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 48px;
+            font-size: 80px;
             font-weight: bold;
             color: rgba(0, 0, 0, 0.1);
-            z-index: -1;
-            white-space: nowrap;
+            z-index: 1;
             pointer-events: none;
+            white-space: nowrap;
+            font-family: Arial, sans-serif;
+            letter-spacing: 5px;
         }
 
         .watermark-text {
@@ -32,12 +33,13 @@
             top: 30%;
             left: 50%;
             transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 24px;
+            font-size: 60px;
             font-weight: bold;
-            color: rgba(255, 0, 0, 0.15);
-            z-index: -1;
-            white-space: nowrap;
+            color: rgba(0, 0, 0, 0.08);
+            z-index: 1;
             pointer-events: none;
+            white-space: nowrap;
+            font-family: Arial, sans-serif;
         }
 
         .watermark-text-2 {
@@ -45,684 +47,148 @@
             top: 70%;
             left: 50%;
             transform: translate(-50%, -50%) rotate(-45deg);
-            font-size: 32px;
+            font-size: 60px;
             font-weight: bold;
-            color: rgba(0, 0, 255, 0.12);
-            z-index: -1;
-            white-space: nowrap;
+            color: rgba(0, 0, 0, 0.08);
+            z-index: 1;
             pointer-events: none;
+            white-space: nowrap;
+            font-family: Arial, sans-serif;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        h1 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        h2 {
+            font-size: 16px;
+            margin: 20px 0 10px 0;
+            padding: 8px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 5px;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #3498db;
             padding-bottom: 15px;
-            border-bottom: 2px solid #ccc;
-        }
-
-        .header h1 {
-            font-size: 24px;
-            font-weight: bold;
-            margin: 0 0 8px 0;
-            color: #333;
         }
 
         .header p {
-            margin: 4px 0;
-            color: #666;
-            font-size: 12px;
+            margin: 3px 0;
+            color: #555;
         }
 
-        /* Blue section header */
-        .section-header {
-            background: #4A90E2;
-            color: white;
-            padding: 10px 20px;
-            margin: 0 auto 20px auto;
-            border-radius: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            width: fit-content;
-            min-width: 250px;
+        .section {
+            margin-top: 25px;
+            page-break-inside: avoid;
         }
 
-        .section-header h2 {
-            margin: 0;
-            font-size: 16px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        /* Main overview container */
-        .overview-container {
-            background: #f8f9fa;
-            padding: 15px;
-            border: 1px solid #ddd;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-            flex-wrap: wrap;
-        }
-
-        /* Left side - Pie chart */
-        .chart-section {
-            flex: 0 0 220px;
-            text-align: center;
-        }
-
-        .pie-chart {
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            margin: 0 auto 10px auto;
-            position: relative;
-            border: 3px solid #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .legend {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            font-size: 9px;
-            margin-top: 8px;
-            text-align: left;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-            flex-shrink: 0;
-        }
-
-        /* Right side - Stats grid */
-        .stats-section {
-            flex: 1;
-            min-width: 220px;
-            max-width: 420px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-        .stat-box {
-            background: white;
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: center;
-            border-radius: 5px;
-            min-height: 70px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .stat-number {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-            margin: 0;
-            line-height: 1.2;
-        }
-
-        .stat-label {
-            font-size: 9px;
-            color: #666;
-            text-transform: uppercase;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-            margin: 0;
-            line-height: 1.2;
-            text-align: center;
-        }
-
-        /* Summary text below stats */
-        .nutritional-summary {
-            background: white;
-            border: 1px solid #ddd;
-            padding: 8px 10px;
-            border-radius: 5px;
-            max-width: 100%;
-            font-size: 10px;
-            text-align: center;
-        }
-
-        .nutritional-summary h4 {
-            margin: 0 0 5px 0;
-            font-size: 11px;
-            font-weight: bold;
-            color: #333;
-            text-align: center;
-        }
-
-        .summary-line {
-            font-size: 10px;
-            line-height: 1.4;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .status-item {
-            font-weight: bold;
-            white-space: nowrap;
-        }
-
-        /* Table section */
-        .table-section {
-            margin-top: 20px;
-        }
-
-        .data-table {
+        table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
-            background: white;
-        }
-
-        .data-table th {
-            background: #4A90E2;
-            color: white;
-            padding: 10px 8px;
-            text-align: center;
-            font-weight: bold;
-            border: 1px solid #3a7bc8;
-            font-size: 11px;
-            line-height: 1.2;
-        }
-
-        .data-table td {
-            padding: 10px 8px;
-            text-align: center;
-            border: 1px solid #ddd;
-            background: white;
-            position: relative;
-        }
-
-        .data-table .barangay-name {
-            text-align: left;
-            font-weight: bold;
-            background: #f8f9fa !important;
-        }
-
-        .data-table .total-row {
-            background: #e8f4f8;
-            font-weight: bold;
-        }
-
-        .data-table .total-row td {
-            background: #e8f4f8 !important;
-        }
-
-        /* Cell highlighting styles for nutritional status */
-        .data-table td.highlight-severe {
-            background: #ffebee !important;
-            color: #c62828;
-            font-weight: bold;
-            border: 2px solid #e53935;
-        }
-
-        .data-table td.highlight-underweight {
-            background: #fff3e0 !important;
-            color: #ef6c00;
-            font-weight: bold;
-            border: 2px solid #ff9800;
-        }
-
-        .data-table td.highlight-normal {
-            background: #e8f5e8 !important;
-            color: #2e7d32;
-            font-weight: bold;
-            border: 2px solid #4caf50;
-        }
-
-        .data-table td.highlight-overweight {
-            background: #fff3e0 !important;
-            color: #d84315;
-            font-weight: bold;
-            border: 2px solid #ff5722;
-        }
-
-        .data-table td.highlight-obese {
-            background: #fce4ec !important;
-            color: #ad1457;
-            font-weight: bold;
-            border: 2px solid #e91e63;
-        }
-
-        .data-table td.highlight-at-risk-high {
-            background: #ffcdd2 !important;
-            color: #d32f2f;
-            font-weight: bold;
-            border: 2px solid #f44336;
-            animation: pulse-red 2s infinite;
-        }
-
-        .data-table td.highlight-at-risk-medium {
-            background: #ffe0b2 !important;
-            color: #f57c00;
-            font-weight: bold;
-            border: 2px solid #ff9800;
-        }
-
-        .data-table td.highlight-at-risk-low {
-            background: #c8e6c9 !important;
-            color: #388e3c;
-            font-weight: bold;
-            border: 2px solid #4caf50;
-        }
-
-        /* Highest count highlighting */
-        .data-table tr.highest-count td {
-            background: #e3f2fd !important;
-            border: 2px solid #2196f3;
-        }
-
-        .data-table tr.highest-count .barangay-name {
-            background: #bbdefb !important;
-            color: #0d47a1;
-            font-weight: bold;
-        }
-
-        /* Zero count highlighting */
-        .data-table td.zero-count {
-            background: #f5f5f5 !important;
-            color: #9e9e9e;
-            font-style: italic;
-        }
-
-        /* Animation for high at-risk areas */
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
-        }
-
-        #pieLabels {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        .pie-label {
-            position: absolute;
+            margin-top: 10px;
             font-size: 10px;
-            font-weight: bold;
-            color: #333;
-            transform: translate(-50%, -50%);
-            white-space: nowrap;
+            background: white;
         }
 
-        /* Color coding */
-        .red { color: #e74c3c; }
-        .orange { color: #f39c12; }
-        .green { color: #27ae60; }
-        .blue { color: #3498db; }
-        .purple { color: #9b59b6; }
+        th, td {
+            border: 1px solid #333;
+            padding: 6px 4px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        td {
+            text-align: center;
+            background: white;
+        }
+
+        /* Status color coding */
+        .status-complete { color: #27ae60; font-weight: bold; }
+        .status-partial { color: #f39c12; font-weight: bold; }
+        .status-missed { color: #e74c3c; font-weight: bold; }
 
         @media print {
-            body { margin: 10px; }
+            body { margin: 15px; }
+            .section { page-break-inside: avoid; }
             .watermark, .watermark-text, .watermark-text-2 {
-                display: block !important;
-            }
-            /* Ensure highlights are visible in print */
-            .data-table td.highlight-severe,
-            .data-table td.highlight-underweight,
-            .data-table td.highlight-normal,
-            .data-table td.highlight-overweight,
-            .data-table td.highlight-obese,
-            .data-table td.highlight-at-risk-high,
-            .data-table td.highlight-at-risk-medium,
-            .data-table td.highlight-at-risk-low {
-                -webkit-print-color-adjust: exact !important;
-                color-adjust: exact !important;
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Watermark elements -->
-    <div class="watermark">PROPERTY OF IMUS ETC HEALTH CENTER</div>
-    <div class="watermark-text">DO NOT COPY</div>
-    <div class="watermark-text-2">CONFIDENTIAL</div>
 
+<!-- Watermark -->
+<div class="watermark">PROPERTY OF IMUS ETC HEALTH CENTER</div>
+<div class="watermark-text">DO NOT COPY</div>
+<div class="watermark-text-2">CONFIDENTIAL</div>
+
+<div class="content">
     <div class="header">
-        <h1>Overall Barangay Summary Report</h1>
-        <p>PPMS Cluster 4 Imus City Health Centers</p>
-        <p>Generated by: {% if account %}{{ account.full_name }}{% else %}System Administrator{% endif %}</p>
-        <p>Report Date: {% now "F d, Y" %}</p>
+        <h1>Overall Barangay Health Centers</h1>
+        <p><strong>Generated by:</strong> Admin</p>
+        
+        <p><strong>Report Date:</strong> {% now "F d, Y" %}</p>
+        <p><strong>Month:</strong> {{ month_filter }}</p>
     </div>
 
-    <!-- Nutritional Status Overview -->
-    <div class="section-header">
-        <span></span>
-        <h2>Nutritional Status Overview</h2>
-    </div>
-
-    <div class="overview-container">
-        <!-- Left: Pie Chart -->
-        <div class="chart-section">
-            <div class="pie-chart" id="pieChart"></div>
-            
-            <div class="legend">
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #e74c3c;"></div>
-                    <span>Severely Underweight</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #f39c12;"></div>
-                    <span>Underweight</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #27ae60;"></div>
-                    <span>Normal</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #e67e22;"></div>
-                    <span>Overweight</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #c0392b;"></div>
-                    <span>Obese</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right: Stats -->
-        <div class="stats-section">
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-number">{{ total_preschoolers|default:"0" }}</div>
-                    <div class="stat-label">Total Preschoolers</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number">{{ total_barangays|default:"0" }}</div>
-                    <div class="stat-label">Total Barangays</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number">{% if highest_barangay %}{{ highest_barangay.name }}{% else %}N/A{% endif %}</div>
-                    <div class="stat-label">Highest Count</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number">{{ total_at_risk|default:"0" }}</div>
-                    <div class="stat-label">At-Risk Children</div>
-                </div>
-            </div>
-
-            <div class="nutritional-summary">
-                <h4>Nutritional Status Summary</h4>
-                <div class="summary-line">
-                    <span class="status-item red">Severely Underweight: {{ overall_summary.Severely_Underweight|default:"0" }}</span>
-                    <span class="status-item orange">Underweight: {{ overall_summary.Underweight|default:"0" }}</span>
-                    <span class="status-item green">Normal: {{ overall_summary.Normal|default:"0" }}</span>
-                    <span class="status-item orange">Overweight: {{ overall_summary.Overweight|default:"0" }}</span>
-                    <span class="status-item red">Obese: {{ overall_summary.Obese|default:"0" }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Detailed Breakdown -->
-    <div class="section-header">
-        <span></span>
-        <h2>Detailed Barangay Breakdown</h2>
-    </div>
-
-    <div class="table-section">
-        <table class="data-table">
+    <!-- Barangay Summary -->
+    <div class="section">
+        <h2>Barangay-wise Preschooler Summary</h2>
+        <table class="summary-table">
             <thead>
                 <tr>
-                    <th style="width: 18%;">Barangay Name</th>
-                    <th style="width: 12%;">Total<br/>Preschoolers</th>
-                    <th style="width: 12%;">Severely<br/>Underweight</th>
-                    <th style="width: 12%;">Underweight</th>
-                    <th style="width: 12%;">Normal</th>
-                    <th style="width: 12%;">Overweight</th>
-                    <th style="width: 10%;">Obese</th>
-                    <th style="width: 12%;">At Risk<br/>%</th>
+                    <th>Barangay</th>
+                    <th>Total Preschoolers</th>
+                    <th>Fully Vaccinated</th>
+                    <th>Partially Vaccinated</th>
+                    <th>Not Vaccinated</th>
                 </tr>
             </thead>
-            <tbody id="barangayTableBody">
-                {% for detail in barangay_details %}
-                <tr data-total="{{ detail.total_preschoolers }}" 
-                    data-severe="{{ detail.severely_underweight }}"
-                    data-underweight="{{ detail.underweight }}"
-                    data-normal="{{ detail.normal }}"
-                    data-overweight="{{ detail.overweight }}"
-                    data-obese="{{ detail.obese }}"
-                    data-at-risk="{{ detail.at_risk_percentage }}">
-                    <td class="barangay-name">{{ detail.name }}</td>
-                    <td>{{ detail.total_preschoolers }}</td>
-                    <td>{{ detail.severely_underweight }}</td>
-                    <td>{{ detail.underweight }}</td>
-                    <td>{{ detail.normal }}</td>
-                    <td>{{ detail.overweight }}</td>
-                    <td>{{ detail.obese }}</td>
-                    <td>{{ detail.at_risk_percentage }}%</td>
+            <tbody>
+                {% for barangay, stats in barangay_summary.items %}
+                <tr>
+                    <td style="text-align: left;">{{ barangay }}</td>
+                    <td><strong>{{ stats.total }}</strong></td>
+                    <td class="status-complete">{{ stats.fully }}</td>
+                    <td class="status-partial">{{ stats.partial }}</td>
+                    <td class="status-missed">{{ stats.not }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 20px; color: #666;">No barangay data available</td>
+                    <td colspan="5" style="text-align: center; font-style: italic; color: #666;">
+                        No preschooler data available per barangay.
+                    </td>
                 </tr>
                 {% endfor %}
-                {% if barangay_details %}
-                <tr class="total-row">
-                    <td class="barangay-name">TOTAL</td>
-                    <td>{{ total_preschoolers|default:"0" }}</td>
-                    <td>{{ overall_summary.Severely_Underweight|default:"0" }}</td>
-                    <td>{{ overall_summary.Underweight|default:"0" }}</td>
-                    <td>{{ overall_summary.Normal|default:"0" }}</td>
-                    <td>{{ overall_summary.Overweight|default:"0" }}</td>
-                    <td>{{ overall_summary.Obese|default:"0" }}</td>
-                    <td>{% if total_preschoolers > 0 %}{% widthratio total_at_risk total_preschoolers 100 %}{% else %}0{% endif %}%</td>
-                </tr>
-                {% endif %}
             </tbody>
         </table>
     </div>
+</div>
 
-    <script>
-        // Dynamic pie chart generation
-        function generatePieChart() {
-            const severelyUnderweight = parseInt('{{ overall_summary.Severely_Underweight|default:"0" }}');
-            const underweight = parseInt('{{ overall_summary.Underweight|default:"0" }}');
-            const normal = parseInt('{{ overall_summary.Normal|default:"0" }}');
-            const overweight = parseInt('{{ overall_summary.Overweight|default:"0" }}');
-            const obese = parseInt('{{ overall_summary.Obese|default:"0" }}');
-            
-            const total = severelyUnderweight + underweight + normal + overweight + obese;
-            
-            const pieChart = document.getElementById('pieChart');
-            
-            if (total === 0) {
-                pieChart.style.background = 'linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)';
-                pieChart.style.backgroundSize = '20px 20px';
-                return;
-            }
-            
-            // Calculate percentages and angles
-            const severelyUnderweightAngle = (severelyUnderweight / total) * 360;
-            const underweightAngle = (underweight / total) * 360;
-            const normalAngle = (normal / total) * 360;
-            const overweightAngle = (overweight / total) * 360;
-            const obeseAngle = (obese / total) * 360;
-            
-            // Calculate cumulative angles for conic-gradient
-            let currentAngle = 0;
-            const angles = [];
-            
-            if (severelyUnderweight > 0) {
-                angles.push(`#e74c3c ${currentAngle}deg ${currentAngle + severelyUnderweightAngle}deg`);
-                currentAngle += severelyUnderweightAngle;
-            }
-            
-            if (underweight > 0) {
-                angles.push(`#f39c12 ${currentAngle}deg ${currentAngle + underweightAngle}deg`);
-                currentAngle += underweightAngle;
-            }
-            
-            if (normal > 0) {
-                angles.push(`#27ae60 ${currentAngle}deg ${currentAngle + normalAngle}deg`);
-                currentAngle += normalAngle;
-            }
-            
-            if (overweight > 0) {
-                angles.push(`#e67e22 ${currentAngle}deg ${currentAngle + overweightAngle}deg`);
-                currentAngle += overweightAngle;
-            }
-            
-            if (obese > 0) {
-                angles.push(`#c0392b ${currentAngle}deg ${currentAngle + obeseAngle}deg`);
-            }
-            
-            // Apply the dynamic gradient
-            if (angles.length > 0) {
-                pieChart.style.background = `conic-gradient(${angles.join(', ')})`;
-            } else {
-                pieChart.style.background = '#e0e0e0';
-            }
-        }
-
-        // Function to apply cell highlighting based on data
-        function applyCellHighlights() {
-            const rows = document.querySelectorAll('#barangayTableBody tr[data-total]');
-            let maxTotal = 0;
-            
-            // Find the highest total preschoolers
-            rows.forEach(row => {
-                const total = parseInt(row.getAttribute('data-total'));
-                if (total > maxTotal) maxTotal = total;
-            });
-            
-            rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                const total = parseInt(row.getAttribute('data-total'));
-                const severe = parseInt(row.getAttribute('data-severe'));
-                const underweight = parseInt(row.getAttribute('data-underweight'));
-                const normal = parseInt(row.getAttribute('data-normal'));
-                const overweight = parseInt(row.getAttribute('data-overweight'));
-                const obese = parseInt(row.getAttribute('data-obese'));
-                const atRisk = parseFloat(row.getAttribute('data-at-risk'));
-                
-                // Highlight highest count barangay
-                if (total === maxTotal && total > 0) {
-                    row.classList.add('highest-count');
-                }
-                
-                // Highlight severely underweight cells
-                if (severe > 0) {
-                    cells[2].classList.add('highlight-severe');
-                } else {
-                    cells[2].classList.add('zero-count');
-                }
-                
-                // Highlight underweight cells
-                if (underweight > 0) {
-                    cells[3].classList.add('highlight-underweight');
-                } else {
-                    cells[3].classList.add('zero-count');
-                }
-                
-                // Highlight normal cells
-                if (normal > 0) {
-                    cells[4].classList.add('highlight-normal');
-                } else {
-                    cells[4].classList.add('zero-count');
-                }
-                
-                // Highlight overweight cells
-                if (overweight > 0) {
-                    cells[5].classList.add('highlight-overweight');
-                } else {
-                    cells[5].classList.add('zero-count');
-                }
-                
-                // Highlight obese cells
-                if (obese > 0) {
-                    cells[6].classList.add('highlight-obese');
-                } else {
-                    cells[6].classList.add('zero-count');
-                }
-                
-                // Highlight at-risk percentage
-                if (atRisk >= 30) {
-                    cells[7].classList.add('highlight-at-risk-high');
-                } else if (atRisk >= 15) {
-                    cells[7].classList.add('highlight-at-risk-medium');
-                } else if (atRisk > 0) {
-                    cells[7].classList.add('highlight-at-risk-low');
-                } else {
-                    cells[7].classList.add('zero-count');
-                }
-            });
-        }
-        
-        // Generate pie chart when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            generatePieChart();
-            applyCellHighlights();
-        });
-        
-        // Optional: Add hover effects for table rows
-        document.addEventListener('DOMContentLoaded', function() {
-            const tableRows = document.querySelectorAll('.data-table tbody tr:not(.total-row)');
-            tableRows.forEach(row => {
-                row.addEventListener('mouseenter', function() {
-                    if (!this.classList.contains('highest-count')) {
-                        this.style.backgroundColor = '#f0f8ff';
-                    }
-                });
-                row.addEventListener('mouseleave', function() {
-                    if (!this.classList.contains('highest-count')) {
-                        this.style.backgroundColor = '';
-                    }
-                });
-            });
-        });
-        
-        // Optional: Add animation to stat numbers
-        function animateNumbers() {
-            const statNumbers = document.querySelectorAll('.stat-number');
-            statNumbers.forEach(stat => {
-                const finalValue = stat.textContent;
-                if (!isNaN(finalValue) && finalValue !== '') {
-                    let currentValue = 0;
-                    const increment = Math.ceil(finalValue / 30);
-                    const timer = setInterval(() => {
-                        currentValue += increment;
-                        if (currentValue >= finalValue) {
-                            currentValue = finalValue;
-                            clearInterval(timer);
-                        }
-                        stat.textContent = currentValue;
-                    }, 50);
-                }
-            });
-        }
-        
-        // Animate numbers on load
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(animateNumbers, 500);
-        });
-    </script>
 </body>
 </html>
