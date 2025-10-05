@@ -4,7 +4,7 @@
   {% load static %}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Registered Barangays</title>
+  <title>PPMS Cluster 4 Imus City - Registered Barangays</title>
   
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,129 +13,938 @@
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <link rel="stylesheet" href="{% static 'css/barangay_list.css' %}">
+  <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
+  <link rel="icon" type="image/png" href="{% static 'media/logo.png' %}">
+  
+  <style>
+    /* Override background for this page */
+    body {
+      background: url('{% static "media/loginbg.png" %}') center/cover no-repeat fixed;
+    }
+    
+    .background-image {
+      background-image: url('{% static "media/loginbg.png" %}');
+    }
+
+    /* Additional styles for the profile in sidebar */
+    .sidebar-profile {
+      padding: 20px 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: white;
+    }
+    
+    .profile-image {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .profile-info h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+    }
+    
+    .profile-info p {
+      margin: 2px 0 0 0;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .logout-nav-item {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: auto;
+    }
+    
+    .logout-nav-item .nav-link {
+      color: #ff6b6b;
+    }
+    
+    .logout-nav-item .nav-link:hover {
+      background-color: rgba(255, 107, 107, 0.1);
+      color: #ff6b6b;
+    }
+    
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      height: calc(100% - 140px);
+      padding: 20px 0 0 0;
+    }
+    
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar-header {
+      flex-shrink: 0;
+    }
+
+    /* Page specific styles */
+    .page-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 30px;
+      margin: 30px auto 0;
+      max-width: 1200px;
+    }
+
+    .page-container h2 {
+      font-size: 2em;
+      margin-bottom: 30px;
+      font-weight: 400;
+      color: #333;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-family: 'Poppins', sans-serif;
+      text-align: center;
+    }
+
+    /* Header with Add Button */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .add-barangay-btn {
+      background-color: #5bdab3;
+      color: #1e1e2f;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .add-barangay-btn:hover {
+      background-color: #1565c0;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    }
+
+    /* Search and Add Section Layout */
+    .search-add-container {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .search-wrapper {
+      display: flex;
+      height: 48px;
+    }
+
+    /* Search input styles */
+    .search-input {
+      border: 1px solid #e6e6e6;
+      border-radius: 8px 0 0 8px;
+      padding: 0 15px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      height: 48px;
+      flex: 1;
+      border-right: none;
+      outline: none;
+    }
+
+    .search-input:focus {
+      border-color: #5bdab3;
+      box-shadow: 0 0 0 3px rgba(91, 218, 179, 0.15);
+      outline: none;
+      z-index: 1;
+      position: relative;
+    }
+
+    .btn-custom {
+      background-color: #5bdab3;
+      color: #1e1e2f;
+      border: 1px solid #e6e6e6;
+      padding: 0 20px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      height: 48px;
+      border-radius: 0 8px 8px 0;
+      border-left: 1px solid #e6e6e6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: -1px;
+    }
+
+    .btn-custom:hover {
+      background-color: #1565c0;
+      color: white;
+      border-color: #1565c0;
+    }: #1565c0;
+      color: white;
+      border-color: #1565c0;
+    }
+
+    .add-barangay-btn {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 150px;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+  .search-add-container {
+    grid-template-columns: 1fr; /* Single column layout */
+    gap: 15px; /* Increased gap between search and button */
+  }
+  
+  .search-wrapper {
+    height: 48px;
+    width: 100%; /* Full width */
+  }
+
+  .search-input {
+    font-size: 13px;
+    padding: 0 12px;
+    height: 48px;
+  }
+
+  .btn-custom {
+    padding: 0 15px;
+    font-size: 13px;
+    height: 48px;
+  }
+  
+  .add-barangay-btn {
+    width: 100%; /* Full width button */
+    min-width: auto;
+    padding: 12px 20px;
+    font-size: 14px;
+    height: 48px;
+    justify-content: center; /* Center the icon and text */
+  }
+}
+
+    /* Modal Styles */
+    .modal-content {
+      border-radius: 12px;
+      border: none;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #5bdab3 0%, #4caf50 100%);
+      color: white;
+      border-radius: 12px 12px 0 0;
+      border-bottom: none;
+      padding: 20px 30px;
+    }
+
+    .modal-title {
+      font-weight: 600;
+      font-size: 1.25rem;
+      margin: 0;
+    }
+
+    .btn-close {
+      filter: brightness(0) invert(1);
+      opacity: 0.8;
+    }
+
+    .btn-close:hover {
+      opacity: 1;
+    }
+
+    .modal-body {
+      padding: 30px;
+    }
+
+    .form-input {
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #e6e6e6;
+      font-size: 16px;
+      font-family: 'Poppins', sans-serif;
+      color: #333;
+      background-color: rgba(255, 255, 255, 0.9);
+      transition: all 0.3s ease;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #5bdab3;
+      box-shadow: 0 0 0 3px rgba(91, 218, 179, 0.15);
+      background-color: white;
+    }
+
+    .modal-footer {
+      padding: 20px 30px;
+      border-top: 1px solid #e6e6e6;
+    }
+
+    .btn-modal-primary {
+      background-color: #5bdab3;
+      color: #1e1e2f;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-modal-primary:hover {
+      background-color: #1565c0;
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    }
+
+    .btn-modal-secondary {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-modal-secondary:hover {
+      background-color: #5a6268;
+      color: white;
+    }
+
+    .modal-footer {
+      padding: 20px 30px;
+      border-top: 1px solid #e6e6e6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+    }
+
+    .modal-footer .btn {
+      flex: 1;
+      margin: 0;
+    }
+
+    /* Table styles */
+    .table {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .table th {
+      background-color: #f8f9fa;
+      color: #333;
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: none;
+      padding: 15px;
+    }
+
+    .table td {
+      padding: 15px;
+      border-color: #e6e6e6;
+      vertical-align: middle;
+    }
+
+    .table-striped > tbody > tr:nth-of-type(odd) > td {
+      background-color: rgba(248, 249, 250, 0.5);
+    }
+
+    .table-hover > tbody > tr:hover > td {
+      background-color: rgba(91, 218, 179, 0.1);
+    }
+
+    /* Stats and counts */
+    .text-danger {
+      color: #e74c3c !important;
+      font-weight: 600;
+    }
+
+    .text-primary {
+      color: #3498db !important;
+      font-weight: 600;
+    }
+
+    .text-success {
+      color: #27ae60 !important;
+      font-weight: 600;
+    }
+
+    /* No results message */
+    #no-results {
+      background: rgba(248, 249, 250, 0.8);
+      padding: 40px;
+      border-radius: 12px;
+      border: 2px dashed #dee2e6;
+    }
+
+    #no-results i {
+      color: #adb5bd;
+      font-size: 3em;
+      margin-bottom: 15px;
+    }
+
+    /* Pagination */
+    .pagination-custom .btn-custom {
+      margin: 0 5px;
+      border-radius: 8px;
+    }
+
+    .page-link {
+      color: #6c757d;
+      font-weight: 500;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+      .page-container {
+        margin: 20px auto 0;
+        padding: 20px;
+      }
+
+      .page-container h2 {
+        font-size: 1.6em;
+        margin-bottom: 20px;
+      }
+
+      .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+      }
+
+      .page-header h2 {
+        margin-bottom: 15px;
+      }
+
+      .table-responsive {
+        border-radius: 8px;
+      }
+
+      .table th,
+      .table td {
+        padding: 10px 8px;
+        font-size: 13px;
+      }
+
+      .btn-custom {
+        padding: 10px 15px;
+        font-size: 13px;
+      }
+
+      .modal-body {
+        padding: 20px;
+      }
+
+      .modal-header {
+        padding: 15px 20px;
+      }
+
+      .modal-footer {
+        padding: 15px 20px;
+      }
+    }
+
+   @media (max-width: 576px) {
+  .search-add-container {
+    gap: 12px;
+  }
+  
+  .add-barangay-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+    height: 44px;
+  }
+  
+  .search-input {
+    font-size: 12px;
+    padding: 0 10px;
+    height: 44px;
+  }
+
+  .btn-custom {
+    padding: 0 12px;
+    font-size: 12px;
+    height: 44px;
+  }
+}
+
+
+    .notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -50px;
+  background: red;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: bold;
+  display: none; /* hidden by default */
+}
+
+
+.notification-badge.updated {
+    animation: bounce 0.6s ease-in-out;
+}
+
+  </style>
 </head>
 <body>
-  <!-- Top Navigation -->
-  <div class="container-fluid px-3">
-    <div class="topbar rounded d-flex align-items-center">
-      <button class="rtn-btn me-3" onclick="location.href='/admin-dashboard'"> 
-        <div class="button-box">
-          <span class="button-elem">
-            <svg viewBox="0 0 46 40" xmlns="http://www.w3.org/2000/svg">
-              <path d="M46 20.038c0-.7-.3-1.5-.8-2.1l-16-17c-1.1-1-3.2-1.4-4.4-.3-1.2 1.1-1.2 3.3 0 4.4l11.3 11.9H3c-1.7 0-3 1.3-3 3s1.3 3 3 3h33.1l-11.3 11.9c-1 1-1.2 3.3 0 4.4 1.2 1.1 3.3.8 4.4-.3l16-17c.5-.5.8-1.1.8-1.9z"></path>
-            </svg>
-          </span>
-        </div>
-      </button>
-      <div class="logo-title fw-bold">PPMS CLUSTER 4 IMUS CITY</div>
+  <div class="background-image"></div>
+  <!-- Sidebar Overlay for Mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Left Sidebar Navigation -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1 class="sidebar-title">PPMS Admin</h1>
     </div>
+    
+    <!-- Profile Section in Sidebar -->
+    <div class="sidebar-profile">
+      {% if account.profile_photo and account.profile_photo.image %}
+        <img src="{{ account.profile_photo.image.url }}" alt="Profile" class="profile-image">
+      {% else %}
+        <img src="{% static 'media/default-profile.jpg' %}" alt="Default Profile" class="profile-image">
+      {% endif %}
+      <div class="profile-info">
+        <h3>Admin</h3>
+        <p>Administrator</p>
+      </div>
+    </div>
+    
+    <nav class="nav-menu">
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/admin-dashboard/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+          </svg>
+          Dashboard
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link active" onclick="location.href='/registered-barangays/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+          </svg>
+          Barangay List
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/registered-preschoolers/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+          </svg>
+          Preschoolers
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/admin-registered-parents/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+          </svg>
+          Parents
+        </button>
+      </div>
+      
+    <div class="nav-item">
+      <button class="nav-link" onclick="location.href='/healthcare-workers/'">
+        <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+        </svg>
+        Registered Workers
+      </button>
+    </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/validate/'">
+          <div class="nav-link-content" style="position: relative; display: inline-flex; align-items: center;">
+            <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span>Account Validation</span>
+            <span id="validation-badge" class="notification-badge">0</span>
+          </div>
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/admin-logs/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+          </svg>
+          Activity Logs
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" id="generateReportBtn">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+          Generate Report
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/manage-announcements/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zM9 8a1 1 0 012 0v4a1 1 0 11-2 0V8zM11 8a1 1 0 012 0v4a1 1 0 11-2 0V8z" clip-rule="evenodd"/>
+          </svg>
+          Announcements
+        </button>
+      </div>
+      
+      <!-- Logout at bottom of navigation -->
+      <div class="nav-item logout-nav-item">
+        <button class="nav-link" id="logoutLink">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+          </svg>
+          Logout
+        </button>
+      </div>
+    </nav>
   </div>
 
-  <!-- Main Content -->
-  <div class="container-fluid px-3 mt-3">
-    <div class="main-container">
-      <h2 class="text-center">Registered Barangays</h2>
-
-      <!-- Stats -->
-      <div class="stats-info text-center mb-3">
-
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <button class="mobile-toggle" id="mobileToggle">☰</button>
+        <div class="greeting">Registered Barangays</div>
       </div>
+      <div class="top-icons">
+        <!-- Notification -->
+        <div class="notif-dropdown">
+          <button class="icon-btn" id="notifBtn" style="position: relative;">
+            <img src="{% static 'media/notification.png' %}" alt="Notifications" style="width: 2.5rem; height: 2.5rem;">
+            <span id="notifDot"></span>
+          </button>
 
-      <!-- Search -->
-      <div class="row mb-4">
-        <div class="col-lg-6 col-md-8 col-sm-12 mx-auto">
-          <div class="input-group">
-            <input type="text" id="search-input" class="form-control search-input" placeholder="Search barangay...">
-            <button id="search-btn" class="btn btn-custom" type="button">
-              <i class="fas fa-search"></i>
-            </button>
-            <button id="clear-btn" class="btn btn-secondary" type="button">
-              <i class="fas fa-times"></i>
-            </button>
+          <div class="dropdown" id="notifMenu" style="max-height: 400px; overflow-y: auto; width: 320px; min-width: 280px;">
+            {% if notifications %}
+              {% for notif in notifications %}
+                {% if notif.type == 'account' %}
+                  <a href="/validate/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}" style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; align-items: center;">
+                      <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      <span class="notif-text">New {{ notif.user_role }} account named <strong>{{ notif.full_name }}</strong> requesting for validation.</span>
+                    </div>
+                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
+                  </a>
+                {% elif notif.type == 'preschooler' %}
+                  <a href="/registered-preschoolers/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}" style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; align-items: center;">
+                      {% if notif.bhw_image %}
+                        <img src="{{ notif.bhw_image }}" alt="BHW Profile" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      {% else %}
+                        <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      {% endif %}
+                      <span class="notif-text">
+                        New preschooler is being registered.<br>
+                        Name: <strong>{{ notif.full_name }}</strong>
+                      </span>
+                    </div>
+                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
+                  </a>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <div class="dropdown-item">No notifications available.</div>
+            {% endif %}
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Table -->
-      <div class="table-responsive">
-        <table class="table table-bordered table-striped table-hover align-middle">
-          <thead class="table-light text-center">
-            <tr>
-              <th>Barangay Name</th>
-              <th>Phone Number</th>
-              <th>Hall Address</th>
-              <th>Preschoolers</th>
-              <th>Parents</th>
-              <th>BHW/BNS</th>
-            </tr>
-          </thead>
-          <tbody id="barangay-table">
-            {% for b in barangays %}
-            <tr class="barangay-row">
-              <td><strong>{{ b.name }}</strong></td>
-              <td>{{ b.phone_number|default:"N/A" }}</td>
-              <td>{{ b.hall_address|default:"N/A" }}</td>
-              <td class="text-center text-danger">{{ b.preschooler_count }}</td>
-              <td class="text-center text-primary">{{ b.parent_count }}</td>
-              <td class="text-center text-success">{{ b.bhw_bns_count }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="6" class="text-center py-5 text-muted">
-                <i class="fas fa-inbox fa-3x mb-3"></i>
-                <p>No barangays registered yet.</p>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+      <div class="page-container">
+        <!-- Page Header -->
+        <div class="page-header">
+          <h2>Registered Barangays</h2>
+        </div>
+
+        <!-- Search and Add Barangay Section -->
+        <div class="search-add-container">
+          <div class="search-wrapper">
+            <input type="text" id="search-input" class="search-input" placeholder="Search barangay...">
+            <button id="search-btn" class="btn-custom" type="button">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+          <button class="add-barangay-btn" data-bs-toggle="modal" data-bs-target="#addBarangayModal">
+            <i class="fas fa-plus"></i> Add Barangay
+          </button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped table-hover align-middle">
+            <thead class="table-light text-center">
+              <tr>
+                <th>Barangay Name</th>
+                <th>Phone Number</th>
+                <th>Hall Address</th>
+                <th>Preschoolers</th>
+                <th>Parents</th>
+                <th>BHW/BNS</th>
+              </tr>
+            </thead>
+            <tbody id="barangay-table">
+              {% for b in barangays %}
+              <tr class="barangay-row">
+                <td><strong>{{ b.name }}</strong></td>
+                <td>{{ b.phone_number|default:"N/A" }}</td>
+                <td>{{ b.hall_address|default:"N/A" }}</td>
+                <td class="text-center text-danger">{{ b.preschooler_count }}</td>
+                <td class="text-center text-primary">{{ b.parent_count }}</td>
+                <td class="text-center text-success">{{ b.bhw_bns_count }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" class="text-center py-5 text-muted">
+                  <i class="fas fa-inbox fa-3x mb-3"></i>
+                  <p>No barangays registered yet.</p>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- No Results Message -->
+        <div id="no-results" class="text-center text-muted mt-3" style="display:none;">
+          <i class="fas fa-search mb-2"></i>
+          <p>No barangays found.</p>
+        </div>
+
+        <!-- Pagination -->
+        {% if barangays.paginator.num_pages > 1 %}
+        <nav class="pagination-custom text-center mt-4" aria-label="Page navigation">
+          <ul class="pagination justify-content-center">
+            {% if barangays.has_previous %}
+            <li class="page-item">
+              <a class="btn btn-custom" href="?page={{ barangays.previous_page_number }}">
+                <i class="fas fa-chevron-left"></i> Previous
+              </a>
+            </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+              <span class="page-link bg-transparent border-0">
+                Page {{ barangays.number }} of {{ barangays.paginator.num_pages }}
+              </span>
+            </li>
+
+            {% if barangays.has_next %}
+            <li class="page-item">
+              <a class="btn btn-custom" href="?page={{ barangays.next_page_number }}">
+                Next <i class="fas fa-chevron-right"></i>
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
       </div>
-
-      <!-- No Results Message -->
-      <div id="no-results" class="text-center text-muted mt-3" style="display:none;">
-        <i class="fas fa-search mb-2"></i>
-        <p>No barangays found.</p>
-      </div>
-
-      <!-- Pagination -->
-      {% if barangays.paginator.num_pages > 1 %}
-      <nav class="pagination-custom text-center mt-4" aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-          {% if barangays.has_previous %}
-          <li class="page-item">
-            <a class="btn btn-custom" href="?page={{ barangays.previous_page_number }}">
-              <i class="fas fa-chevron-left"></i> Previous
-            </a>
-          </li>
-          {% endif %}
-
-          <li class="page-item disabled">
-            <span class="page-link bg-transparent border-0">
-              Page {{ barangays.number }} of {{ barangays.paginator.num_pages }}
-            </span>
-          </li>
-
-          {% if barangays.has_next %}
-          <li class="page-item">
-            <a class="btn btn-custom" href="?page={{ barangays.next_page_number }}">
-              Next <i class="fas fa-chevron-right"></i>
-            </a>
-          </li>
-          {% endif %}
-        </ul>
-      </nav>
-      {% endif %}
     </div>
   </div>
 
-  <!-- JS -->
+  <!-- Add Barangay Modal -->
+  <div class="modal fade" id="addBarangayModal" tabindex="-1" aria-labelledby="addBarangayModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addBarangayModalLabel">
+            <i class="fas fa-plus-circle me-2"></i>Add New Barangay
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="post" action="/add-barangay/" id="barangay-form">
+          {% csrf_token %}
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="barangay-name" class="form-label fw-semibold">
+                <i class="fas fa-map-marker-alt text-primary me-1"></i>Barangay Name *
+              </label>
+              <input type="text" id="barangay-name" class="form-input" name="barangay-name" placeholder="Enter barangay name" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="phone-number" class="form-label fw-semibold">
+                <i class="fas fa-phone text-success me-1"></i>Phone Number *
+              </label>
+              <input type="tel" id="phone-number" class="form-input" name="phone-number" placeholder="11-digit phone number" maxlength="11" required>
+              <div class="form-text text-muted">
+                <small><i class="fas fa-info-circle"></i> Must be exactly 11 digits</small>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="hall-address" class="form-label fw-semibold">
+                <i class="fas fa-building text-warning me-1"></i>Barangay Hall Address *
+              </label>
+              <input type="text" id="hall-address" class="form-input" name="hall-address" placeholder="Enter barangay hall address" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-modal-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times me-1"></i>Cancel
+            </button>
+            <button type="submit" class="btn btn-modal-primary">
+              <i class="fas fa-save me-1"></i>Register Barangay
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      const notifBtn = document.getElementById("notifBtn");
+      const notifMenu = document.getElementById("notifMenu");
+      const notifDot = document.getElementById("notifDot");
+      const mobileToggle = document.getElementById("mobileToggle");
+      const sidebar = document.getElementById("sidebar");
+      const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+      // Mobile sidebar toggle
+      if (mobileToggle) {
+        mobileToggle.addEventListener("click", () => {
+          sidebar.classList.toggle("open");
+          sidebarOverlay.classList.toggle("active");
+        });
+        sidebarOverlay.addEventListener("click", () => {
+          sidebar.classList.remove("open");
+          sidebarOverlay.classList.remove("active");
+        });
+      }
+
+      // Notification red dot
+      const latestNotifTimestampStr = "{{ latest_notif_timestamp }}";
+      const latestNotifTimestamp = latestNotifTimestampStr ? new Date(latestNotifTimestampStr) : null;
+      let lastReadTimestampStr = localStorage.getItem('lastReadNotifTimestamp');
+      let lastReadTimestamp = lastReadTimestampStr ? new Date(lastReadTimestampStr) : null;
+      if (latestNotifTimestamp && (!lastReadTimestamp || latestNotifTimestamp > lastReadTimestamp)) {
+        notifDot.style.display = "inline-block";
+      }
+
+      if (notifBtn && notifMenu) {
+        notifBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          notifMenu.style.display = notifMenu.style.display === "block" ? "none" : "block";
+          notifDot.style.display = "none";
+          if (latestNotifTimestamp) localStorage.setItem('lastReadNotifTimestamp', latestNotifTimestamp.toISOString());
+        });
+        document.addEventListener("click", (e) => {
+          if (!e.target.closest(".notif-dropdown")) notifMenu.style.display = "none";
+        });
+      }
+
+      // Logout confirmation
+      const logoutLink = document.getElementById("logoutLink");
+      if (logoutLink) {
+        logoutLink.addEventListener("click", function(e) {
+          e.preventDefault();
+          Swal.fire({
+            title: 'Are you sure you want to logout?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, logout',
+            cancelButtonText: 'Cancel'
+          }).then((result) => {
+            if (result.isConfirmed) window.location.href = "/logout/";
+          });
+        });
+      }
+
+      // Notification item click handler
+      document.querySelectorAll('.notif-item').forEach(item => {
+        item.addEventListener('click', function (e) {
+          e.preventDefault();
+          const notifId = this.getAttribute('data-id');
+          const notifType = this.getAttribute('data-type');
+          const targetUrl = this.getAttribute('href');
+          const notifText = this.querySelector('.notif-text');
+
+          fetch('/mark-notif-read/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': '{{ csrf_token }}',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: notifId, type: notifType }),
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status && notifText) notifText.style.fontWeight = 'normal';
+            window.location.href = targetUrl;
+          })
+          .catch(() => window.location.href = targetUrl);
+        });
+      });
+
+      // Set active nav item
+      const currentPath = window.location.pathname;
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+        const onclick = link.getAttribute('onclick');
+        if (onclick && onclick.includes(currentPath)) link.classList.add('active');
+      });
+
+      // Search functionality
       const searchInput = document.getElementById("search-input");
       const searchBtn = document.getElementById("search-btn");
-      const clearBtn = document.getElementById("clear-btn");
       const rows = document.querySelectorAll(".barangay-row");
       const noResults = document.getElementById("no-results");
 
@@ -156,19 +965,243 @@
         noResults.style.display = visibleCount === 0 && input !== "" ? "block" : "none";
       }
 
-      function clearSearch() {
-        searchInput.value = "";
-        rows.forEach(row => row.style.display = "");
-        noResults.style.display = "none";
-      }
-
       searchBtn.addEventListener("click", performSearch);
-      clearBtn.addEventListener("click", clearSearch);
       searchInput.addEventListener("input", performSearch);
       searchInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter") performSearch();
       });
+
+      // Add Barangay Modal Form Handling
+      const phoneInput = document.getElementById("phone-number");
+      const form = document.getElementById("barangay-form");
+      const modal = document.getElementById("addBarangayModal");
+      const modalInstance = new bootstrap.Modal(modal);
+
+      // Restrict phone number input (digits only)
+      phoneInput.addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, ""); // removes non-digits
+      });
+
+      // Form submission with validation and loading
+      form.addEventListener("submit", function(e) {
+        e.preventDefault();
+        
+        const barangayName = document.getElementById("barangay-name").value.trim();
+        const phoneNumber = document.getElementById("phone-number").value.trim();
+        const hallAddress = document.getElementById("hall-address").value.trim();
+
+        // Client-side validation
+        if (!barangayName || !phoneNumber || !hallAddress) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Missing Information',
+            text: 'Please fill in all required fields before submitting.',
+            confirmButtonColor: '#f39c12'
+          });
+          return;
+        }
+
+        if (phoneNumber.length !== 11) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Invalid Phone Number',
+            text: 'Phone number must be exactly 11 digits long.',
+            confirmButtonColor: '#f39c12'
+          });
+          return;
+        }
+
+        // Show loading state
+        Swal.fire({
+          title: 'Registering Barangay...',
+          html: `
+            <div style="text-align: center;">
+              <div style="margin: 20px 0;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2em; color: #5bdab3;"></i>
+              </div>
+              <p>Please wait while we register <strong>${barangayName}</strong></p>
+            </div>
+          `,
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          allowEnterKey: false,
+          showConfirmButton: false,
+          background: '#fff',
+          backdrop: 'rgba(0,0,0,0.4)'
+        });
+
+        // Submit the form
+        fetch('/add-barangay/', {
+          method: 'POST',
+          body: new FormData(this),
+          headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          }
+        })
+        .then(response => response.text())
+        .then(html => {
+          // Parse the response to check for success/error messages
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const messages = doc.querySelectorAll('.message, .alert');
+          
+          let hasSuccess = false;
+          let hasError = false;
+          let messageText = '';
+          
+          messages.forEach(msg => {
+            const text = msg.textContent.trim();
+            if (msg.classList.contains('success') || msg.classList.contains('alert-success')) {
+              hasSuccess = true;
+              messageText = text;
+            } else if (msg.classList.contains('error') || msg.classList.contains('alert-danger')) {
+              hasError = true;
+              messageText = text;
+            }
+          });
+
+          if (hasSuccess) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Successfully Added!',
+              text: messageText || `Barangay ${barangayName} has been registered successfully!`,
+              confirmButtonText: 'Close',
+              confirmButtonColor: '#5bdab3',
+              timer: 3000,
+              timerProgressBar: true
+            }).then(() => {
+              modalInstance.hide();
+              form.reset();
+              // Reload the page to show the new barangay
+              window.location.reload();
+            });
+          } else if (hasError) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Registration Failed',
+              html: `
+                <div style="text-align: center; margin-top: 10px;">
+                  <p style="font-size: 16px; margin-bottom: 15px; color: #e74c3c;">
+                    ${messageText || 'An error occurred during registration.'}
+                  </p>
+                  <p style="color: #7f8c8d; font-size: 14px;">
+                    Please check your information and try again.
+                  </p>
+                </div>
+              `,
+              confirmButtonText: 'Try Again',
+              confirmButtonColor: '#e74c3c',
+              background: '#fff',
+              backdrop: 'rgba(0,0,0,0.4)'
+            });
+          } else {
+            // Fallback - assume success if no clear error
+            Swal.fire({
+              icon: 'success',
+              title: 'Successfully Added!',
+              text: `Barangay ${barangayName} has been registered!`,
+              confirmButtonText: 'Great!',
+              confirmButtonColor: '#5bdab3',
+              timer: 3000,
+              timerProgressBar: true
+            }).then(() => {
+              modalInstance.hide();
+              form.reset();
+              window.location.reload();
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Network Error',
+            text: 'There was a problem connecting to the server. Please try again.',
+            confirmButtonColor: '#e74c3c'
+          });
+        });
+      });
+
+      // Clear form when modal is closed
+      modal.addEventListener('hidden.bs.modal', function () {
+        form.reset();
+      });
     });
+
+
+    function updateValidationBadge() {
+    fetch("{% url 'pending-validation-count' %}")
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById("validation-badge");
+            if (data.pending_count > 0) {
+                badge.textContent = data.pending_count;
+                badge.style.display = "inline-block";
+            } else {
+                badge.style.display = "none";
+            }
+        })
+        .catch(error => console.error("Error fetching pending count:", error));
+}
+
+// Update every 5 seconds
+setInterval(updateValidationBadge, 5000);
+
+// Run immediately on load
+updateValidationBadge();
+
   </script>
+
+
+<script>
+  // Generate Report Button with SweetAlert Modal
+const generateReportBtn = document.getElementById("generateReportBtn");
+if (generateReportBtn) {
+  generateReportBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Select Month for Report',
+      input: 'month',
+      showCancelButton: true,
+      confirmButtonColor: '#3498db',
+      cancelButtonColor: '#95a5a6',
+      confirmButtonText: 'Generate Report',
+      cancelButtonText: 'Cancel',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Please select a month first!';
+        }
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Show loading message briefly
+        Swal.fire({
+          title: 'Generating Report...',
+          text: 'Please wait while we prepare your report.',
+          icon: 'info',
+          allowOutsideClick: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        const reportUrl = `/generate-admin-report/?month=${result.value}`;
+
+        // Open in a new browser tab
+        setTimeout(() => {
+          window.open(reportUrl, '_blank');
+          Swal.close();
+        }, 1000);
+      }
+    });
+  });
+}
+
+
+
+
+</script>
+
 </body>
 </html>
