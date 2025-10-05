@@ -82,7 +82,7 @@ class Account(models.Model):
     
         super().save(*args, **kwargs)
 
-     def delete(self, *args, **kwargs):
+    def delete(self, *args, **kwargs):
         # Delete associated User when Account is deleted
         try:
             User.objects.filter(username=self.email).delete()
@@ -962,4 +962,5 @@ class FCMToken(models.Model):
 
     def __str__(self):
         return f"{self.account.email} - {self.token}"
+
 
