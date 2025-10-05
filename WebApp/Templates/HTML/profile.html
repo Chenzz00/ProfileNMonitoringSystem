@@ -539,9 +539,13 @@
 
         <div class="profile-item">
           <span class="profile-label">Address:</span>
-          <span class="profile-value" id="addressDisplay">{{ account.clean_address|default:"--" }}</span>
-          <input type="text" name="address" id="addressInput" value="{{ account.clean_address }}" style="display: none;">
+          <span class="profile-value" id="addressDisplay">
+            {{ account.complete_address|default:"--" }}
+          </span>
+          <input type="text" name="address" id="addressInput" 
+                 value="{{ account.complete_address }}" style="display: none;">
         </div>
+
 
         <div class="profile-item">
           <span class="profile-label">Contact #:</span>
@@ -695,3 +699,4 @@
   </script>
 </body>
 </html>
+
