@@ -7,8 +7,11 @@ from django.conf.urls.static import static
 from WebApp.views import generate_nutrition_excel
 
 urlpatterns = [
-    #hardware - start
-    # In your urls.py, change these lines:
+   #hardware - start
+
+    path('api/esp32/announce/', views.announce_device, name='esp32_announce'),
+
+    # ESP32 Data Reception (existing endpoints - updated for multi-device)
     path('api/esp32/data/', views.receive_esp32_data_simple, name='esp32_data_receive'),
     path('api/esp32/get-data/', views.get_esp32_data_simple, name='esp32_data_get'),
     
@@ -26,6 +29,7 @@ urlpatterns = [
     # DRF Endpoints (optional - for REST framework users)
     path('api/esp32/data-drf/', views.receive_esp32_data, name='esp32_data_receive_drf'),
     path('api/esp32/get-data-drf/', views.get_esp32_data, name='esp32_data_get_drf'),
+
     #hardware - end
     path('', views.login, name='login'), 
     path('logout/', views.logout_view, name='logout'), 
@@ -136,3 +140,4 @@ urlpatterns = [
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
