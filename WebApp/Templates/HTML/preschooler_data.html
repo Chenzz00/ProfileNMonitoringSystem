@@ -35,34 +35,34 @@
       margin: 0 auto;
     }
 
-    .back-button {
-      position: fixed;
-      top: 30px;
-      right: 30px;
-      z-index: 1000;
-      background-color: #5bdab3;
-      color: #1e1e2f;
-      padding: 12px 20px;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: 500;
-      font-size: 14px;
-      transition: all 0.3s ease;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(91, 218, 179, 0.3);
-    }
+    .close-container {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 10;
+}
 
-    .back-button:hover {
-      background-color: #1565c0;
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(21, 101, 192, 0.3);
-    }
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #666;
+  cursor: pointer;
+  padding: 5px 10px;
+  line-height: 1;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  color: #d32f2f;
+}
+
+
 
     .preschooler-details {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
+        position: relative;  /* ADD this line */
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
       border-radius: 15px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -407,7 +407,7 @@
       border: none;
       font-size: 24px;
       cursor: pointer;
-      color: #666;
+      color: #ffffff;
       z-index: 1001;
     }
 
@@ -857,15 +857,108 @@
         display: none;
       }
     }
+
+        /* Archived Banner Styles */
+.archived-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px 30px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 18px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  margin: -20px -20px 20px -20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border-bottom: 4px solid #5a67d8;
+}
+
+.archived-banner::before {
+  content: "";
+  font-size: 28px;
+}
+
+
+
+    /* Disabled state for archived records */
+.archived-disabled {
+  pointer-events: none !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  position: relative;
+}
+
+.archived-disabled::after {
+  content: "";
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  opacity: 0.7;
+}
+
+/* Disable buttons when archived */
+button.archived-disabled,
+.btn.archived-disabled {
+  background-color: #e0e0e0 !important;
+  color: #999 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  opacity: 0.5 !important;
+  box-shadow: none !important;
+}
+
+/* Read-only inputs */
+input[readonly].archived-input,
+select[disabled].archived-input,
+textarea[readonly].archived-input {
+  background-color: #f5f5f5 !important;
+  color: #666 !important;
+  cursor: not-allowed !important;
+  border-color: #ddd !important;
+}
+
+/* Mobile responsive for banner */
+@media (max-width: 768px) {
+  .archived-banner {
+    padding: 15px 20px;
+    font-size: 16px;
+    margin: -15px -15px 15px -15px;
+  }
+  
+  .archived-banner::before {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .archived-banner {
+    padding: 12px 15px;
+    font-size: 14px;
+    flex-direction: column;
+    gap: 8px;
+  }
+}  
   </style>
 </head>
 
 <body>
 <div class="main-container">
-  <!-- Back Button -->
-  <button class="back-button" onclick="location.href='/preschoolers'">← Back</button>
+
+   {% if is_archived %}
+<div class="archived-banner">
+  This preschooler has been archived and cannot be edited
+</div>
+{% endif %}
+
 
   <div class="preschooler-details">
+  <div class="close-container">
+    <button class="close-btn" onclick="goBack()" title="Close">&times;</button>
+  </div>
     <!-- Header Section with Photo and Basic Info -->
     <div class="preschooler-header">
       <!-- Photo Section -->
@@ -1050,7 +1143,7 @@
       <!-- Immunization History -->
       <div class="section-header">
         <h4>Immunization History</h4>
-        <button class="add-schedule-btn" onclick="openAddVaccineModal()">+ Add Vaccine</button>
+        <button class="add-schedule-btn" onclick="openAddVaccineModal()">+ Add Completed Vaccine</button>
       </div>
       
       <div class="table-container">
@@ -1198,31 +1291,29 @@
         <table class="info-table">
           <tr>
             <th>Date Measured</th>
-            <th>Temperature</th>
+            <th>Temperature (°C)</th>
             <th>Height (cm)</th>
             <th>Weight (kg)</th>
             <th>BMI</th>
-            <th>BMI Category</th>
-            <th>Standard Weight (kg)</th>
-            <th>Standard Height (cm)</th>
-            <th>Weight Status</th>
-            <th>Height Status</th>
+            <th>Nutritional Status</th>
+            <th>Weight for Age</th>
+            <th>Height for Age</th>
+            <th>Weight for Height</th>
           </tr>
-          {% for record in preschooler.bmi_set.all %}
+          {% for record in bmi_with_temps %}
           <tr>
-            <td>{{ record.date_recorded|date:"m/Y" }}</td>
-            <td>N/A</td>
-            <td>{{ record.height }}</td>
-            <td>{{ record.weight }}</td>
-            <td>{{ record.bmi_value }}</td>
+            <td>{{ record.date_recorded|date:"M d, Y" }}</td>
+            <td>{% if record.temperature %}{{ record.temperature|floatformat:1 }}{% else %}N/A{% endif %}</td>
+            <td>{{ record.height|floatformat:1 }}</td>
+            <td>{{ record.weight|floatformat:1 }}</td>
+            <td>{{ record.bmi_value|floatformat:2 }}</td>
             <td>{{ nutritional_status }}</td>
-            <td>N/A</td>
-            <td>N/A</td>
-            <td>{{ weight_for_age_status }}</td>
-            <td>{{ height_for_age_status }}</td>
+            <td>{{ record.weight_for_age_status }}</td>
+            <td>{{ record.height_for_age_status }}</td>
+            <td>{{ record.weight_for_height_status }}</td>
           </tr>
           {% empty %}
-          <tr><td colspan="10">No records found.</td></tr>
+          <tr><td colspan="9">No records found.</td></tr>
           {% endfor %}
         </table>
       </div>
@@ -1233,7 +1324,7 @@
 <!-- Vaccine Card Modal -->
 <div id="vaccineCardModal" class="modal-overlay">
   <div class="modal-card">
-    <button class="close-modal" onclick="closeVaccineCardModal()">×</button>
+    <button class="close-modal" onclick="closeVaccineCardModal()">x</button>
     <h2 style="text-align: center; margin-bottom: 30px; font-size: 28px; font-weight: bold;">Child Immunization Record</h2>
 
     <form method="POST" action="{% url 'update_child_info' preschooler.preschooler_id %}">
@@ -1297,6 +1388,7 @@
         <button type="submit" class="btn btn-green">Save Changes</button>
       </div>
 
+      <!-- FIXED VACCINE TABLE - Only shows completed vaccinations -->
       <table class="vaccine-table">
         <thead>
           <tr>
@@ -1308,27 +1400,52 @@
           </tr>
         </thead>
         <tbody>
+          <!-- Only show COMPLETED immunizations, not scheduled ones -->
           {% for h in immunization_history %}
+          {% if h.status == 'completed' %}
           <tr>
             <td class="vaccine-name">{{ h.vaccine_name }}</td>
-            <td><span class="dose-badge">{{ h.dose_number }}</span> / {{ h.required_doses }}</td>
-            <td><input type="date" name="vaccine_date_{{ h.id }}" value="{{ h.completion_date|date:'Y-m-d' }}" readonly style="pointer-events: none; background: transparent; border: none;"></td>
-            <td><input type="text" name="vaccine_status_{{ h.id }}" value="{% if h.status == 'completed' %}Completed{% else %}{{ h.reschedule_reason|default:'' }}{% endif %}" readonly style="pointer-events: none; background: transparent; border: none;"></td>
-            <td><input type="text" name="vaccine_remarks_{{ h.id }}" value="{{ h.reschedule_reason|default:'' }}" readonly style="pointer-events: none; background: transparent; border: none;"></td>
+            <td><span class="dose-badge">{{ h.dose_number|default:1 }}</span> / {{ h.required_doses }}</td>
+            <td>
+              <input type="date" 
+                     name="vaccine_date_{{ h.id }}" 
+                     value="{{ h.completion_date|date:'Y-m-d' }}" 
+                     readonly 
+                     style="pointer-events: none; background: transparent; border: none;">
+            </td>
+            <td>
+              <input type="text" 
+                     name="vaccine_status_{{ h.id }}" 
+                     value="Completed" 
+                     readonly 
+                     style="pointer-events: none; background: transparent; border: none;">
+            </td>
+            <td>
+              <!-- Only show medical remarks, NOT reschedule reasons -->
+              <input type="text" 
+                     name="vaccine_remarks_{{ h.id }}" 
+                     value="{{ h.medical_remarks|default:'' }}" 
+                     readonly 
+                     style="pointer-events: none; background: transparent; border: none;">
+            </td>
           </tr>
+          {% endif %}
           {% empty %}
-          
-          {% endfor %}
-          
-          {% for s in pending_schedules %}
           <tr>
-            <td class="vaccine-name">{{ s.vaccine_name }}</td>
-            <td><span class="dose-badge">{{ s.required_doses }}</span></td>
-            <td><input type="date" name="schedule_date_{{ s.id }}" value="{{ s.scheduled_date|date:'Y-m-d' }}" readonly style="pointer-events: none; background: transparent; border: none;"></td>
-            <td><input type="text" name="schedule_status_{{ s.id }}" value="{% if s.status == 'completed' %}Completed{% else %}{{ s.reschedule_reason|default:'Scheduled' }}{% endif %}" readonly style="pointer-events: none; background: transparent; border: none;"></td>
-            <td><input type="text" name="schedule_remarks_{{ s.id }}" value="{{ s.reschedule_reason|default:'' }}" readonly style="pointer-events: none; background: transparent; border: none;"></td>
+            <td colspan="5" style="text-align: center; font-style: italic; color: #666;">
+              No completed vaccinations recorded yet
+            </td>
           </tr>
           {% endfor %}
+          
+          <!-- If you want to show scheduled vaccinations separately, add a note -->
+          {% if pending_schedules %}
+          <tr>
+            <td colspan="5" style="background: #f0f8ff; padding: 10px; text-align: center; font-style: italic; color: #1565c0;">
+              Additional scheduled vaccinations: {{ pending_schedules|length }} appointment(s) pending
+            </td>
+          </tr>
+          {% endif %}
         </tbody>
       </table>
 
@@ -1351,7 +1468,7 @@
       <div class="form-group">
         <label for="vaccineName">Vaccine Name:</label>
         <select id="vaccineName" name="vaccine_name" required onchange="updateRequiredDoses()">
-          <option value="">Select Vaccine</option>
+          <option value="" disabled selected>Select Vaccine</option>
           <option value="BCG Vaccine" data-doses="1">BCG Vaccine</option>
           <option value="Hepatitis B Vaccine" data-doses="1">Hepatitis B Vaccine</option>
           <option value="Pentavalent Vaccine" data-doses="3">Pentavalent Vaccine</option>
@@ -1427,30 +1544,22 @@
         <label for="vaccineNameCompleted">Vaccine Name:</label>
         <select id="vaccineNameCompleted" name="vaccine_name" required onchange="updateCompletedDoses()">
           <option value="">Select Vaccine</option>
-          <option value="BCG Vaccine" data-doses="1">BCG Vaccine</option>
-          <option value="Hepatitis B Vaccine" data-doses="1">Hepatitis B Vaccine</option>
-          <option value="Pentavalent Vaccine" data-doses="3">Pentavalent Vaccine</option>
-          <option value="Oral Polio Vaccine" data-doses="4">Oral Polio Vaccine</option>
-          <option value="Inactivated Polio Vaccine" data-doses="2">Inactivated Polio Vaccine</option>
-          <option value="Pneumococcal Conjugate Vaccine" data-doses="3">Pneumococcal Conjugate Vaccine</option>
-          <option value="Measles, Mumps, and Rubella" data-doses="2">Measles, Mumps, and Rubella</option>
+          <!-- Smart vaccine options populated by JavaScript -->
         </select>
+        <small id="vaccineAgeInfo" style="color: #666; font-size: 12px; margin-top: 5px; display: none;"></small>
       </div>
 
       <div class="form-group">
-        <label for="requiredDosesCompleted">Required Doses:</label>
-        <input type="number" id="requiredDosesCompleted" name="required_doses" min="1" readonly>
+        <label for="requiredDosesCompleted">Doses:</label>
+        <input type="number" id="requiredDosesCompleted" name="required_doses" min="1" value="1" readonly>
       </div>
 
       <div class="form-group">
-        <label for="immunizationDateCompleted">Immunization Date:</label>
-        <input type="date" id="immunizationDateCompleted" name="immunization_date" required min="2024-01-01">
+        <label for="immunizationDateCompleted">Date Completed:</label>
+        <input type="date" id="immunizationDateCompleted" name="immunization_date" required>
       </div>
 
-      <div class="form-group">
-        <label for="completionDateCompleted">Completion Date:</label>
-        <input type="datetime-local" id="completionDateCompleted" name="completion_date" required>
-      </div>
+      <!-- Removed completion_date field as requested -->
 
       <div class="schedule-modal-buttons">
         <button type="submit" class="btn btn-green">Save</button>
@@ -1489,10 +1598,23 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // Set minimum date to tomorrow for scheduling inputs, today for completion inputs
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowString = tomorrow.toISOString().split('T')[0];
   const today = new Date().toISOString().split('T')[0];
   
-  const dateInputs = document.querySelectorAll('#immunizationDate, #newDate, #rescheduleNutritionDate, #nutritionServiceDate, #immunizationDateCompleted, #completionDate, #completionDateCompleted');
-  dateInputs.forEach(input => {
+  // Scheduling inputs - require tomorrow or later
+  const schedulingInputs = document.querySelectorAll('#immunizationDate, #newDate, #rescheduleNutritionDate, #nutritionServiceDate');
+  schedulingInputs.forEach(input => {
+    if (input) {
+      input.setAttribute('min', tomorrowString);
+    }
+  });
+  
+  // Completion inputs - allow today and future
+  const completionInputs = document.querySelectorAll('#completionDate, #completionDateCompleted');
+  completionInputs.forEach(input => {
     if (input) {
       input.setAttribute('min', today);
     }
@@ -1502,8 +1624,15 @@ document.addEventListener('DOMContentLoaded', () => {
     mutations.forEach(function(mutation) {
       mutation.addedNodes.forEach(function(node) {
         if (node.nodeType === 1) {
-          const dateInputs = node.querySelectorAll('input[type="date"]');
-          dateInputs.forEach(input => {
+          const schedulingInputs = node.querySelectorAll('#immunizationDate, #newDate, #rescheduleNutritionDate, #nutritionServiceDate');
+          schedulingInputs.forEach(input => {
+            if (!input.hasAttribute('min')) {
+              input.setAttribute('min', tomorrowString);
+            }
+          });
+          
+          const completionInputs = node.querySelectorAll('#completionDate, #completionDateCompleted');
+          completionInputs.forEach(input => {
             if (!input.hasAttribute('min')) {
               input.setAttribute('min', today);
             }
@@ -1635,8 +1764,154 @@ function closeAddScheduleModal() {
   document.getElementById('addScheduleModal').style.display = 'none';
 }
 
+// SMART ADD VACCINE MODAL FUNCTIONS
+function populateSmartVaccineDropdown() {
+  const select = document.getElementById('vaccineNameCompleted');
+  const ageInfo = document.getElementById('vaccineAgeInfo');
+  const childAgeMonths = {{ total_age_months }};
+  
+  // Clear existing options except the first one
+  while (select.children.length > 1) {
+    select.removeChild(select.lastChild);
+  }
+  
+  // Define vaccines with age requirements and completion status
+  const vaccines = [
+    {
+      name: 'BCG Vaccine',
+      doses: 1,
+      minAgeMonths: 0,
+      maxAgeMonths: 60,
+      completed: {% for v in vaccine_statuses %}{% if v.name == "BCG Vaccine" %}{{ v.completed_doses|default:0 }} >= {{ v.total_doses|default:1 }}{% endif %}{% empty %}false{% endfor %}
+    },
+    {
+      name: 'Hepatitis B Vaccine',
+      doses: 1,
+      minAgeMonths: 0,
+      maxAgeMonths: 60,
+      completed: {% for v in vaccine_statuses %}{% if v.name == "Hepatitis B Vaccine" %}{{ v.completed_doses|default:0 }} >= {{ v.total_doses|default:1 }}{% endif %}{% empty %}false{% endfor %}
+    },
+    {
+      name: 'Pentavalent Vaccine',
+      doses: 3,
+      minAgeMonths: 1.5,
+      maxAgeMonths: 60,
+      completed: {% for v in vaccine_statuses %}{% if v.name == "Pentavalent Vaccine" %}{{ v.completed_doses|default:0 }} >= {{ v.total_doses|default:3 }}{% endif %}{% empty %}false{% endfor %}
+    },
+    {
+      name: 'Oral Polio Vaccine',
+      doses: 3,
+      minAgeMonths: 1.5,
+      maxAgeMonths: 60,
+      completed: {% for v in vaccine_statuses %}{% if v.name == "Oral Polio Vaccine" %}{{ v.completed_doses|default:0 }} >= {{ v.total_doses|default:3 }}{% endif %}{% empty %}false{% endfor %}
+    },
+    {
+      name: 'Inactivated Polio Vaccine',
+      doses: 2,
+      minAgeMonths: 3.5,
+      maxAgeMonths: 60,
+      completed: {% for v in vaccine_statuses %}{% if v.name == "Inactivated Polio Vaccine" %}{{ v.completed_doses|default:0 }} >= {{ v.total_doses|default:2 }}{% endif %}{% empty %}false{% endfor %}
+    },
+    {
+      name: 'Pneumococcal Conjugate Vaccine',
+      doses: 3,
+      minAgeMonths: 1.5,
+      maxAgeMonths: 60,
+      completed: {% for v in vaccine_statuses %}{% if v.name == "Pneumococcal Conjugate Vaccine" %}{{ v.completed_doses|default:0 }} >= {{ v.total_doses|default:3 }}{% endif %}{% empty %}false{% endfor %}
+    },
+    {
+      name: 'Measles, Mumps, and Rubella',
+      doses: 2,
+      minAgeMonths: 9,
+      maxAgeMonths: 60,
+      completed: {% for v in vaccine_statuses %}{% if v.name == "Measles, Mumps, and Rubella" %}{{ v.completed_doses|default:0 }} >= {{ v.total_doses|default:2 }}{% endif %}{% empty %}false{% endfor %}
+    }
+  ];
+  
+  let availableVaccines = 0;
+  
+  vaccines.forEach(vaccine => {
+    if (vaccine.completed) {
+      console.log(`${vaccine.name} is already completed, skipping`);
+      return;
+    }
+    
+    if (childAgeMonths >= vaccine.minAgeMonths && childAgeMonths <= vaccine.maxAgeMonths) {
+      const option = document.createElement('option');
+      option.value = vaccine.name;
+      option.setAttribute('data-doses', vaccine.doses);
+      option.textContent = vaccine.name;
+      select.appendChild(option);
+      availableVaccines++;
+    }
+  });
+  
+  if (availableVaccines === 0) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'No vaccines available for this age/completion status';
+    option.disabled = true;
+    select.appendChild(option);
+    
+    ageInfo.textContent = `Child is ${childAgeMonths} months old. All age-appropriate vaccines may already be completed.`;
+    ageInfo.style.display = 'block';
+    ageInfo.style.color = '#f57c00';
+  } else {
+    ageInfo.style.display = 'none';
+  }
+  
+  console.log(`Available vaccines for ${childAgeMonths}-month-old child: ${availableVaccines}`);
+}
+
+function getCurrentVaccineDoses(vaccineName) {
+  const completedDoses = {
+    {% for v in vaccine_statuses %}
+    '{{ v.name }}': {{ v.completed_doses|default:0 }},
+    {% endfor %}
+  };
+  
+  return completedDoses[vaccineName] || 0;
+}
+
+function updateCompletedDoses() {
+  const select = document.getElementById('vaccineNameCompleted');
+  const requiredDosesInput = document.getElementById('requiredDosesCompleted');
+  
+  // Always set to 1 dose per submission
+  requiredDosesInput.value = 1;
+  
+  const ageInfo = document.getElementById('vaccineAgeInfo');
+  const vaccineName = select.options[select.selectedIndex].value;
+  
+  if (vaccineName) {
+    const currentDoses = getCurrentVaccineDoses(vaccineName);
+    const nextDose = currentDoses + 1;
+    
+    ageInfo.textContent = `Adding dose ${nextDose} for ${vaccineName}`;
+    ageInfo.style.color = '#2e7d32';
+    ageInfo.style.display = 'block';
+  }
+}
+
 function openAddVaccineModal() {
   document.getElementById('addVaccineModal').style.display = 'flex';
+  populateSmartVaccineDropdown();
+  
+  // Set date constraints for completed vaccines
+  const today = new Date().toISOString().split('T')[0];
+  const dateInput = document.getElementById('immunizationDateCompleted');
+  
+  // Allow past dates and today, but NOT future dates
+  dateInput.setAttribute('max', today); // Maximum is today
+  
+  // Minimum date is child's birth date
+  const birthDate = '{{ preschooler.birth_date }}';
+  dateInput.setAttribute('min', birthDate);
+  
+  // Clear any existing value
+  dateInput.value = '';
+  
+  console.log(`Date constraints set: min=${birthDate}, max=${today}`);
 }
 
 function closeAddVaccineModal() {
@@ -1652,13 +1927,11 @@ function closeAddNutritionModal() {
 }
 
 function openRescheduleModal(scheduleId) {
-  // Get original date from table row
   const button = event.target;
   const row = button.closest('tr');
   const dateCell = row.querySelector('td:nth-child(3)');
   const originalDateText = dateCell.textContent.trim();
   
-  // Convert to YYYY-MM-DD format
   let originalDate = null;
   if (originalDateText !== 'N/A' && originalDateText !== '') {
     const parts = originalDateText.split('/');
@@ -1667,22 +1940,35 @@ function openRescheduleModal(scheduleId) {
     }
   }
 
-  // Your existing modal code
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowString = tomorrow.toISOString().split('T')[0];
+
   document.getElementById('rescheduleModal').style.display = 'flex';
   document.getElementById('scheduleId').value = scheduleId;
   
-  // Add date validation to your existing date input
   const dateInput = document.getElementById('newDate');
-  const today = new Date().toISOString().split('T')[0];
-  dateInput.setAttribute('min', today);
+  dateInput.setAttribute('min', tomorrowString);
   
-  // Remove existing event listeners to avoid duplicates
-  dateInput.removeEventListener('change', validateDate);
+  dateInput.removeEventListener('change', validateRescheduleDate);
   
-  // Add new validation with styled notification
-  function validateDate() {
-    if (originalDate && dateInput.value === originalDate) {
-      // Use SweetAlert for styled notification
+  function validateRescheduleDate() {
+    const selectedDate = dateInput.value;
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (selectedDate === today) {
+      Swal.fire({
+        title: 'Invalid Date',
+        text: 'Cannot schedule for today. Please select tomorrow or a future date.',
+        icon: 'warning',
+        confirmButtonColor: '#ff9800',
+        confirmButtonText: 'OK'
+      });
+      dateInput.value = '';
+      return;
+    }
+    
+    if (originalDate && selectedDate === originalDate) {
       Swal.fire({
         title: 'Invalid Date',
         text: 'Cannot reschedule to the same original date. Please select a different date.',
@@ -1691,10 +1977,11 @@ function openRescheduleModal(scheduleId) {
         confirmButtonText: 'OK'
       });
       dateInput.value = '';
+      return;
     }
   }
   
-  dateInput.addEventListener('change', validateDate);
+  dateInput.addEventListener('change', validateRescheduleDate);
 }
 
 function closeRescheduleModal() {
@@ -1709,26 +1996,20 @@ function updateRequiredDoses() {
   requiredDosesInput.value = doses;
 }
 
-function updateCompletedDoses() {
-  const select = document.getElementById('vaccineNameCompleted');
-  const requiredDosesInput = document.getElementById('requiredDosesCompleted');
-  const selectedOption = select.options[select.selectedIndex];
-  const doses = selectedOption.getAttribute('data-doses') || '1';
-  requiredDosesInput.value = doses;
-}
-
-// Enhanced vaccine scheduling with age validation
 function scheduleVaccineWithAge(vaccineName, totalDoses, doseNumber, ageDescription) {
   console.log(`Scheduling age-appropriate vaccine: ${vaccineName}, Dose ${doseNumber}`);
+  
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowString = tomorrow.toISOString().split('T')[0];
   
   Swal.fire({
     title: `Schedule ${vaccineName}`,
     html: `
-        </p>
         <label style="display: block; margin-bottom: 10px; font-weight: 600;">Select Date:</label>
-        <input type="date" id="ageBasedScheduleDate" class="swal2-input" style="margin: 0;">
+        <input type="date" id="ageBasedScheduleDate" class="swal2-input" style="margin: 0;" min="${tomorrowString}">
         <div style="margin-top: 15px; padding: 12px; background: #e3f2fd; border-radius: 8px; font-size: 14px; border-left: 4px solid #2196f3;">
-          📱 <strong>Parents will receive notifications</strong> about this appointment
+          Parents will receive notifications about this appointment
         </div>
       </div>
     `,
@@ -1738,17 +2019,25 @@ function scheduleVaccineWithAge(vaccineName, totalDoses, doseNumber, ageDescript
     cancelButtonColor: '#6c757d',
     preConfirm: () => {
       const date = document.getElementById('ageBasedScheduleDate').value;
+      const today = new Date().toISOString().split('T')[0];
+      
       if (!date) {
         Swal.showValidationMessage('Please select a date');
         return false;
       }
       
-      const selectedDate = new Date(date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      if (date === today) {
+        Swal.showValidationMessage('Cannot schedule for today. Please select tomorrow or a future date.');
+        return false;
+      }
       
-      if (selectedDate < today) {
-        Swal.showValidationMessage('Please select a future date');
+      const selectedDate = new Date(date);
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      tomorrowDate.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < tomorrowDate) {
+        Swal.showValidationMessage('Please select tomorrow or a future date');
         return false;
       }
       
@@ -1813,7 +2102,6 @@ function submitScheduleFormWithDose(vaccineName, totalDoses, immunizationDate, d
   form.submit();
 }
 
-// Check for date restrictions on complete buttons
 document.addEventListener('DOMContentLoaded', function() {
   const today = new Date().toISOString().split('T')[0];
   
@@ -1842,14 +2130,12 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-
 function completeCurrentDose(vaccineName, scheduleId, currentDoses, totalDoses) {
   const button = event.target;
   const row = button.closest('tr');
   const dateCell = row.querySelector('td:nth-child(3)');
   const today = new Date().toISOString().split('T')[0];
   
-  // Check if vaccination can be completed on scheduled date
   if (dateCell) {
     const scheduledDateText = dateCell.textContent.trim();
     
@@ -1866,7 +2152,7 @@ function completeCurrentDose(vaccineName, scheduleId, currentDoses, totalDoses) 
                 <p>This vaccination can only be completed on or after:</p>
                 <strong style="color: #1565c0; font-size: 18px;">${scheduledDateText}</strong>
                 <div style="margin-top: 15px; padding: 12px; background: #fff3cd; border-radius: 8px; font-size: 14px; border-left: 4px solid #ffc107;">
-                  ⏰ Please wait until the scheduled date to mark this as completed
+                  Please wait until the scheduled date to mark this as completed
                 </div>
               </div>
             `,
@@ -1882,13 +2168,12 @@ function completeCurrentDose(vaccineName, scheduleId, currentDoses, totalDoses) 
   
   const nextDose = parseInt(currentDoses) + 1;
   
-  // Confirmation dialog
   Swal.fire({
     title: `Complete ${vaccineName}?`,
     html: `
       <p>This will mark <strong>dose ${nextDose} of ${totalDoses}</strong> as completed.</p>
       <div style="margin-top: 15px; padding: 10px; background: #e8f5e8; border-radius: 5px; font-size: 14px;">
-        ✅ Parents will be notified of completion
+        Parents will be notified of completion
       </div>
     `,
     icon: 'question',
@@ -1898,7 +2183,6 @@ function completeCurrentDose(vaccineName, scheduleId, currentDoses, totalDoses) 
     confirmButtonText: 'Yes, complete it!'
   }).then((result) => {
     if (result.isConfirmed) {
-      // Show loading state
       Swal.fire({
         title: 'Completing Dose...',
         text: 'Updating status and notifying parents',
@@ -1908,7 +2192,6 @@ function completeCurrentDose(vaccineName, scheduleId, currentDoses, totalDoses) 
         }
       });
 
-      // Submit completion
       fetch(`/update_schedule_status/${scheduleId}/`, {
         method: 'POST',
         headers: {
@@ -1922,14 +2205,13 @@ function completeCurrentDose(vaccineName, scheduleId, currentDoses, totalDoses) 
       .then(response => response.json())
       .then(data => {
         if (data.success) {
-          // Simple success message - no scheduling popup
           Swal.fire({
             title: 'Dose Completed!',
             text: data.message,
             icon: 'success',
             confirmButtonColor: '#4caf50'
           }).then(() => {
-            location.reload(); // Refresh to show updated age-based scheduling
+            location.reload();
           });
         } else {
           Swal.fire('Error!', data.message, 'error');
@@ -1945,6 +2227,9 @@ function completeCurrentDose(vaccineName, scheduleId, currentDoses, totalDoses) 
 
 function scheduleNextDose(vaccineName, completedDoses, totalDoses) {
   const nextDose = parseInt(completedDoses) + 1;
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowString = tomorrow.toISOString().split('T')[0];
   
   Swal.fire({
     title: `Schedule Next Dose`,
@@ -1953,7 +2238,7 @@ function scheduleNextDose(vaccineName, completedDoses, totalDoses) {
         <p><strong>${vaccineName}</strong></p>
         <p>Dose ${nextDose} of ${totalDoses}</p>
         <label style="display: block; margin: 20px 0 10px 0; font-weight: 600;">Select Date:</label>
-        <input type="date" id="nextDoseDate" class="swal2-input" style="margin: 0;">
+        <input type="date" id="nextDoseDate" class="swal2-input" style="margin: 0;" min="${tomorrowString}">
         <div style="margin-top: 15px; padding: 12px; background: #e3f2fd; border-radius: 8px; font-size: 14px; border-left: 4px solid #2196f3;">
           Parents will receive notifications about this appointment
         </div>
@@ -1964,17 +2249,25 @@ function scheduleNextDose(vaccineName, completedDoses, totalDoses) {
     confirmButtonColor: '#4caf50',
     preConfirm: () => {
       const date = document.getElementById('nextDoseDate').value;
+      const today = new Date().toISOString().split('T')[0];
+      
       if (!date) {
         Swal.showValidationMessage('Please select a date');
         return false;
       }
       
-      const selectedDate = new Date(date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      if (date === today) {
+        Swal.showValidationMessage('Cannot schedule for today. Please select tomorrow or a future date.');
+        return false;
+      }
       
-      if (selectedDate < today) {
-        Swal.showValidationMessage('Please select a future date');
+      const selectedDate = new Date(date);
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      tomorrowDate.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < tomorrowDate) {
+        Swal.showValidationMessage('Please select tomorrow or a future date');
         return false;
       }
       
@@ -2033,7 +2326,6 @@ function submitScheduleForm(vaccineName, totalDoses, immunizationDate, currentDo
   form.submit();
 }
 
-// Standard status update functions
 function updateScheduleStatus(scheduleId, status) {
   if (status === 'completed') {
     Swal.fire({
@@ -2081,11 +2373,12 @@ function submitStatusUpdate(scheduleId, status) {
   });
 }
 
-// Nutrition service functions
 function scheduleNutritionService(serviceType) {
   console.log(`Scheduling nutrition service: ${serviceType}`);
   
-  const today = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowString = tomorrow.toISOString().split('T')[0];
   const serviceEmoji = serviceType === "Vitamin A" ? "💊" : "🪱";
   
   Swal.fire({
@@ -2096,7 +2389,7 @@ function scheduleNutritionService(serviceType) {
           Schedule nutrition service for <strong>${serviceType}</strong>
         </p>
         <label style="display: block; margin-bottom: 10px; font-weight: 600;">Select Date:</label>
-        <input type="date" id="nutritionServiceDate" class="swal2-input" style="margin: 0;" min="${today}">
+        <input type="date" id="nutritionServiceDate" class="swal2-input" style="margin: 0;" min="${tomorrowString}">
         <div style="margin-top: 15px; padding: 12px; background: #e8f5e8; border-radius: 8px; font-size: 14px; border-left: 4px solid #4caf50;">
           <strong>Parents will receive notifications</strong> about this appointment
         </div>
@@ -2108,17 +2401,25 @@ function scheduleNutritionService(serviceType) {
     cancelButtonColor: '#6c757d',
     preConfirm: () => {
       const date = document.getElementById('nutritionServiceDate').value;
+      const today = new Date().toISOString().split('T')[0];
+      
       if (!date) {
         Swal.showValidationMessage('Please select a date');
         return false;
       }
       
-      const selectedDate = new Date(date);
-      const todayDate = new Date();
-      todayDate.setHours(0, 0, 0, 0);
+      if (date === today) {
+        Swal.showValidationMessage('Cannot schedule for today. Please select tomorrow or a future date.');
+        return false;
+      }
       
-      if (selectedDate < todayDate) {
-        Swal.showValidationMessage('Please select a future date');
+      const selectedDate = new Date(date);
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      tomorrowDate.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < tomorrowDate) {
+        Swal.showValidationMessage('Please select tomorrow or a future date');
         return false;
       }
       
@@ -2142,6 +2443,83 @@ function scheduleNutritionService(serviceType) {
       });
       
       submitNutritionScheduleForm(serviceType, result.value, 'schedule_nutrition_enhanced');
+    }
+  });
+}
+
+function scheduleNutritionServiceWithAge(serviceType, eligibilityReason) {
+  console.log(`Scheduling age-appropriate nutrition service: ${serviceType}`);
+  
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowString = tomorrow.toISOString().split('T')[0];
+  const serviceEmoji = serviceType === "Vitamin A" ? "💊" : "🪱";
+  
+  Swal.fire({
+    title: `${serviceEmoji} Schedule ${serviceType}`,
+    html: `
+      <div style="margin: 20px 0;">
+        <p style="margin-bottom: 15px; color: #333; font-weight: 500;">
+          Schedule nutrition service for <strong>${serviceType}</strong>
+        </p>
+        <p style="margin-bottom: 15px; font-size: 13px; color: #666;">
+          ${eligibilityReason}
+        </p>
+        <label style="display: block; margin-bottom: 10px; font-weight: 600;">Select Date:</label>
+        <input type="date" id="nutritionServiceDate" class="swal2-input" style="margin: 0;" min="${tomorrowString}">
+        <div style="margin-top: 15px; padding: 12px; background: #e8f5e8; border-radius: 8px; font-size: 14px; border-left: 4px solid #4caf50;">
+          <strong>Parents will receive notifications</strong> about this appointment
+        </div>
+      </div>
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Schedule & Notify Parents',
+    confirmButtonColor: '#28a745',
+    cancelButtonColor: '#6c757d',
+    preConfirm: () => {
+      const date = document.getElementById('nutritionServiceDate').value;
+      const today = new Date().toISOString().split('T')[0];
+      
+      if (!date) {
+        Swal.showValidationMessage('Please select a date');
+        return false;
+      }
+      
+      if (date === today) {
+        Swal.showValidationMessage('Cannot schedule for today. Please select tomorrow or a future date.');
+        return false;
+      }
+      
+      const selectedDate = new Date(date);
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      tomorrowDate.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < tomorrowDate) {
+        Swal.showValidationMessage('Please select tomorrow or a future date');
+        return false;
+      }
+      
+      return date;
+    }
+  }).then((result) => {
+    if (result.isConfirmed) {
+      Swal.fire({
+        title: 'Scheduling Nutrition Service...',
+        html: `
+          <div style="margin: 20px 0;">
+            <p>Creating schedule for <strong>${serviceType}</strong></p>
+            <p>Sending notifications to parents...</p>
+            <div style="margin-top: 15px;">
+              <div class="swal2-loader"></div>
+            </div>
+          </div>
+        `,
+        allowOutsideClick: false,
+        showConfirmButton: false
+      });
+      
+      submitNutritionScheduleForm(serviceType, result.value, 'schedule_nutrition_age_based');
     }
   });
 }
@@ -2184,7 +2562,7 @@ function updateNutritionStatus(scheduleId, status) {
       html: `
         <p>This nutrition service will be marked as completed.</p>
         <div style="margin-top: 15px; padding: 10px; background: #e8f5e8; border-radius: 5px; font-size: 14px;">
-          ✅ Parents will be notified of completion
+          Parents will be notified of completion
         </div>
       `,
       icon: 'question',
@@ -2242,18 +2620,20 @@ function submitNutritionStatusUpdate(scheduleId, status) {
 function openRescheduleNutritionModal(scheduleId) {
   console.log('Opening reschedule modal for nutrition service:', scheduleId);
   
-  const today = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowString = tomorrow.toISOString().split('T')[0];
   
   Swal.fire({
     title: 'Reschedule Nutrition Service',
     html: `
       <div style="margin: 20px 0;">
         <label style="display: block; margin-bottom: 10px; font-weight: 600;">New Date:</label>
-        <input type="date" id="rescheduleNutritionDate" class="swal2-input" style="margin: 0;" min="${today}">
+        <input type="date" id="rescheduleNutritionDate" class="swal2-input" style="margin: 0;" min="${tomorrowString}">
         <label style="display: block; margin: 20px 0 10px 0; font-weight: 600;">Reason for Rescheduling:</label>
         <textarea id="rescheduleNutritionReason" class="swal2-textarea" placeholder="Please provide a reason for rescheduling..."></textarea>
         <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 6px; font-size: 13px; color: #856404;">
-          📱 Parents will be notified about the schedule change
+          Parents will be notified about the schedule change
         </div>
       </div>
     `,
@@ -2264,9 +2644,15 @@ function openRescheduleNutritionModal(scheduleId) {
     preConfirm: () => {
       const newDate = document.getElementById('rescheduleNutritionDate').value;
       const reason = document.getElementById('rescheduleNutritionReason').value;
+      const today = new Date().toISOString().split('T')[0];
       
       if (!newDate) {
         Swal.showValidationMessage('Please select a new date');
+        return false;
+      }
+      
+      if (newDate === today) {
+        Swal.showValidationMessage('Cannot schedule for today. Please select tomorrow or a future date.');
         return false;
       }
       
@@ -2276,11 +2662,12 @@ function openRescheduleNutritionModal(scheduleId) {
       }
       
       const selectedDate = new Date(newDate);
-      const todayDate = new Date();
-      todayDate.setHours(0, 0, 0, 0);
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      tomorrowDate.setHours(0, 0, 0, 0);
       
-      if (selectedDate < todayDate) {
-        Swal.showValidationMessage('Please select a future date');
+      if (selectedDate < tomorrowDate) {
+        Swal.showValidationMessage('Please select tomorrow or a future date');
         return false;
       }
       
@@ -2336,6 +2723,7 @@ function openRescheduleNutritionModal(scheduleId) {
 document.getElementById('addScheduleForm').addEventListener('submit', function(e) {
   const vaccineSelect = document.getElementById('vaccineName');
   const dateInput = document.getElementById('immunizationDate');
+  const today = new Date().toISOString().split('T')[0];
   
   if (!vaccineSelect.value) {
     e.preventDefault();
@@ -2359,15 +2747,27 @@ document.getElementById('addScheduleForm').addEventListener('submit', function(e
     return;
   }
 
-  const selectedDate = new Date(dateInput.value);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  if (selectedDate < today) {
+  if (dateInput.value === today) {
     e.preventDefault();
     Swal.fire({
       title: 'Invalid Date',
-      text: 'Please select a future date for the vaccination.',
+      text: 'Cannot schedule for today. Please select tomorrow or a future date.',
+      icon: 'warning',
+      confirmButtonColor: '#ff9800'
+    });
+    return;
+  }
+
+  const selectedDate = new Date(dateInput.value);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  
+  if (selectedDate < tomorrow) {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Invalid Date',
+      text: 'Please select tomorrow or a future date for the vaccination.',
       icon: 'warning',
       confirmButtonColor: '#ff9800'
     });
@@ -2432,6 +2832,91 @@ document.getElementById('addNutritionForm').addEventListener('submit', function(
   this.appendChild(sourceInput);
 });
 
+// SMART ADD VACCINE FORM VALIDATION
+// FIXED: Add Vaccine Form Validation - Allow past dates, prevent future dates
+document.getElementById('addVaccineForm').addEventListener('submit', function(e) {
+  const vaccineSelect = document.getElementById('vaccineNameCompleted');
+  const dateInput = document.getElementById('immunizationDateCompleted');
+  
+  // Check if vaccine is selected
+  if (!vaccineSelect.value || vaccineSelect.value.trim() === '') {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Validation Error',
+      text: 'Please select a vaccine name.',
+      icon: 'warning',
+      confirmButtonColor: '#ff9800'
+    });
+    return;
+  }
+  
+  // Check if date is provided
+  if (!dateInput.value || dateInput.value.trim() === '') {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Validation Error',
+      text: 'Please select the date when the vaccine was completed.',
+      icon: 'warning',
+      confirmButtonColor: '#ff9800'
+    });
+    return;
+  }
+
+  // Validate date is not in the future
+  const selectedDate = new Date(dateInput.value);
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  
+  if (selectedDate > today) {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Invalid Date',
+      text: 'Completion date cannot be in the future. Please select today or a past date.',
+      icon: 'warning',
+      confirmButtonColor: '#ff9800'
+    });
+    return;
+  }
+
+  // Validate date is not before child's birth
+  const childBirthDate = new Date('{{ preschooler.birth_date }}');
+  if (selectedDate < childBirthDate) {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Invalid Date',
+      text: 'Completion date cannot be before the child was born.',
+      icon: 'warning',
+      confirmButtonColor: '#ff9800'
+    });
+    return;
+  }
+
+  // Show loading message
+  Swal.fire({
+    title: 'Adding Completed Vaccine...',
+    text: 'Recording vaccination completion',
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
+  // Add source for tracking
+  const sourceInput = document.createElement('input');
+  sourceInput.type = 'hidden';
+  sourceInput.name = 'source';
+  sourceInput.value = 'smart_add_completed_vaccine';
+  this.appendChild(sourceInput);
+  
+  // FIXED: Don't add completion_date - let Django handle the date conversion
+  // The immunization_date field already contains the correct date
+  
+  console.log('Submitting completed vaccine:', {
+    vaccine: vaccineSelect.value,
+    date: dateInput.value
+  });
+});
+
 // PDF Generation Function
 function generatePDF() {
   const { jsPDF } = window.jspdf;
@@ -2445,7 +2930,6 @@ function generatePDF() {
   
   pdf.setFontSize(12);
   pdf.setFont(undefined, 'normal');
-  pdf.text('Department of Health - Immunization Program', 105, 30, { align: 'center' });
   pdf.text(`Generated on: ${currentDate}`, 105, 35, { align: 'center' });
   
   pdf.setFontSize(14);
@@ -2482,8 +2966,22 @@ function generatePDF() {
   pdf.text(`Father's Name: ${fatherName}`, 110, yPos);
   yPos += 8;
   
-  pdf.text(`Address: ${address}`, 20, yPos);
-  pdf.text(`Barangay: ${barangay}`, 110, yPos);
+  const fullAddress = address ? `Address: ${address}` : 'Address:';
+  const addressWidth = pdf.getTextWidth(fullAddress);
+  
+  if (addressWidth <= 170 && fullAddress.length <= 80) {
+    pdf.text(fullAddress, 20, yPos);
+    yPos += 8;
+    pdf.text(`Barangay: ${barangay}`, 20, yPos);
+  } else {
+    const addressLines = pdf.splitTextToSize(fullAddress, 170);
+    addressLines.forEach((line, index) => {
+      pdf.text(index === 0 ? line : line.trim(), 20, yPos);
+      yPos += 6;
+    });
+    yPos += 2;
+    pdf.text(`Barangay: ${barangay}`, 20, yPos);
+  }
   yPos += 8;
   
   pdf.text(`Birth Weight: ${birthWeight} kg`, 20, yPos);
@@ -2495,62 +2993,102 @@ function generatePDF() {
   pdf.text('IMMUNIZATION RECORDS', 20, yPos);
   yPos += 5;
   
+  const tableX = 20;
+  const tableWidth = 170;
+  
+  const col1Width = 70;
+  const col2Width = 20;
+  const col3Width = 25;
+  const col4Width = 25;
+  const col5Width = 30;
+  
+  const col1X = tableX;
+  const col2X = col1X + col1Width;
+  const col3X = col2X + col2Width;
+  const col4X = col3X + col3Width;
+  const col5X = col4X + col4Width;
+  
   pdf.setFillColor(44, 85, 48);
-  pdf.rect(20, yPos, 170, 8, 'F');
+  pdf.rect(tableX, yPos, tableWidth, 8, 'F');
   
   pdf.setTextColor(255, 255, 255);
   pdf.setFontSize(9);
   pdf.setFont(undefined, 'bold');
-  pdf.text('Vaccine', 25, yPos + 5);
-  pdf.text('Doses', 60, yPos + 5);
-  pdf.text('Date Given', 80, yPos + 5);
-  pdf.text('Status', 115, yPos + 5);
-  pdf.text('Remarks', 140, yPos + 5);
+  
+  pdf.text('Vaccine', col1X + 2, yPos + 5);
+  pdf.text('Doses', col2X + 2, yPos + 5);
+  pdf.text('Date Given', col3X + 2, yPos + 5);
+  pdf.text('Status', col4X + 2, yPos + 5);
+  pdf.text('Remarks', col5X + 2, yPos + 5);
   
   yPos += 8;
   pdf.setTextColor(0, 0, 0);
   pdf.setFont(undefined, 'normal');
   
-  const immunizationData = [
-    {% for h in immunization_history %}
-    {
-      vaccine: '{{ h.vaccine_name }}',
-      doses: '{{ h.required_doses }}',
-      date: '{{ h.completion_date|date:"m/d/Y"|default:"" }}',
-      status: 'Completed',
-      remarks: '{{ h.reschedule_reason|default:"" }}'
-    },
-    {% endfor %}
-    {% for s in pending_schedules %}
-    {
-      vaccine: '{{ s.vaccine_name }}',
-      doses: '{{ s.required_doses }}',
-      date: '{{ s.scheduled_date|date:"m/d/Y" }}',
-      status: '{{ s.get_status_display }}',
-      remarks: '{{ s.reschedule_reason|default:"" }}'
-    },
-    {% endfor %}
-  ];
+  const completedVaccinations = [];
   
-  immunizationData.forEach((record, index) => {
-    if (index % 2 === 1) {
-      pdf.setFillColor(249, 249, 249);
-      pdf.rect(20, yPos, 170, 6, 'F');
-    }
-    
-    pdf.text(record.vaccine, 25, yPos + 4);
-    pdf.text(record.doses.toString(), 60, yPos + 4);
-    pdf.text(record.date, 80, yPos + 4);
-    pdf.text(record.status, 115, yPos + 4);
-    pdf.text(record.remarks, 140, yPos + 4);
-    
-    yPos += 6;
-    
-    if (yPos > 270) {
-      pdf.addPage();
-      yPos = 20;
-    }
+  {% for h in immunization_history %}
+  {% if h.status == 'completed' %}
+  completedVaccinations.push({
+    vaccine: '{{ h.vaccine_name }}',
+    doses: '{{ h.dose_number|default:1 }}/{{ h.required_doses }}',
+    date: '{{ h.completion_date|date:"m/d/Y"|default:"" }}',
+    status: 'Completed',
+    remarks: '{{ h.medical_remarks|default:"" }}'
   });
+  {% endif %}
+  {% endfor %}
+  
+  console.log('Completed vaccinations for PDF:', completedVaccinations.length);
+  
+  if (completedVaccinations.length === 0) {
+    pdf.text('No completed vaccinations recorded yet', col1X + 2, yPos + 4);
+    yPos += 10;
+  } else {
+    completedVaccinations.forEach((record, index) => {
+      if (index % 2 === 1) {
+        pdf.setFillColor(249, 249, 249);
+        pdf.rect(tableX, yPos, tableWidth, 6, 'F');
+      }
+      
+      pdf.setDrawColor(220, 220, 220);
+      pdf.line(col2X, yPos, col2X, yPos + 6);
+      pdf.line(col3X, yPos, col3X, yPos + 6);
+      pdf.line(col4X, yPos, col4X, yPos + 6);
+      pdf.line(col5X, yPos, col5X, yPos + 6);
+      
+      let vaccineName = record.vaccine;
+      
+      const maxVaccineWidth = col1Width - 4;
+      if (pdf.getTextWidth(vaccineName) > maxVaccineWidth) {
+        const vaccineLines = pdf.splitTextToSize(vaccineName, maxVaccineWidth);
+        if (vaccineLines.length > 1) {
+          vaccineName = vaccineLines[0].trim();
+          if (vaccineName.length > 30) {
+            vaccineName = vaccineName.substring(0, 27) + '...';
+          }
+        }
+      }
+      
+      pdf.text(vaccineName, col1X + 2, yPos + 4);
+      pdf.text(record.doses, col2X + 2, yPos + 4);
+      pdf.text(record.date, col3X + 2, yPos + 4);
+      pdf.text(record.status, col4X + 2, yPos + 4);
+      
+      let remarks = record.remarks || '';
+      if (remarks.length > 15) {
+        remarks = remarks.substring(0, 12) + '...';
+      }
+      pdf.text(remarks, col5X + 2, yPos + 4);
+      
+      yPos += 6;
+      
+      if (yPos > 270) {
+        pdf.addPage();
+        yPos = 20;
+      }
+    });
+  }
   
   yPos += 20;
   if (yPos > 270) {
@@ -2560,22 +3098,213 @@ function generatePDF() {
   
   pdf.setFontSize(8);
   pdf.setFont(undefined, 'italic');
-  pdf.text('This document is computer-generated and contains the complete immunization record.', 105, yPos, { align: 'center' });
-  pdf.text('For official purposes, please verify with the issuing health center.', 105, yPos + 5, { align: 'center' });
+  pdf.text('This official record contains ONLY completed immunizations.', 105, yPos, { align: 'center' });
+  pdf.text('Scheduled appointments are not included until completion.', 105, yPos + 5, { align: 'center' });
   
-  const fileName = `${childName.replace(/\s+/g, '_')}_Immunization_Record.pdf`;
+  const fileName = `${childName.replace(/\s+/g, '_')}_Completed_Immunizations.pdf`;
   pdf.save(fileName);
   
   Swal.fire({
     title: 'PDF Generated!',
-    text: 'The immunization record has been saved as a PDF file.',
+    text: 'Official immunization record saved (completed vaccinations only).',
     icon: 'success',
     confirmButtonColor: '#4caf50'
   });
 }
 
+function setCompletionDateConstraints() {
+  const today = new Date().toISOString().split('T')[0];
+  const birthDate = '{{ preschooler.birth_date }}';
+  
+  // For completed vaccines - allow past dates and today
+  const completedDateInputs = document.querySelectorAll('#immunizationDateCompleted');
+  completedDateInputs.forEach(input => {
+    if (input) {
+      input.setAttribute('max', today);  // No future dates
+      input.setAttribute('min', birthDate); // No dates before birth
+      
+      // Add helpful placeholder
+      input.setAttribute('placeholder', 'Select completion date');
+    }
+  });
+}
+
+// Auto-populate when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  const dateInput = document.getElementById('immunizationDateCompleted');
+  
+  if (dateInput) {
+    dateInput.addEventListener('change', function() {
+      const selectedDate = new Date(this.value);
+      const today = new Date();
+      const childBirthDate = new Date('{{ preschooler.birth_date }}');
+      
+      // Clear any previous validation styling
+      this.style.borderColor = '';
+      
+      if (selectedDate > today) {
+        this.style.borderColor = '#d32f2f';
+        this.title = 'Date cannot be in the future';
+      } else if (selectedDate < childBirthDate) {
+        this.style.borderColor = '#d32f2f';
+        this.title = 'Date cannot be before child was born';
+      } else {
+        this.style.borderColor = '#4caf50';
+        this.title = 'Valid completion date';
+      }
+    });
+  }
+});
+
 console.log('Age-based vaccine scheduling loaded for child age: {{ total_age_months }} months');
 console.log('Vaccine scheduling will now check child age eligibility');
+</script>
+
+
+<script>
+  // ============================================
+  // ARCHIVED PRESCHOOLER READ-ONLY ENFORCEMENT
+  // ============================================
+  document.addEventListener('DOMContentLoaded', function() {
+    const isArchived = {{ is_archived|yesno:"true,false" }};
+    
+    if (isArchived) {
+      console.log('Archived preschooler detected - Enabling read-only mode');
+      
+      // 1. DISABLE ALL ACTION BUTTONS (except vaccine card + back/close)
+      disableAllButtons();
+      
+      // 2. DISABLE ALL FORM INPUTS
+      disableAllInputs();
+      
+      // 3. PREVENT FORM SUBMISSIONS
+      preventFormSubmissions();
+      
+      // 4. DISABLE MODAL ACTIONS (except vaccine card)
+      disableModalActions();
+      
+      // 5. OVERRIDE BUTTON CLICK HANDLERS
+      overrideButtonHandlers();
+      
+      // 6. MAKE VACCINE CARD VIEW-ONLY
+      disableVaccineCardEditing();
+    }
+  });
+
+  function disableAllButtons() {
+    // Disable schedule/action buttons
+    document.querySelectorAll(
+      '.add-schedule-btn, .add-nutrition-btn, .btn-schedule, .btn-complete, .btn-reschedule'
+    ).forEach(btn => {
+      btn.disabled = true;
+      btn.classList.add('archived-disabled');
+      btn.title = 'Cannot modify archived preschooler';
+      btn.style.pointerEvents = 'none';
+    });
+
+    // ✅ Do not disable "View Vaccine Card"
+    // ✅ Do not disable back-button or close-modal buttons
+  }
+
+  function disableAllInputs() {
+    document.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach(field => {
+      field.disabled = true;
+      field.readOnly = true;
+      field.classList.add('archived-input');
+    });
+  }
+
+  function preventFormSubmissions() {
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      });
+    });
+  }
+
+  function disableModalActions() {
+    const modalFunctions = [
+      'openAddScheduleModal',
+      'openAddVaccineModal',
+      'openAddNutritionModal',
+      'openRescheduleModal',
+      'openRescheduleNutritionModal'
+      // ✅ leave openVaccineCardModal working
+    ];
+    
+    modalFunctions.forEach(funcName => {
+      if (typeof window[funcName] === 'function') {
+        window[funcName] = function() {
+          return false; // silently block
+        };
+      }
+    });
+  }
+
+  function overrideButtonHandlers() {
+    const actionFunctions = [
+      'scheduleVaccineWithAge',
+      'scheduleNutritionService',
+      'scheduleNutritionServiceWithAge',
+      'completeCurrentDose',
+      'updateScheduleStatus',
+      'updateNutritionStatus',
+      'scheduleNextDose'
+    ];
+    
+   
+  }
+
+  function disableVaccineCardEditing() {
+    const vaccineModal = document.getElementById('vaccineCardModal');
+    if (vaccineModal) {
+      const form = vaccineModal.querySelector('form');
+      if (form) {
+        form.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach(field => {
+          field.disabled = true;
+          field.readOnly = true;
+          field.classList.add('archived-input');
+        });
+        
+        // Hide edit/save buttons
+        form.querySelectorAll('button[type="submit"], button.btn-green, button.btn-blue').forEach(btn => {
+          btn.style.display = 'none';
+        });
+      }
+    }
+  }
+
+  // ✅ Removed all Swal "Action Not Allowed" notifs
+  // ✅ Allow back-button & close-modal
+  // ✅ Allow view vaccine card to open normally
+
+ 
+
+
+  console.log('Archived preschooler read-only mode:', {{ is_archived|yesno:"true,false" }});
+</script>
+<script>
+function goBack() {
+  // Get the referrer parameter from URL if it exists
+  const urlParams = new URLSearchParams(window.location.search);
+  const from = urlParams.get('from');
+  
+  // If there's a 'from' parameter, use it
+  if (from === 'archived') {
+    location.href = '/archived';
+  } else if (from === 'registered') {
+    location.href = '/preschoolers';
+  } else {
+    // Fallback: use browser history or default to preschoolers
+    if (document.referrer && (document.referrer.includes('/archived') || document.referrer.includes('/preschoolers'))) {
+      window.history.back();
+    } else {
+      location.href = '/preschoolers';
+    }
+  }
+}
 </script>
 
 </body>
