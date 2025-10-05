@@ -38,12 +38,7 @@
       overflow: hidden;
     }
 
-    .video-background video {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      object-position: center;
-    }
+    
 
     .topbar {
       background-color: #1e1e2f;
@@ -666,10 +661,7 @@
 <body>
   <!-- Video Background -->
   <div class="video-background">
-    <video autoplay muted loop playsinline>
-      <source src="{% static 'media/vidbg.mp4' %}" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
+    
   </div>
 
   <!-- Top Bar -->
@@ -712,7 +704,8 @@
     <div class="main-content">
       <!-- Main Content Container -->
       <div class="container">
-        <h2>WELCOME, {{ full_name|upper }}</h2>
+        <h2>WELCOME, {{ account.first_name|upper }} {{ account.last_name|upper }}</h2>
+
         <h3>My Preschoolers</h3>
         <p>Here are the preschoolers registered under your account.</p>
         <p>Click on a preschooler card to view their details.</p>
