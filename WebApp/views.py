@@ -1005,7 +1005,7 @@ def email_endorsement(request):
             return redirect('dashboard')
         except Exception as e:
             messages.error(request, f"Error sending email: {e}")
-            print(f"Email sending error: {e}")
+            
             return redirect('email_endorsement')
 
     return render(request, 'HTML/email_endorsement.html', {
@@ -1204,7 +1204,7 @@ def addbarangay(request):
         phone_number = request.POST.get('phone-number', '').strip()
         hall_address = request.POST.get('hall-address', '').strip()
 
-        print(f"[DEBUG] Received: {name=}, {phone_number=}, {hall_address=}")
+        
 
         # ✅ Check for empty barangay name
         if not name:
@@ -1226,7 +1226,7 @@ def addbarangay(request):
             messages.success(request, f"Barangay {name} was added successfully!")
             return redirect('addbarangay')
         except Exception as e:
-            print(f"[ERROR] Failed to add barangay: {e}")
+            
             messages.error(request, "Something went wrong while saving. Please try again.")
     
     return render(request, 'HTML/addbarangay.html')
@@ -1837,7 +1837,7 @@ def login(request):
                                 'is_active': True,
                             }
                         )
-                        print(f"✅ FCM token saved for {account.email}")
+                        
 
                     return redirect('dashboard')
 
@@ -1875,7 +1875,7 @@ def login(request):
                                 'is_active': True,
                             }
                         )
-                        print(f"✅ FCM token saved for {account.email}")
+                        
 
                     return redirect('parent_dashboard')
 
@@ -2049,15 +2049,15 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
                 subject = f"[PPMS] Vaccination Scheduled for {preschooler.first_name}"
                 message = (
                     f"Dear {parent.full_name},\n\n"
-                    f"A vaccination appointment has been scheduled for your child, "
+                    "A vaccination appointment has been scheduled for your child, "
                     f"{preschooler.first_name} {preschooler.last_name}.\n\n"
                     f"Vaccine: {vaccine_name}\n"
                     f"Dose: {dose_number} of {required_doses}\n"
                     f"Scheduled Date: {immunization_date}\n"
                     f"{f'Next Dose: {next_schedule}\n' if next_schedule else ''}"
-                    f"\nPlease bring your child on the scheduled date.\n"
-                    f"You can confirm completion on your dashboard.\n\n"
-                    f"Thank you,\nPPMS System"
+                    "\nPlease bring your child on the scheduled date.\n"
+                    "You can confirm completion on your dashboard.\n\n"
+                    "Thank you,\nPPMS System"
                 )
 
                 send_mail(
@@ -3997,10 +3997,7 @@ def preschoolers(request):
     user_email = request.session.get('email')
     raw_role = (request.session.get('user_role') or '').strip().lower()
 
-    print(f"=== PRESCHOOLERS VIEW DEBUG ===")
-    print(f"Email: '{user_email}'")
-    print(f"Raw Role: '{raw_role}'")
-    print(f"Session data: {dict(request.session)}")
+    
 
     # Get current account
     account = get_object_or_404(Account, email=user_email)
@@ -4020,7 +4017,7 @@ def preschoolers(request):
             barangay=account.barangay
         )
         barangay_name = account.barangay.name if account.barangay else "No Barangay"
-        print(f"Showing preschoolers for barangay: {barangay_name}")
+      
 
     preschoolers_qs = preschoolers_qs.select_related('parent_id', 'barangay') \
         .prefetch_related(
@@ -4028,7 +4025,7 @@ def preschoolers(request):
             Prefetch('temperature_set', queryset=Temperature.objects.order_by('-date_recorded'), to_attr='temp_records')
         )
 
-    print(f"Found {preschoolers_qs.count()} preschoolers")
+    
 
     # Pagination
     paginator = Paginator(preschoolers_qs, 10)
@@ -4061,7 +4058,7 @@ def preschoolers(request):
 
         # Delivery place color coding
         delivery_place = getattr(p, 'place_of_delivery', None)
-        print(f"Debug: {p.first_name} {p.last_name} - Place of delivery: '{delivery_place}'")
+        
 
         if delivery_place == 'Home':
             p.delivery_class = 'delivery-home'
@@ -4074,7 +4071,7 @@ def preschoolers(request):
         else:
             p.delivery_class = 'delivery-na'
 
-        print(f"Debug: Assigned class: '{p.delivery_class}'")
+       
 
     # Determine user role for template
     if raw_role in ['bhw', 'bns', 'midwife', 'nurse']:
@@ -4091,12 +4088,7 @@ def preschoolers(request):
         'barangay_name': barangay_name,
     }
 
-    print(f"Template context:")
-    print(f"  - user_role: '{template_user_role}'")
-    print(f"  - original_role: '{raw_role}'")
-    print(f"  - preschoolers count: {len(page_obj.object_list)}")
-    print(f"  - barangay: '{barangay_name}'")
-    print(f"=== END PRESCHOOLERS DEBUG ===")
+    
 
     return render(request, 'HTML/preschoolers.html', context)
 
@@ -4386,7 +4378,7 @@ def register(request):
         barangay_id  = request.POST.get("barangay_id")   # already snake_case in HTML
         role         = request.POST.get("role")
 
-        print(f"[DEBUG] Registration attempt for: {first_name, last_name} ({role})")
+      
 
         # --- VALIDATIONS ---
         if not all([first_name, last_name, email, contact, password, confirm, birthdate, house_number, block , lot, phase, street, subdivision, city , province , barangay_id, role]):
@@ -4404,7 +4396,7 @@ def register(request):
         # Convert birthdate string to date object
         try:
             birthdate_obj = datetime.strptime(birthdate, '%Y-%m-%d').date()
-            print(f"[DEBUG] Birthdate converted: {birthdate} -> {birthdate_obj}")
+       
         except ValueError as e:
             print(f"[DEBUG] ❌ Birthdate conversion error: {e}")
             messages.error(request, "Invalid birthdate format. Please try again.")
@@ -4420,11 +4412,11 @@ def register(request):
                 first_name=first_name,
                 last_name=last_name
             )
-            print(f"[DEBUG] ✅ Django User created: {user.id}")
+            
 
             # Step 2: Get Barangay
             barangay = Barangay.objects.get(id=int(barangay_id))
-            print(f"[DEBUG] ✅ Barangay found: {barangay.name}")
+         
 
             # Step 3: Create Account
             print("[DEBUG] Creating Account with all info...")
@@ -4450,11 +4442,10 @@ def register(request):
                 is_rejected=False,
                 barangay=barangay
             )
-            print(f"[DEBUG] ✅ Account created successfully: {account.account_id}")
-            print(f"[DEBUG] 🎉 REGISTRATION COMPLETED! Role: {role}")
+   
 
         except Barangay.DoesNotExist:
-            print(f"[DEBUG] ❌ Barangay not found: {barangay_id}")
+            
             messages.error(request, "Invalid barangay selected.")
             return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
             
@@ -4765,9 +4756,7 @@ This is an automated message. Please do not reply.
             """
 
             # ✅ FIX 2: Enhanced error handling and debug info
-            print(f"[DEBUG] 📧 Attempting to send email to: {email}")
-            print(f"[DEBUG] 📧 Email settings: {settings.EMAIL_BACKEND}")
-            print(f"[DEBUG] 📧 From email: {settings.DEFAULT_FROM_EMAIL}")
+      
             
             send_mail(
                 subject,
@@ -4777,7 +4766,7 @@ This is an automated message. Please do not reply.
                 html_message=html_message,
                 fail_silently=False,  # ✅ Changed to False to see actual errors
             )
-            print(f"[DEBUG] ✅ Clean email sent successfully to {email}")
+
 
         except Exception as email_error:
             print(f"[DEBUG] ❌ Email error: {email_error}")
@@ -4807,8 +4796,7 @@ def register_preschooler(request):
     user_barangay = get_user_barangay(request.user)
     current_user_info = None
     
-    print(f"DEBUG: Current user email: {request.user.email}")
-    print(f"DEBUG: User authenticated: {request.user.is_authenticated}")
+   
     
     if request.user.is_authenticated:
         # Try each model to find the user and get their info
@@ -4821,7 +4809,7 @@ def register_preschooler(request):
                 'role': account.user_role,
                 'object': account
             }
-            print(f"DEBUG: Found in Account: {account.email}, Role: {account.user_role}, Barangay: {user_barangay}")
+         
         except Account.DoesNotExist:
             try:
                 # Try BHW model
@@ -4832,7 +4820,7 @@ def register_preschooler(request):
                     'role': 'BHW',
                     'object': bhw
                 }
-                print(f"DEBUG: Found in BHW: {bhw.email}, Barangay: {user_barangay}")
+          
             except BHW.DoesNotExist:
                 try:
                     # Try BNS model
@@ -4843,7 +4831,7 @@ def register_preschooler(request):
                         'role': 'BNS',
                         'object': bns
                     }
-                    print(f"DEBUG: Found in BNS: {bns.email}, Barangay: {user_barangay}")
+                  
                 except BNS.DoesNotExist:
                     try:
                         # Try Midwife model
@@ -4854,7 +4842,7 @@ def register_preschooler(request):
                             'role': 'Midwife',
                             'object': midwife
                         }
-                        print(f"DEBUG: Found in Midwife: {midwife.email}, Barangay: {user_barangay}")
+            
                     except Midwife.DoesNotExist:
                         try:
                             # Try Nurse model
@@ -4865,7 +4853,7 @@ def register_preschooler(request):
                                 'role': 'Nurse',
                                 'object': nurse
                             }
-                            print(f"DEBUG: Found in Nurse: {nurse.email}, Barangay: {user_barangay}")
+                          
                         except Nurse.DoesNotExist:
                             print("DEBUG: User not found in any authorized user model")
 
@@ -4897,11 +4885,11 @@ def register_preschooler(request):
             messages.error(request, f"Your role '{current_user_info['role']}' is not authorized to register preschoolers. Only BHW, BNS, Midwife, or Admin roles can register preschoolers.")
             return redirect('dashboard')
 
-    print(f"DEBUG: Authorization passed - Role: {current_user_info['role']}, Barangay: {user_barangay}")
+   
 
     # Get parents from the SAME barangay only - no cross-barangay registration
     parents_qs = Parent.objects.filter(barangay=user_barangay).order_by('-created_at')
-    print(f"DEBUG: Found {parents_qs.count()} parents in {user_barangay}")
+  
 
     # Debug: Show which parents were found
     for parent in parents_qs[:5]:  # Show first 5 for debugging
@@ -4987,8 +4975,7 @@ def register_preschooler_entry(request):
 
             parent.registered_preschoolers.add(preschooler)
 
-            print(f"DEBUG: Successfully registered preschooler {preschooler.full_name} for parent {parent.full_name} in barangay {user_barangay}")
-
+           
             return JsonResponse({
                 'status': 'success', 
                 'message': f'Preschooler {preschooler.full_name} registered successfully in {user_barangay.name}!',
@@ -5028,7 +5015,7 @@ def registered_bhw(request):
     )
 
     # Debug: Print what we found
-    print(f"Found {bhw_list.count()} validated BHW accounts:")
+   
     for bhw in bhw_list:
         print(f"- {bhw.full_name} (role: '{bhw.user_role}', validated: {bhw.is_validated})")
 
@@ -5068,7 +5055,7 @@ def registered_bns(request):
     )
 
     # Debug: Print what we found
-    print(f"Found {bns_list.count()} validated BNS accounts:")
+ 
     for bns in bns_list:
         print(f"- {bns.full_name} (role: '{bns.user_role}', validated: {bns.is_validated})")
 
@@ -5785,7 +5772,7 @@ This is an automated message. Please do not reply.
                 html_message=html_message,
                 fail_silently=True,
             )
-            print(f"[DEBUG] ✅ Removal email sent to {email}")
+         
 
             # Delete account
             bns.delete()
@@ -6071,7 +6058,7 @@ This is an automated message. Please do not reply.
                 html_message=html_message,
                 fail_silently=True,
             )
-            print(f"[DEBUG] ✅ Removal email sent to {email}")
+         
 
             # Delete account
             bhw.delete()
@@ -6378,7 +6365,7 @@ This is an automated message. Please do not reply.
                 html_message=html_message,
                 fail_silently=True,
             )
-            print(f"[DEBUG] ✅ Removal email sent to {email}")
+        
 
             # Delete account
             midwife.delete()
@@ -7072,7 +7059,7 @@ This is an automated message. Please do not reply.
                 html_message=html_message,
                 fail_silently=True,
             )
-            print(f"[DEBUG] ✅ Removal email sent to {email}")
+         
 
             # Delete account
             nurse.delete()
@@ -7115,9 +7102,8 @@ def fix_existing_bns_records():
                 account.user_role = 'Barangay Nutritional Scholar'
                 account.save()
                 count += 1
-                print(f"Fixed account: {account.full_name} - {account.email}")
-        
-        print(f"Fixed {count} BNS accounts")
+                
+    
         return count
         
     except Exception as e:
@@ -7700,7 +7686,7 @@ def history(request):
     user_barangay = get_user_barangay(request.user)
     current_user_info = None
     
-    print(f"DEBUG: History - Current user email: {request.user.email}")
+
     
     if request.user.is_authenticated:
         # Try each model to find the user
@@ -7713,7 +7699,7 @@ def history(request):
                 'role': account.user_role,
                 'object': account
             }
-            print(f"DEBUG: Found in Account: {account.email}, Barangay: {user_barangay}")
+            
         except Account.DoesNotExist:
             try:
                 # Try BHW model
@@ -7724,7 +7710,7 @@ def history(request):
                     'role': 'BHW',
                     'object': bhw
                 }
-                print(f"DEBUG: Found in BHW: {bhw.email}, Barangay: {user_barangay}")
+               
             except BHW.DoesNotExist:
                 try:
                     # Try BNS model
@@ -7735,7 +7721,7 @@ def history(request):
                         'role': 'BNS',
                         'object': bns
                     }
-                    print(f"DEBUG: Found in BNS: {bns.email}, Barangay: {user_barangay}")
+                    
                 except BNS.DoesNotExist:
                     try:
                         # Try Midwife model
@@ -7746,7 +7732,7 @@ def history(request):
                             'role': 'Midwife',
                             'object': midwife
                         }
-                        print(f"DEBUG: Found in Midwife: {midwife.email}, Barangay: {user_barangay}")
+                        
                     except Midwife.DoesNotExist:
                         try:
                             # Try Nurse model
@@ -7757,7 +7743,7 @@ def history(request):
                                 'role': 'Nurse',
                                 'object': nurse
                             }
-                            print(f"DEBUG: Found in Nurse: {nurse.email}, Barangay: {user_barangay}")
+                            
                         except Nurse.DoesNotExist:
                             try:
                                 # Try Parent model
@@ -7768,7 +7754,7 @@ def history(request):
                                     'role': 'Parent',
                                     'object': parent
                                 }
-                                print(f"DEBUG: Found in Parent: {parent.email}, Barangay: {user_barangay}")
+                         
                             except Parent.DoesNotExist:
                                 print("DEBUG: User not found in any model")
 
@@ -7800,8 +7786,7 @@ def history(request):
     parent_logs = ParentActivityLog.objects.filter(barangay=user_barangay).select_related('parent', 'barangay').order_by('-timestamp')
     preschooler_logs = PreschoolerActivityLog.objects.filter(barangay=user_barangay).select_related('barangay').order_by('-timestamp')
 
-    print(f"DEBUG: Found {parent_logs.count()} parent logs and {preschooler_logs.count()} preschooler logs for {user_barangay}")
-
+    
     # Debug: Show some sample logs
     for log in parent_logs[:3]:
         print(f"DEBUG: Parent log: {log.activity} - {log.timestamp} - Barangay: {log.barangay}")
@@ -7862,8 +7847,7 @@ def create_parent_activity_log(parent, activity, performed_by_user):
                 activity=activity,
                 performed_by=user_info  # Assuming you have this field
             )
-            print(f"DEBUG: Created parent activity log: {activity} for {parent.full_name} in {user_barangay}")
-        except Exception as e:
+            
             print(f"DEBUG: Error creating parent activity log: {e}")
 
 
@@ -7898,8 +7882,7 @@ def create_preschooler_activity_log(preschooler, activity, performed_by_user):
                 activity=activity,
                 performed_by=user_info
             )
-            print(f"DEBUG: Created preschooler activity log: {activity} for {preschooler.first_name} {preschooler.last_name} in {user_barangay}")
-        except Exception as e:
+          
             print(f"DEBUG: Error creating preschooler activity log: {e}")
 
 @admin_required
@@ -8131,7 +8114,7 @@ def healthcare_workers(request):
     
     # Get all barangays for the filter dropdown
     barangays = Barangay.objects.all().order_by('name')
-    print(f"DEBUG: Found {barangays.count()} barangays")
+    
     
     # ===== BHW DATA =====
     bhw_list = Account.objects.filter(
@@ -8139,7 +8122,7 @@ def healthcare_workers(request):
         is_validated=True
     ).select_related('barangay')
     
-    print(f"DEBUG: Found {bhw_list.count()} BHW accounts")
+  
     
     for bhw in bhw_list:
         try:
@@ -8190,7 +8173,7 @@ def healthcare_workers(request):
         is_validated=True
     ).select_related('barangay').distinct()  # Use distinct to avoid duplicates
     
-    print(f"DEBUG: Found {bns_list.count()} BNS accounts with comprehensive query")
+   
     
     # Debug: Show what we found
     for bns in bns_list:
@@ -8200,7 +8183,7 @@ def healthcare_workers(request):
     if bns_list.count() == 0:
         print("\nNo BNS found in Account table. Checking BNS table directly...")
         direct_bns = BNS.objects.all()
-        print(f"Direct BNS table has {direct_bns.count()} records:")
+     
         for bns in direct_bns[:5]:  # Show first 5
             print(f"  - {bns.full_name} | {bns.email}")
             # Try to find corresponding Account
@@ -8256,7 +8239,7 @@ def healthcare_workers(request):
         is_validated=True
     ).select_related('barangay')
     
-    print(f"DEBUG: Found {midwife_list.count()} Midwife accounts")
+
     
     for midwife in midwife_list:
         try:
@@ -8273,7 +8256,7 @@ def healthcare_workers(request):
         is_validated=True
     ).select_related('barangay')
     
-    print(f"DEBUG: Found {nurse_list.count()} Nurse accounts")
+   
     
     for nurse in nurse_list:
         try:
@@ -8284,13 +8267,7 @@ def healthcare_workers(request):
         
         set_activity_status(nurse)
     
-    # ===== FINAL SUMMARY =====
-    print(f"\n=== FINAL SUMMARY ===")
-    print(f"Total BHWs: {bhw_list.count()}")
-    print(f"Total BNS: {bns_list.count()}")  
-    print(f"Total Midwives: {midwife_list.count()}")
-    print(f"Total Nurses: {nurse_list.count()}")
-    print(f"Total Barangays: {barangays.count()}")
+
     
     context = {
         'barangays': barangays,
