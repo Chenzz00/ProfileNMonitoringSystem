@@ -4378,14 +4378,15 @@ def registered_parents(request):
 def register(request):
     if request.method == 'POST':
         first_name   = request.POST.get("firstName")
-        middle_name  = request.POST.get("middleName")  # New field
-        suffix       = request.POST.get("suffix")      # New field
+        middle_name  = request.POST.get("middleName")
+        suffix       = request.POST.get("suffix")
         last_name    = request.POST.get("lastName")
         email        = request.POST.get("email")
         contact      = request.POST.get("contact")
         password     = request.POST.get("password")
         confirm      = request.POST.get("confirm")
         birthdate    = request.POST.get("birthdate")
+        sex          = request.POST.get("sex")  # ✅ Added from first code
         house_number = request.POST.get("house_number")   
         block        = request.POST.get("block")
         lot          = request.POST.get("lot")
@@ -4394,13 +4395,12 @@ def register(request):
         subdivision  = request.POST.get("city")
         city         = request.POST.get("subdivision")
         province     = request.POST.get("province")
-        barangay_id  = request.POST.get("barangay_id")   # already snake_case in HTML
+        barangay_id  = request.POST.get("barangay_id")
         role         = request.POST.get("role")
 
-      
-
         # --- VALIDATIONS ---
-        if not all([first_name, last_name, email, contact, password, confirm, birthdate, house_number, block , lot, phase, street, subdivision, city , province , barangay_id, role]):
+        if not all([first_name, last_name, email, contact, password, confirm, birthdate, sex,
+                    house_number, block, lot, phase, street, subdivision, city, province, barangay_id, role]):
             messages.error(request, "Please fill out all required fields.")
             return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
 
@@ -4415,14 +4415,13 @@ def register(request):
         # Convert birthdate string to date object
         try:
             birthdate_obj = datetime.strptime(birthdate, '%Y-%m-%d').date()
-       
         except ValueError as e:
             print(f"[DEBUG] ❌ Birthdate conversion error: {e}")
             messages.error(request, "Invalid birthdate format. Please try again.")
             return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
 
         try:
-            # Step 1: Create Django User (for authentication)
+            # Step 1: Create Django User
             print("[DEBUG] Creating Django User...")
             user = User.objects.create_user(
                 username=email,
@@ -4431,43 +4430,39 @@ def register(request):
                 first_name=first_name,
                 last_name=last_name
             )
-            
 
             # Step 2: Get Barangay
             barangay = Barangay.objects.get(id=int(barangay_id))
-         
 
-            # Step 3: Create Account
+            # Step 3: Create Account with sex included ✅
             print("[DEBUG] Creating Account with all info...")
             account = Account.objects.create(
                 first_name=first_name,
-                middle_name=middle_name,  # New field
-                suffix=suffix,            # New field
+                middle_name=middle_name,
+                suffix=suffix,
                 last_name=last_name,
                 email=email,
                 contact_number=contact,
-                house_number = house_number,
-                block = block,
-                lot = lot,
-                phase = phase,
-                street = street,
-                subdivision = subdivision,
-                city = city,
-                province = province,
+                house_number=house_number,
+                block=block,
+                lot=lot,
+                phase=phase,
+                street=street,
+                subdivision=subdivision,
+                city=city,
+                province=province,
                 birthdate=birthdate_obj,
+                sex=sex,  # ✅ Added here
                 password=make_password(password),
                 user_role=role,
                 is_validated=False,
                 is_rejected=False,
                 barangay=barangay
             )
-   
 
         except Barangay.DoesNotExist:
-            
             messages.error(request, "Invalid barangay selected.")
             return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
-            
         except Exception as e:
             print(f"[DEBUG] ❌ Registration error: {e}")
             messages.error(request, f"Registration failed: {str(e)}")
@@ -4475,7 +4470,7 @@ def register(request):
 
         # Send Clean Email Confirmation
         try:
-            # ✅ FIX 1: Create full_name variable
+            # Create full_name variable
             full_name_parts = [first_name]
             if middle_name:
                 full_name_parts.append(middle_name)
@@ -4488,7 +4483,8 @@ def register(request):
             role_classes = {
                 'BHW': 'bhw',
                 'BNS': 'bns', 
-                'Midwife': 'midwife'
+                'Midwife': 'midwife',
+                'Nurse': 'nurse'
             }
             role_class = role_classes.get(role, 'bhw')
             
@@ -4496,7 +4492,8 @@ def register(request):
             role_display = {
                 'BHW': 'BHW (Barangay Health Worker)',
                 'BNS': 'BNS (Barangay Nutrition Scholar)',
-                'Midwife': 'Midwife'
+                'Midwife': 'Midwife',
+                'Nurse': 'Nurse'
             }
             role_name = role_display.get(role, role)
             
@@ -4532,7 +4529,6 @@ def register(request):
                         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
                     }}
                     
-                    /* ✅ Simple header without background color */
                     .header {{
                         padding: 24px 32px;
                         text-align: center;
@@ -4593,7 +4589,6 @@ def register(request):
                         color: #92400e;
                     }}
                     
-                    /* ✅ Registration Summary - Clean Style */
                     .details {{
                         background: #ecfdf5;
                         border: 1px solid #10b981;
@@ -4645,6 +4640,7 @@ def register(request):
                     .role-badge.bhw {{ background: #10b981; }}
                     .role-badge.bns {{ background: #3b82f6; }}
                     .role-badge.midwife {{ background: #ec4899; }}
+                    .role-badge.nurse {{ background: #8b5cf6; }}
                     
                     .footer {{
                         background: #f1f5f9;
@@ -4686,13 +4682,11 @@ def register(request):
             </head>
             <body>
                 <div class="container">
-                    <!-- Header -->
                     <div class="header">
                         <h1>PPMS Cluster 4</h1>
                         <p>Imus City Healthcare Management</p>
                     </div>
                     
-                    <!-- Content -->
                     <div class="content">
                         <div class="greeting">
                             Hello <strong>{full_name}</strong>,
@@ -4702,19 +4696,21 @@ def register(request):
                             Thank you for registering with PPMS Cluster 4. We've received your application to join our healthcare team as a <span class="role-badge {role_class}">{role}</span>.
                         </div>
                         
-                        <!-- Status -->
                         <div class="status">
                             <div class="status-icon">⏳</div>
                             <h3>Pending Approval</h3>
                             <p>Your account is under review by our admin team</p>
                         </div>
                         
-                        <!-- ✅ Registration Summary - Clean Style -->
                         <div class="details">
                             <h4>Registration Summary</h4>
                             <div class="detail-item">
                                 <span class="detail-label">Full Name:</span>
                                 <span class="detail-value">{full_name}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Sex:</span>
+                                <span class="detail-value">{sex}</span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">Email:</span>
@@ -4735,7 +4731,6 @@ def register(request):
                         </div>
                     </div>
                     
-                    <!-- Footer -->
                     <div class="footer">
                         <h3>PPMS Cluster 4</h3>
                         <p>Imus City Healthcare Management</p>
@@ -4762,6 +4757,7 @@ Your account is under review by our admin team.
 
 Registration Summary:
 - Full Name: {full_name}
+- Sex: {sex}
 - Email: {email}
 - Role: {role_name}
 - Barangay: {barangay.name}
@@ -4774,24 +4770,18 @@ This is an automated message. Please do not reply.
 © 2025 PPMS Cluster 4. All rights reserved.
             """
 
-            # ✅ FIX 2: Enhanced error handling and debug info
-      
-            
             send_mail(
                 subject,
                 plain_message,
                 settings.DEFAULT_FROM_EMAIL,
                 [email],
                 html_message=html_message,
-                fail_silently=False,  # ✅ Changed to False to see actual errors
+                fail_silently=False,
             )
-
 
         except Exception as email_error:
             print(f"[DEBUG] ❌ Email error: {email_error}")
             print(f"[DEBUG] ❌ Email error type: {type(email_error).__name__}")
-            # Don't fail registration if email fails
-            pass
 
         # Success!
         messages.success(request, f"{role} registration successful. Pending admin approval.")
@@ -7315,10 +7305,16 @@ def register_parent(request):
             email = request.POST.get('email', '').strip()
             contact_number = request.POST.get('contact_number', '').strip()
             birthdate = request.POST.get('birthdate', '').strip()
-            
+            sex = request.POST.get('sex', '').strip()  # ✅ Added
+
             # Basic validation
-            if not all([first_name, last_name, email, contact_number, birthdate]):
+            if not all([first_name, last_name, email, contact_number, birthdate, sex]):
                 messages.error(request, "All required fields must be filled.")
+                return redirect('register_parent')
+            
+            # Validate sex field
+            if sex not in ['Male', 'Female']:
+                messages.error(request, "Please select a valid sex.")
                 return redirect('register_parent')
             
             # Email validation
@@ -7359,9 +7355,8 @@ def register_parent(request):
                 address_parts.append(province)
 
             address = ", ".join(address_parts) if address_parts else "No address provided"
-            middle_name = request.POST.get('middleName', '').strip()
-            suffix = request.POST.get('suffix', '').strip()
-            
+
+            # Build full name
             name_parts = []
             if first_name:
                 name_parts.append(first_name)
@@ -7390,39 +7385,22 @@ def register_parent(request):
                         'role': account.user_role
                     }
                 except Account.DoesNotExist:
-                    try:
-                        bhw = BHW.objects.select_related('barangay').get(email=request.user.email)
-                        current_user_info = {
-                            'model': 'BHW',
-                            'name': bhw.full_name,
-                            'role': 'BHW'
-                        }
-                    except BHW.DoesNotExist:
+                    for model_class, role_name in [
+                        (BHW, 'BHW'),
+                        (BNS, 'BNS'),
+                        (Midwife, 'Midwife'),
+                        (Nurse, 'Nurse'),
+                    ]:
                         try:
-                            bns = BNS.objects.select_related('barangay').get(email=request.user.email)
+                            user_obj = model_class.objects.select_related('barangay').get(email=request.user.email)
                             current_user_info = {
-                                'model': 'BNS',
-                                'name': bns.full_name,
-                                'role': 'BNS'
+                                'model': role_name,
+                                'name': user_obj.full_name,
+                                'role': role_name
                             }
-                        except BNS.DoesNotExist:
-                            try:
-                                midwife = Midwife.objects.select_related('barangay').get(email=request.user.email)
-                                current_user_info = {
-                                    'model': 'Midwife',
-                                    'name': midwife.full_name,
-                                    'role': 'Midwife'
-                                }
-                            except Midwife.DoesNotExist:
-                                try:
-                                    nurse = Nurse.objects.select_related('barangay').get(email=request.user.email)
-                                    current_user_info = {
-                                        'model': 'Nurse',
-                                        'name': nurse.full_name,
-                                        'role': 'Nurse'
-                                    }
-                                except Nurse.DoesNotExist:
-                                    logger.error("User not found in any authorized user model")
+                            break
+                        except model_class.DoesNotExist:
+                            continue
 
             # Validate that user exists and has proper authorization
             if not current_user_info:
@@ -7484,15 +7462,16 @@ def register_parent(request):
                     email=email,
                     password=raw_password
                 )
-                logger.info(f"Django User created successfully")
+                logger.info("Django User created successfully")
 
                 # Create Parent with correct field names
-                logger.info(f"Creating Parent record")
+                logger.info("Creating Parent record")
                 parent = Parent.objects.create(
                     first_name=first_name,
                     middle_name=middle_name,
                     suffix=suffix,
                     last_name=last_name,
+                    sex=sex,  # ✅ Added
                     email=email,
                     contact_number=contact_number,
                     birthdate=birthdate_obj,
@@ -7502,16 +7481,17 @@ def register_parent(request):
                     password=raw_password,
                     created_at=timezone.now()
                 )
-                logger.info(f"Parent created successfully")
+                logger.info("Parent created successfully")
 
                 # Create Account - also assign to same barangay
-                logger.info(f"Creating Account record")
+                logger.info("Creating Account record")
                 account = Account.objects.create(
                     email=email,
                     first_name=first_name,
                     middle_name=middle_name,
                     suffix=suffix,
                     last_name=last_name,
+                    sex=sex,  # ✅ Added
                     contact_number=contact_number,
                     birthdate=birthdate_obj,
                     user_role='parent',
@@ -7522,84 +7502,32 @@ def register_parent(request):
                     password=raw_password,
                     must_change_password=True
                 )
-                logger.info(f"Account created successfully")
+                logger.info("Account created successfully")
 
-            # Send email (outside transaction to prevent rollback on email failure)
+            # Send email (outside transaction)
             try:
                 subject = "PPMS Cluster 4 – Parent Registration Successful"
-                
                 html_message = f"""
-                <!DOCTYPE html>
                 <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <style>
-                        body {{ font-family: Arial, sans-serif; background-color: #f9fafb; padding: 20px; }}
-                        .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-                        .header {{ text-align: center; margin-bottom: 30px; }}
-                        .credentials {{ background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }}
-                        .credential-row {{ margin: 10px 0; font-size: 16px; }}
-                        .credential-label {{ font-weight: bold; color: #28a745; }}
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <div class="header">
-                            <h1>Registration Successful!</h1>
-                            <p>PPMS Cluster 4 - Imus City Healthcare Management</p>
-                        </div>
+                <body style='font-family: Arial, sans-serif; background-color: #f9fafb; padding: 20px;'>
+                    <div style='max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;'>
+                        <h2 style='text-align: center;'>Registration Successful!</h2>
                         <p>Hello <strong>{full_name}</strong>,</p>
-                        <p>Welcome to PPMS Cluster 4! Your parent account has been successfully registered for <strong>{user_barangay.name}</strong>.</p>
-                        
-                        <div class="credentials">
-                            <h3>Your Login Credentials</h3>
-                            <div class="credential-row">
-                                <span class="credential-label">Email:</span> {email}
-                            </div>
-                            <div class="credential-row">
-                                <span class="credential-label">Password:</span> {raw_password}
-                            </div>
+                        <p>Your parent account has been registered for <strong>{user_barangay.name}</strong>.</p>
+                        <div style='background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;'>
+                            <strong>Email:</strong> {email}<br>
+                            <strong>Password:</strong> {raw_password}
                         </div>
-                        
-                        <p><strong>Important:</strong> Please keep this information safe. You will be required to change your password on first login.</p>
-                        
-                        <hr>
-                        <p><small>This is an automated message. Please do not reply.<br>© 2025 PPMS Cluster 4. All rights reserved.</small></p>
+                        <p><strong>Important:</strong> You must change your password on first login.</p>
                     </div>
                 </body>
                 </html>
                 """
-
-                plain_message = f"""
-PPMS Parent Registration Successful
-
-Hello {full_name},
-
-Welcome to PPMS Cluster 4! Your account has been registered for {user_barangay.name}.
-
-Login Credentials:
-Email: {email}
-Password: {raw_password}
-
-Important: You must change your password on first login.
-
-PPMS Cluster 4 - Imus City Healthcare Management
-                """
-
-                send_mail(
-                    subject,
-                    plain_message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [email],
-                    html_message=html_message,
-                    fail_silently=True,
-                )
-                logger.info(f"Email sent successfully to {email}")
-
+                plain_message = f"Hello {full_name},\n\nYour parent account for {user_barangay.name} has been created.\nEmail: {email}\nPassword: {raw_password}"
+                send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, [email], html_message=html_message, fail_silently=True)
             except Exception as email_error:
-                logger.warning(f"Email sending failed (non-critical): {email_error}")
+                logger.warning(f"Email sending failed: {email_error}")
 
-            # Success message
             messages.success(request, f"Parent '{full_name}' registered successfully in {user_barangay.name}!\nEmail: {email}\nPassword: {raw_password}")
             return redirect('register_parent')
 
@@ -7624,9 +7552,10 @@ PPMS Cluster 4 - Imus City Healthcare Management
             account = Account.objects.get(email=request.user.email)
             context['account'] = account
         except Account.DoesNotExist:
-            account = None
+            context['account'] = None
 
     return render(request, 'HTML/register_parent.html', context)
+
 
 def get_user_barangay(user):
     """Helper function to get user's barangay from any user model"""
@@ -9277,7 +9206,6 @@ def save_temperature(request):
             'status': 'error',
             'message': 'An unexpected error occurred while saving temperature'
         })
-
 
 
 
