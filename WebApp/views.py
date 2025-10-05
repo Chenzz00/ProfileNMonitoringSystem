@@ -2047,6 +2047,9 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
         if parent.email:
             try:
                 subject = f"[PPMS] Vaccination Scheduled for {preschooler.first_name}"
+                
+                next_dose_line = f"Next Dose: {next_schedule}\n" if next_schedule else ""
+
                 message = (
                     f"Dear {parent.full_name},\n\n"
                     "A vaccination appointment has been scheduled for your child, "
@@ -2054,7 +2057,7 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
                     f"Vaccine: {vaccine_name}\n"
                     f"Dose: {dose_number} of {required_doses}\n"
                     f"Scheduled Date: {immunization_date}\n"
-                    f"{f'Next Dose: {next_schedule}\n' if next_schedule else ''}"
+                    f"{next_dose_line}"
                     "\nPlease bring your child on the scheduled date.\n"
                     "You can confirm completion on your dashboard.\n\n"
                     "Thank you,\nPPMS System"
@@ -2105,6 +2108,7 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
 
     except Exception as e:
         logger.error(f"[ASYNC] Notification error for {parent.email}: {e}")
+
 
 
 @login_required
