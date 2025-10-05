@@ -4320,7 +4320,6 @@ def profile(request):
         'dashboard_url': dashboard_url,
         'barangays': barangays,
     })
-
 def registered_parents(request):
     # ✅ Redirect if not authenticated
     if not request.user.is_authenticated:
@@ -9278,6 +9277,7 @@ def save_temperature(request):
             'status': 'error',
             'message': 'An unexpected error occurred while saving temperature'
         })
+
 
 
 
