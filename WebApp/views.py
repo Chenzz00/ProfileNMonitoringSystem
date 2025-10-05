@@ -2201,6 +2201,9 @@ def send_nutrition_notifications_async(parents, preschooler, service_type, dose_
             if parent.email:
                 try:
                     subject = f"[PPMS] Nutrition Service Scheduled for {preschooler.first_name}"
+
+                    notes_line = f"Notes: {notes}\n" if notes else ""
+
                     message = (
                         f"Dear {parent.full_name},\n\n"
                         f"A nutrition service appointment has been scheduled for your child, "
@@ -2208,13 +2211,15 @@ def send_nutrition_notifications_async(parents, preschooler, service_type, dose_
                         f"Service Type: {service_type}\n"
                         f"Dose: {dose_number} of {total_doses}\n"
                         f"Scheduled Date: {service_date}\n"
-                        f"{f'Notes: {notes}\n' if notes else ''}"
-                        f"\nPlease bring your child on the scheduled date.\n"
-                        f"You can confirm completion on your dashboard.\n\n"
-                        f"Thank you,\nPPMS System"
+                        f"{notes_line}"
+                        "\nPlease bring your child on the scheduled date.\n"
+                        "You can confirm completion on your dashboard.\n\n"
+                        "Thank you,\nPPMS System"
                     )
+
                     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [parent.email], fail_silently=False)
                     logger.info(f"[ASYNC] Nutrition email sent to {parent.email}")
+
                 except Exception as e:
                     logger.error(f"[ASYNC] Failed to send nutrition email to {parent.email}: {e}")
 
@@ -2225,6 +2230,7 @@ def send_nutrition_notifications_async(parents, preschooler, service_type, dose_
                     service_emoji = "🍎" if service_type == "Vitamin A" else "💊"
                     title = f"{service_emoji} Nutrition Service Scheduled for {preschooler.first_name}"
                     body = f"{service_type} (Dose {dose_number}/{total_doses}) scheduled for {service_date}"
+
                     data = {
                         "type": "nutrition_service_schedule",
                         "preschooler_id": str(preschooler.preschooler_id),
@@ -2234,8 +2240,9 @@ def send_nutrition_notifications_async(parents, preschooler, service_type, dose_
                         "total_doses": str(total_doses),
                         "scheduled_date": str(service_date),
                         "schedule_id": str(schedule.id),
-                        "notes": notes
+                        "notes": notes or ""
                     }
+
                     PushNotificationService.send_push_notification(
                         token=account.fcm_token,
                         title=title,
@@ -2245,11 +2252,13 @@ def send_nutrition_notifications_async(parents, preschooler, service_type, dose_
                     logger.info(f"[ASYNC] Nutrition push sent to {parent.email}")
                 else:
                     logger.warning(f"[ASYNC] No FCM token for {parent.email}")
+
             except Exception as e:
                 logger.error(f"[ASYNC] Failed to send nutrition push to {parent.email}: {e}")
 
         except Exception as e:
             logger.error(f"[ASYNC] Error handling parent {parent.email}: {e}")
+
 
 
 @login_required
@@ -9263,3 +9272,4 @@ def save_temperature(request):
             'status': 'error',
             'message': 'An unexpected error occurred while saving temperature'
         })
+
