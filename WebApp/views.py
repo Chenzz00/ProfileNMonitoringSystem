@@ -2646,11 +2646,6 @@ def add_nutrition_service(request, preschooler_id):
     completion_date = request.POST.get("completion_date")
     notes = request.POST.get("notes", "")
 
-    logger.info(f"[DEBUG] Form data:")
-    logger.info(f"[DEBUG]   service_type: {service_type}")
-    logger.info(f"[DEBUG]   completion_date: {completion_date}")
-    logger.info(f"[DEBUG]   notes: {notes}")
-
     # Validate required fields
     if not service_type or not completion_date:
         logger.warning("[DEBUG] Missing required fields")
@@ -2686,8 +2681,11 @@ def add_nutrition_service(request, preschooler_id):
         # === SEND COMPLETION NOTIFICATIONS ===
         parents = preschooler.parents.all()
         logger.info(f"[DEBUG] Found {parents.count()} parent(s) for completion notification")
-        
+
         for parent in parents:
+            # Prepare optional notes text
+            notes_line = f"Notes: {notes}\n" if notes else ""
+
             # Send email
             if parent.email:
                 try:
@@ -2699,11 +2697,17 @@ def add_nutrition_service(request, preschooler_id):
                         f"Service: {service_type}\n"
                         f"Dose: {dose_number}\n"
                         f"Completion Date: {completion_date}\n"
-                        f"{f'Notes: {notes}\n' if notes else ''}"
-                        f"\nThank you,\nPPMS System"
+                        f"{notes_line}"
+                        "\nThank you,\nPPMS System"
                     )
-                    
-                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [parent.email], fail_silently=False)
+
+                    send_mail(
+                        subject,
+                        message,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [parent.email],
+                        fail_silently=False
+                    )
                     logger.info(f"[DEBUG] Completion email sent to parent {parent.email}")
                 except Exception as email_error:
                     logger.error(f"[DEBUG] Completion email sending failed: {email_error}")
@@ -2715,27 +2719,30 @@ def add_nutrition_service(request, preschooler_id):
                     nutrition_icon = "✅🍎" if service_type == "Vitamin A" else "✅💊"
                     notification_title = f"{nutrition_icon} Nutrition Service Completed"
                     notification_body = f"{service_type} completed for {preschooler.first_name}"
-                    
+
                     notification_data = {
                         "type": "nutrition_completed",
                         "preschooler_id": str(preschooler.preschooler_id),
                         "preschooler_name": f"{preschooler.first_name} {preschooler.last_name}",
                         "service_type": service_type,
                         "dose_number": str(dose_number),
-                        "completion_date": str(completion_date)
+                        "completion_date": str(completion_date),
+                        "notes": notes or ""
                     }
-                    
+
                     push_result = PushNotificationService.send_push_notification(
                         token=account.fcm_token,
                         title=notification_title,
                         body=notification_body,
                         data=notification_data
                     )
-                    
+
                     if push_result.get("success"):
                         logger.info(f"[DEBUG] Completion push notification sent to {parent.email}")
                     else:
                         logger.error(f"[DEBUG] Completion push notification failed for {parent.email}")
+                else:
+                    logger.warning(f"[DEBUG] No FCM token found for {parent.email}")
                         
             except Exception as push_error:
                 logger.error(f"[DEBUG] Error sending completion push notification: {push_error}")
@@ -9272,4 +9279,5 @@ def save_temperature(request):
             'status': 'error',
             'message': 'An unexpected error occurred while saving temperature'
         })
+
 
