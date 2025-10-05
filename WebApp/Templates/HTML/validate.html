@@ -3,126 +3,99 @@
 <head>
   {% load static %}
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Validate Accounts</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PPMS Cluster 4 Imus City - Validate Accounts</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
+  <link rel="icon" type="image/png" href="{% static 'media/logo.png' %}">
   
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
+    /* Override background for this page */
     body {
-      font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #333;
-      padding: 20px;
-      min-height: 100vh;
-      margin: 0;
-      overflow-x: hidden;
-      font-size: 14px;
-      font-weight: 400;
       background: url('{% static "media/loginbg.png" %}') center/cover no-repeat fixed;
     }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
+    
+    .background-image {
+      background-image: url('{% static "media/loginbg.png" %}');
     }
 
-    .topbar {
-      position: relative;
-      height: 100px;
-      background-color: rgba(30, 30, 47, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      margin-bottom: 30px;
+    /* Additional styles for the profile in sidebar */
+    .sidebar-profile {
+      padding: 20px 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: white;
     }
-
-    .logo-title {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 20px;
+    
+    .profile-image {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .profile-info h3 {
+      margin: 0;
+      font-size: 16px;
       font-weight: 600;
       color: white;
-      white-space: nowrap;
     }
-
-    .rtn-btn {
-      position: absolute;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 56px;
-      height: 56px;
-      background-color: transparent;
-      border: none;
-      cursor: pointer;
+    
+    .profile-info p {
+      margin: 2px 0 0 0;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
     }
-
-    .rtn-btn:before,
-    .rtn-btn:after {
-      content: "";
-      position: absolute;
-      border-radius: 50%;
-      inset: 7px;
+    
+    .logout-nav-item {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: auto;
     }
-
-    .rtn-btn:before {
-      border: 4px solid #f0eeef;
-      transition: opacity 0.4s, transform 0.5s;
+    
+    .logout-nav-item .nav-link {
+      color: #ff6b6b;
     }
-
-    .rtn-btn:after {
-      border: 4px solid #96daf0;
-      transform: scale(1.3);
-      opacity: 0;
-      transition: opacity 0.4s, transform 0.5s;
+    
+    .logout-nav-item .nav-link:hover {
+      background-color: rgba(255, 107, 107, 0.1);
+      color: #ff6b6b;
     }
-
-    .rtn-btn:hover:before {
-      opacity: 0;
-      transform: scale(0.7);
-    }
-
-    .rtn-btn:hover:after {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    .button-box {
+    
+    .nav-menu {
       display: flex;
-      position: absolute;
-      top: 0;
-      left: 0;
+      flex-direction: column;
+      height: calc(100% - 140px);
+      padding: 20px 0 0 0;
+    }
+    
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar-header {
+      flex-shrink: 0;
     }
 
-    .button-elem {
-      display: block;
-      width: 20px;
-      height: 20px;
-      margin: 17px 18px 0 18px;
-      transform: rotate(180deg);
-      fill: #f0eeef;
-    }
-
-    .table-section {
+    /* Page specific styles */
+    .page-container {
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
-      padding: 30px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 30px;
+      margin: 30px auto 0;
+      max-width: 1200px;
     }
 
-    .table-section h3 {
-      font-size: 18px;
-      margin-bottom: 25px;
+    .page-container h2 {
+      font-size: 2em;
+      margin-bottom: 30px;
       font-weight: 400;
       color: #333;
       text-transform: uppercase;
@@ -131,73 +104,108 @@
       text-align: center;
     }
 
-    .role-filter {
+    /* Dropdown Filter Styles */
+    .filter-container {
       display: flex;
       justify-content: center;
-      gap: 15px;
+      gap: 20px;
       margin-bottom: 25px;
       flex-wrap: wrap;
     }
 
-    .filter-btn {
-      padding: 10px 20px;
+    .dropdown-wrapper {
+      position: relative;
+      display: inline-block;
+      min-width: 180px;
+    }
+
+    .dropdown-select {
+      width: 100%;
+      padding: 12px 40px 12px 16px;
       border: 2px solid #5bdab3;
-      background: transparent;
-      color: #5bdab3;
+      background: white;
+      color: #333;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 500;
+      font-size: 14px;
+      font-family: 'Poppins', sans-serif;
       transition: all 0.3s ease;
-      position: relative;
-      font-size: 13px;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
     }
 
-    .filter-btn.active,
-    .filter-btn:hover {
-      background: #5bdab3;
-      color: white;
+    .dropdown-select:hover,
+    .dropdown-select:focus {
+      border-color: #1565c0;
+      box-shadow: 0 2px 8px rgba(21, 101, 192, 0.2);
+      outline: none;
     }
 
-    .badge-count {
+    .dropdown-wrapper::after {
+      content: '▼';
       position: absolute;
-      top: -8px;
-      right: -8px;
+      right: 15px;
+      top: 65%;
+      transform: translateY(-50%);
+      color: #5bdab3;
+      pointer-events: none;
+      font-size: 12px;
+    }
+
+    .dropdown-wrapper:hover::after {
+      color: #1565c0;
+    }
+
+    .dropdown-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-indicator {
+      display: inline-block;
       background: #f44336;
       color: white;
-      border-radius: 50%;
-      padding: 2px 6px;
+      border-radius: 12px;
+      padding: 2px 8px;
       font-size: 10px;
+      margin-left: 8px;
       min-width: 18px;
-      height: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      text-align: center;
     }
 
-    .badge-count.validated {
+    .badge-indicator.validated {
       background: #4caf50;
     }
 
-    .badge-count.rejected {
+    .badge-indicator.rejected {
       background: #ff9800;
     }
 
+    /* Enhanced table container with horizontal scrolling */
     .table-container {
       overflow-x: auto;
       margin-bottom: 20px;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      /* Enhanced scrollbar styling for better mobile experience */
       -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: #5bdab3 #f0f0f0;
     }
 
-    /* Custom scrollbar styling */
+    /* Custom scrollbar for webkit browsers */
     .table-container::-webkit-scrollbar {
       height: 8px;
     }
 
     .table-container::-webkit-scrollbar-track {
-      background: #f1f1f1;
+      background: #f0f0f0;
       border-radius: 4px;
     }
 
@@ -207,10 +215,10 @@
     }
 
     .table-container::-webkit-scrollbar-thumb:hover {
-      background: #4bc99f;
+      background: #1565c0;
     }
 
-    table {
+    .table {
       width: 100%;
       border-collapse: collapse;
       font-size: 14px;
@@ -220,35 +228,44 @@
       min-width: 900px; /* Ensures horizontal scroll on smaller screens */
     }
 
-    table th,
-    table td {
+    .table th,
+    .table td {
       border: 1px solid #e6e6e6;
-      padding: 12px 16px;
+      padding: 15px;
       text-align: left;
       font-size: 14px;
       color: #333;
       font-weight: 400;
-      white-space: nowrap; /* Prevents text wrapping */
+      vertical-align: middle;
     }
 
-    table th {
+    .table th {
       background-color: #f8f9fa;
-      font-weight: 500;
-      border-bottom: 2px solid #e6e6e6;
-      text-align: center;
+      color: #333;
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: none;
       position: sticky;
       top: 0;
       z-index: 10;
-    }
-
-    table td {
       text-align: center;
     }
 
-    table tr:hover td {
-      background-color: #f8f9fa;
+    .table td {
+      text-align: center;
     }
 
+    .table-striped > tbody > tr:nth-of-type(odd) > td {
+      background-color: rgba(248, 249, 250, 0.5);
+    }
+
+    .table-hover > tbody > tr:hover > td {
+      background-color: rgba(91, 218, 179, 0.1);
+    }
+
+    /* Role Badge Styles */
     .role-badge {
       display: inline-block;
       padding: 4px 12px;
@@ -278,17 +295,31 @@
       color: #00796b;
     }
 
+    /* Status Badge Styles */
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .status-validated {
+      background-color: #e8f5e8;
+      color: #2e7d2e;
+    }
+
+    .status-rejected {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+
+    /* Action Buttons */
     .action-buttons {
       display: flex;
       gap: 0.5rem;
-      flex-wrap: nowrap; /* Prevent wrapping on mobile */
+      flex-wrap: nowrap;
       justify-content: center;
-    }
-
-    .action-buttons .btn {
-      min-width: 70px;
-      padding: 6px 12px;
-      font-size: 11px;
     }
 
     .btn {
@@ -337,224 +368,79 @@
       box-shadow: 0 4px 12px rgba(229, 57, 53, 0.3);
     }
 
-    .status-badge {
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
-      text-transform: uppercase;
-    }
-
-    .status-validated {
-      background-color: #e8f5e8;
-      color: #2e7d2e;
-    }
-
-    .status-rejected {
-      background-color: #ffebee;
-      color: #c62828;
-    }
-
-    .pagination {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 1rem;
-      margin-top: 1.5rem;
-      font-weight: 400;
-      font-size: 14px;
-      color: #333;
-      font-family: 'Poppins', sans-serif;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 20px;
-      border-radius: 10px;
-      backdrop-filter: blur(10px);
-    }
-
-    .pagination span {
-      color: #666;
-    }
-
-    .pagination a {
-      background-color: #5bdab3;
-      color: #1e1e2f;
-      padding: 8px 16px;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: 500;
-      font-size: 14px;
-      transition: all 0.3s ease;
-      border: none;
-      box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
-      display: inline-block;
-    }
-
-    .pagination a:hover {
-      background-color: #1565c0;
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
-    }
-
-    /* Scroll indicator for mobile */
-    .scroll-indicator {
-      display: none;
+    /* Pagination */
+    .pagination-section {
       text-align: center;
-      margin-bottom: 15px;
+      margin-top: 20px;
+      color: #333;
+      font-size: 14px;
+      font-weight: 400;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .pagination-section span {
+      margin: 0 15px;
       color: #666;
-      font-size: 12px;
-      font-style: italic;
     }
 
-    /* Tablet Responsive */
-    @media (max-width: 1024px) {
-      .table-section {
-        margin: 0 10px;
-        padding: 25px;
-      }
+    .pagination-section .btn {
+      margin: 0 5px;
+      padding: 12px 20px;
+      font-size: 14px;
     }
 
-    /* Mobile Responsive */
+    /* Mobile adjustments */
     @media (max-width: 768px) {
-      body {
-        padding: 15px;
-      }
-
-      .topbar {
-        height: 70px;
-        margin-bottom: 20px;
-      }
-
-      .rtn-btn {
-        width: 45px;
-        height: 45px;
-        left: 15px;
-      }
-
-      .rtn-btn:before,
-      .rtn-btn:after {
-        inset: 6px;
-      }
-
-      .button-elem {
-        width: 18px;
-        height: 18px;
-        margin: 13px 13px 0 13px;
-      }
-      
-      .logo-title {
-        font-size: 16px;
-        padding: 0 80px;
-        text-align: center;
-      }
-      
-      .table-section {
+      .page-container {
+        margin: 20px auto 0;
         padding: 20px;
-        margin: 0;
       }
 
-      .table-section h3 {
-        font-size: 16px;
+      .page-container h2 {
+        font-size: 1.6em;
+        margin-bottom: 25px;
+      }
+
+      .filter-container {
+        gap: 10px;
         margin-bottom: 20px;
       }
 
-      .role-filter {
-        gap: 8px;
-        margin-bottom: 20px;
+      .dropdown-wrapper {
+        min-width: 140px;
+        flex: 1;
       }
 
-      .filter-btn {
-        padding: 8px 12px;
-        font-size: 11px;
+      .table {
+        min-width: 800px;
       }
 
-      /* Show scroll indicator on mobile */
-      .scroll-indicator {
-        display: block;
-      }
-
-      /* Enhanced table styling for mobile */
-      table {
-        font-size: 12px;
-        min-width: 800px; /* Adjust based on your content */
-      }
-
-      table th,
-      table td {
-        padding: 8px 12px;
-        font-size: 12px;
-      }
-
-      .action-buttons .btn {
-        min-width: 60px;
-        padding: 4px 8px;
-        font-size: 10px;
-      }
-
-      .role-badge {
-        font-size: 10px;
-        padding: 2px 8px;
-      }
-
-      .status-badge {
-        font-size: 10px;
-        padding: 2px 8px;
-      }
-
-      .pagination {
+      .table th,
+      .table td {
+        padding: 10px 12px;
         font-size: 13px;
-        padding: 15px;
-        flex-wrap: wrap;
-        gap: 8px;
       }
 
-      .pagination a {
-        font-size: 12px;
+      .btn {
+        font-size: 11px;
         padding: 6px 12px;
       }
     }
 
-    /* Small Mobile */
-    @media (max-width: 480px) {
-      body {
-        padding: 10px;
+    @media (max-width: 576px) {
+      .table {
+        min-width: 700px;
       }
 
-      .topbar {
-        height: 60px;
-        margin-bottom: 15px;
+      .table th,
+      .table td {
+        padding: 8px 10px;
+        font-size: 12px;
       }
 
-      .logo-title {
-        font-size: 14px;
-        padding: 0 70px;
-      }
-
-      .table-section {
-        padding: 15px;
-      }
-
-      .role-filter {
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .filter-btn {
-        width: 100%;
-        max-width: 200px;
-        text-align: center;
-      }
-
-      table {
-        font-size: 11px;
-        min-width: 750px;
-      }
-
-      table th,
-      table td {
-        padding: 6px 8px;
-        font-size: 11px;
+      .btn {
+        font-size: 10px;
+        padding: 5px 10px;
       }
 
       .action-buttons {
@@ -569,235 +455,428 @@
         font-size: 9px;
       }
     }
-
-    /* Extra Small Mobile */
-    @media (max-width: 375px) {
-      .table-section {
-        padding: 12px;
-      }
-
-      table {
-        font-size: 10px;
-        min-width: 700px;
-      }
-
-      table th,
-      table td {
-        padding: 4px 6px;
-        font-size: 10px;
-      }
-
-      .role-badge,
-      .status-badge {
-        font-size: 9px;
-        padding: 2px 6px;
-      }
-    }
-
-    /* Landscape orientation on mobile */
-    @media (max-width: 768px) and (orientation: landscape) {
-      .topbar {
-        height: 60px;
-        margin-bottom: 15px;
-      }
-
-      .logo-title {
-        font-size: 14px;
-      }
-
-      .table-section {
-        padding: 15px;
-      }
-
-      .role-filter {
-        flex-direction: row;
-        flex-wrap: wrap;
-      }
-
-      table {
-        font-size: 13px;
-      }
-
-      table th,
-      table td {
-        padding: 8px 10px;
-        font-size: 13px;
-      }
-    }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="background-image"></div>
+  <!-- Sidebar Overlay for Mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Left Sidebar Navigation -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1 class="sidebar-title">PPMS Admin</h1>
+    </div>
+    
+    <!-- Profile Section in Sidebar -->
+    <div class="sidebar-profile">
+      {% if account.profile_photo and account.profile_photo.image %}
+        <img src="{{ account.profile_photo.image.url }}" alt="Profile" class="profile-image">
+      {% else %}
+        <img src="{% static 'media/default-profile.jpg' %}" alt="Default Profile" class="profile-image">
+      {% endif %}
+      <div class="profile-info">
+        <h3>Admin</h3>
+        <p>Administrator</p>
+      </div>
+    </div>
+    
+    <nav class="nav-menu">
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/admin-dashboard/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+          </svg>
+          Dashboard
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/registered-barangays/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+          </svg>
+          Barangay List
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/registered-preschoolers/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+          </svg>
+          Preschoolers
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/admin-registered-parents/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+          </svg>
+          Parents
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/healthcare-workers/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+          </svg>
+          Registered Workers
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link active" onclick="location.href='/validate/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          Account Validation
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/admin-logs/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+          </svg>
+          Activity Logs
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" id="generateReportBtn">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+          Generate Report
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/manage-announcements/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zM9 8a1 1 0 012 0v4a1 1 0 11-2 0V8zM11 8a1 1 0 012 0v4a1 1 0 11-2 0V8z" clip-rule="evenodd"/>
+          </svg>
+          Announcements
+        </button>
+      </div>
+      
+      <!-- Logout at bottom of navigation -->
+      <div class="nav-item logout-nav-item">
+        <button class="nav-link" id="logoutLink">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+          </svg>
+          Logout
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
     <!-- Top Bar -->
     <div class="topbar">
-      <button class="rtn-btn" onclick="location.href='/admin-dashboard'"> 
-        <div class="button-box">
-          <span class="button-elem">
-            <svg viewBox="0 0 46 40" xmlns="http://www.w3.org/2000/svg">
-              <path d="M46 20.038c0-.7-.3-1.5-.8-2.1l-16-17c-1.1-1-3.2-1.4-4.4-.3-1.2 1.1-1.2 3.3 0 4.4l11.3 11.9H3c-1.7 0-3 1.3-3 3s1.3 3 3 3h33.1l-11.3 11.9c-1 1-1.2 3.3 0 4.4 1.2 1.1 3.3.8 4.4-.3l16-17c.5-.5.8-1.1.8-1.9z"></path>
-            </svg>
-          </span>
-        </div>
-      </button>
-      <div class="logo-title">PPMS CLUSTER 4 IMUS CITY</div>
-    </div>
-
-    <!-- Table Section -->
-    <div class="table-section">
-      <h3>BHW, BNS & Midwife Account Validation</h3>
-
-      <!-- Status Filter Buttons -->
-      <div class="role-filter">
-        <button class="filter-btn {% if current_status == 'pending' or not current_status %}active{% endif %}" onclick="filterByStatus('pending')">
-          Pending Validation
-          {% if total_pending %}
-            <span class="badge-count">{{ total_pending }}</span>
-          {% endif %}
-        </button>
-        <button class="filter-btn {% if current_status == 'validated' %}active{% endif %}" onclick="filterByStatus('validated')">
-          Validated
-          {% if total_validated %}
-            <span class="badge-count validated">{{ total_validated }}</span>
-          {% endif %}
-        </button>
-        <button class="filter-btn {% if current_status == 'rejected' %}active{% endif %}" onclick="filterByStatus('rejected')">
-          Rejected
-          {% if total_rejected %}
-            <span class="badge-count rejected">{{ total_rejected }}</span>
-          {% endif %}
-        </button>
-        <button class="filter-btn {% if current_status == 'all' %}active{% endif %}" onclick="filterByStatus('all')">All Records</button>
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <button class="mobile-toggle" id="mobileToggle">☰</button>
+        <div class="greeting">Account Validation</div>
       </div>
+      <div class="top-icons">
+        <!-- Notification -->
+        <div class="notif-dropdown">
+          <button class="icon-btn" id="notifBtn" style="position: relative;">
+            <img src="{% static 'media/notification.png' %}" alt="Notifications" style="width: 2.5rem; height: 2.5rem;">
+            <span id="notifDot"></span>
+          </button>
 
-      <!-- Role Filter Buttons -->
-      <div class="role-filter" style="margin-top: 15px;">
-        <button class="filter-btn {% if current_filter == 'all' or not current_filter %}active{% endif %}" onclick="filterByRole('all')">
-          All Roles
-        </button>
-        <button class="filter-btn {% if current_filter == 'healthworker' %}active{% endif %}" onclick="filterByRole('healthworker')">
-          Health Workers Only
-          {% if bhw_pending %}
-            <span class="badge-count">{{ bhw_pending }}</span>
-          {% endif %}
-        </button>
-        <button class="filter-btn {% if current_filter == 'bns' %}active{% endif %}" onclick="filterByRole('bns')">
-          BNS Only
-          {% if bns_pending %}
-            <span class="badge-count">{{ bns_pending }}</span>
-          {% endif %}
-        </button>
-        <button class="filter-btn {% if current_filter == 'midwife' %}active{% endif %}" onclick="filterByRole('midwife')">
-          Midwives Only
-          {% if midwife_pending %}
-            <span class="badge-count">{{ midwife_pending }}</span>
-          {% endif %}
-        </button>
-        <button class="filter-btn {% if current_filter == 'nurse' %}active{% endif %}" onclick="filterByRole('nurse')">
-          Nurses Only
-          {% if nurse_pending %}
-            <span class="badge-count">{{ nurse_pending }}</span>
-          {% endif %}
-        </button>
-      </div>
-
-      
-
-      <!-- Table Container -->
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Barangay</th>
-              <th>Role</th>
-              <th>Registration Date</th>
-              <th>Action / Status</th>
-            </tr>
-          </thead>
-          <tbody id="accountsTable">
-            {% for account in accounts %}
-              <tr class="account-row" data-role="{{ account.user_role|lower }}">
-                <td>{{ account.full_name }}</td>
-                <td>{{ account.email }}</td>
-                <td>{{ account.barangay.name|default:"Not Assigned" }}</td>
-                <td>
-                 <span class="role-badge 
-                  {% if account.user_role|lower == 'healthworker' or account.user_role|lower == 'bhw' %}role-bhw
-                  {% elif account.user_role|lower == 'bns' or account.user_role|lower == 'barangay nutritional scholar' %}role-bns
-                  {% elif account.user_role|lower == 'midwife' %}role-midwife
-                  {% elif account.user_role|lower == 'nurse' %}role-nurse
-                  {% endif %}">
-                  {% if account.user_role|lower == 'healthworker' or account.user_role|lower == 'bhw' %}
-                    BHW
-                  {% elif account.user_role|lower == 'bns' or account.user_role|lower == 'barangay nutritional scholar' %}
-                    BNS
-                  {% elif account.user_role|lower == 'midwife' %}
-                    MIDWIFE
-                  {% elif account.user_role|lower == 'nurse' %}
-                    NURSE
-                  {% else %}
-                    {{ account.user_role|upper }}
-                  {% endif %}
-                </span>
-                </td>
-                <td>{{ account.created_at|date:"M d, Y" }}</td>
-                <td>
-                  {% if account.is_validated %}
-                    <span class="status-badge status-validated">VALIDATED</span>
-                  {% elif account.is_rejected %}
-                    <span class="status-badge status-rejected">REJECTED</span>
-                  {% else %}
-                    <div class="action-buttons">
-                      <form method="post" action="{% url 'validate_account' account.account_id %}" class="action-form validate-form">
-                        {% csrf_token %}
-                        <button type="submit" class="btn validate-btn">Validate</button>
-                      </form>
-                      <form method="post" action="{% url 'reject_account' account.account_id %}" class="action-form reject-form">
-                        {% csrf_token %}
-                        <button type="submit" class="btn reject-btn">Reject</button>
-                      </form>
+          <div class="dropdown" id="notifMenu" style="max-height: 400px; overflow-y: auto; width: 320px; min-width: 280px;">
+            {% if notifications %}
+              {% for notif in notifications %}
+                {% if notif.type == 'account' %}
+                  <a href="/validate/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}" style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; align-items: center;">
+                      <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      <span class="notif-text">New {{ notif.user_role }} account named <strong>{{ notif.full_name }}</strong> requesting for validation.</span>
                     </div>
-                  {% endif %}
-                </td>
-              </tr>
-            {% empty %}
+                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
+                  </a>
+                {% elif notif.type == 'preschooler' %}
+                  <a href="/registered-preschoolers/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}" style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; align-items: center;">
+                      {% if notif.bhw_image %}
+                        <img src="{{ notif.bhw_image }}" alt="BHW Profile" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      {% else %}
+                        <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      {% endif %}
+                      <span class="notif-text">
+                        New preschooler is being registered.<br>
+                        Name: <strong>{{ notif.full_name }}</strong>
+                      </span>
+                    </div>
+                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
+                  </a>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <div class="dropdown-item">No notifications available.</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+      <div class="page-container">
+        <h2>BHW, BNS & Midwife Account Validation</h2>
+        
+        <!-- Dropdown Filter Section -->
+        <div class="filter-container">
+          <div class="dropdown-wrapper">
+            <label class="dropdown-label">Validation Status</label>
+            <select class="dropdown-select" id="statusFilter" onchange="handleStatusChange(this.value)">
+              <option value="pending" {% if current_status == 'pending' or not current_status %}selected{% endif %}>
+                Pending Validation {% if total_pending %}({{ total_pending }}){% endif %}
+              </option>
+              <option value="validated" {% if current_status == 'validated' %}selected{% endif %}>
+                Validated {% if total_validated %}({{ total_validated }}){% endif %}
+              </option>
+              <option value="rejected" {% if current_status == 'rejected' %}selected{% endif %}>
+                Rejected {% if total_rejected %}({{ total_rejected }}){% endif %}
+              </option>
+              <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Records</option>
+            </select>
+          </div>
+
+          <div class="dropdown-wrapper">
+            <label class="dropdown-label">User Role</label>
+            <select class="dropdown-select" id="roleFilter" onchange="handleRoleChange(this.value)">
+              <option value="all" {% if current_filter == 'all' or not current_filter %}selected{% endif %}>All Roles</option>
+              <option value="healthworker" {% if current_filter == 'healthworker' %}selected{% endif %}>
+                Health Workers {% if bhw_pending %}({{ bhw_pending }}){% endif %}
+              </option>
+              <option value="bns" {% if current_filter == 'bns' %}selected{% endif %}>
+                BNS {% if bns_pending %}({{ bns_pending }}){% endif %}
+              </option>
+              <option value="midwife" {% if current_filter == 'midwife' %}selected{% endif %}>
+                Midwives {% if midwife_pending %}({{ midwife_pending }}){% endif %}
+              </option>
+              <option value="nurse" {% if current_filter == 'nurse' %}selected{% endif %}>
+                Nurses {% if nurse_pending %}({{ nurse_pending }}){% endif %}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Enhanced Responsive Table Container -->
+        <div class="table-container">
+          <table class="table table-striped table-hover">
+            <thead>
               <tr>
-                <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
-                  <div style="font-size: 18px; margin-bottom: 10px;"></div>
-                  <div>No BHW, BNS, Midwife or Nurse accounts found.</div>
-                  <div style="font-size: 12px; margin-top: 5px; opacity: 0.7;">Only Health Worker, BNS, and Midwife registration requests are shown here.</div>
-                </td>
+                <th>Full Name</th>
+                <th>Email</th>
+                <th>Barangay</th>
+                <th>Role</th>
+                <th>Registration Date</th>
+                <th>Action / Status</th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody id="accountsTable">
+              {% for account in accounts %}
+                <tr class="account-row" data-role="{{ account.user_role|lower }}">
+                  <td>{{ account.full_name }}</td>
+                  <td>{{ account.email }}</td>
+                  <td>{{ account.barangay.name|default:"Not Assigned" }}</td>
+                  <td>
+                   <span class="role-badge 
+                    {% if account.user_role|lower == 'healthworker' or account.user_role|lower == 'bhw' %}role-bhw
+                    {% elif account.user_role|lower == 'bns' or account.user_role|lower == 'barangay nutritional scholar' %}role-bns
+                    {% elif account.user_role|lower == 'midwife' %}role-midwife
+                    {% elif account.user_role|lower == 'nurse' %}role-nurse
+                    {% endif %}">
+                    {% if account.user_role|lower == 'healthworker' or account.user_role|lower == 'bhw' %}
+                      BHW
+                    {% elif account.user_role|lower == 'bns' or account.user_role|lower == 'barangay nutritional scholar' %}
+                      BNS
+                    {% elif account.user_role|lower == 'midwife' %}
+                      MIDWIFE
+                    {% elif account.user_role|lower == 'nurse' %}
+                      NURSE
+                    {% else %}
+                      {{ account.user_role|upper }}
+                    {% endif %}
+                  </span>
+                  </td>
+                  <td>{{ account.created_at|date:"M d, Y" }}</td>
+                  <td>
+                    {% if account.is_validated %}
+                      <span class="status-badge status-validated">VALIDATED</span>
+                    {% elif account.is_rejected %}
+                      <span class="status-badge status-rejected">REJECTED</span>
+                    {% else %}
+                      <div class="action-buttons">
+                        <form method="post" action="{% url 'validate_account' account.account_id %}" class="action-form validate-form">
+                          {% csrf_token %}
+                          <button type="submit" class="btn validate-btn">Validate</button>
+                        </form>
+                        <form method="post" action="{% url 'reject_account' account.account_id %}" class="action-form reject-form">
+                          {% csrf_token %}
+                          <button type="submit" class="btn reject-btn">Reject</button>
+                        </form>
+                      </div>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
+                    <div style="font-size: 18px; margin-bottom: 10px;"></div>
+                    <div>No BHW, BNS, Midwife or Nurse accounts found.</div>
+                    <div style="font-size: 12px; margin-top: 5px; opacity: 0.7;">Only Health Worker, BNS, and Midwife registration requests are shown here.</div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj %}
+        <div class="pagination-section">
+          <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+          {% if page_obj.has_previous %}
+            <a href="?page=1{% if current_filter and current_filter != 'all' %}&role={{ current_filter }}{% endif %}{% if current_status and current_status != 'pending' %}&status={{ current_status }}{% endif %}" class="btn">&laquo; First</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if current_filter and current_filter != 'all' %}&role={{ current_filter }}{% endif %}{% if current_status and current_status != 'pending' %}&status={{ current_status }}{% endif %}" class="btn">Previous</a>
+          {% endif %}
+
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if current_filter and current_filter != 'all' %}&role={{ current_filter }}{% endif %}{% if current_status and current_status != 'pending' %}&status={{ current_status }}{% endif %}" class="btn">Next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if current_filter and current_filter != 'all' %}&role={{ current_filter }}{% endif %}{% if current_status and current_status != 'pending' %}&status={{ current_status }}{% endif %}" class="btn">Last &raquo;</a>
+          {% endif %}
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>
 
-  <!-- Pagination -->
-  {% if page_obj %}
-  <div class="pagination">
-    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-
-    {% if page_obj.has_previous %}
-      <a href="?page=1{% if current_filter and current_filter != 'all' %}&role={{ current_filter }}{% endif %}{% if current_status and current_status != 'pending' %}&status={{ current_status }}{% endif %}">&laquo; First</a>
-      <a href="?page={{ page_obj.previous_page_number }}{% if current_filter and current_filter != 'all' %}&role={{ current_filter }}{% endif %}{% if current_status and current_status != 'pending' %}&status={{ current_status }}{% endif %}">Previous</a>
-    {% endif %}
-
-    {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}{% if current_filter and current_filter != 'all' %}&role={{ current_filter }}{% endif %}{% if current_status and current_status != 'pending' %}&status={{ current_status }}{% endif %}">Next</a>
-      <a href="?page={{ page_obj.paginator.num_pages }}{% if current_filter and current_filter != 'all' %}&role={{ current_filter }}{% endif %}{% if current_status and current_status != 'pending' %}&status={{ current_status }}{% endif %}">Last &raquo;</a>
-    {% endif %}
-  </div>
-  {% endif %}
-
-  <!-- SweetAlert2 -->
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  {% if messages %}
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const notifBtn = document.getElementById("notifBtn");
+      const notifMenu = document.getElementById("notifMenu");
+      const notifDot = document.getElementById("notifDot");
+      const mobileToggle = document.getElementById("mobileToggle");
+      const sidebar = document.getElementById("sidebar");
+      const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+      // Mobile sidebar toggle
+      if (mobileToggle) {
+        mobileToggle.addEventListener("click", () => {
+          sidebar.classList.toggle("open");
+          sidebarOverlay.classList.toggle("active");
+        });
+        sidebarOverlay.addEventListener("click", () => {
+          sidebar.classList.remove("open");
+          sidebarOverlay.classList.remove("active");
+        });
+      }
+
+      // Notification red dot
+      const latestNotifTimestampStr = "{{ latest_notif_timestamp }}";
+      const latestNotifTimestamp = latestNotifTimestampStr ? new Date(latestNotifTimestampStr) : null;
+      let lastReadTimestampStr = localStorage.getItem('lastReadNotifTimestamp');
+      let lastReadTimestamp = lastReadTimestampStr ? new Date(lastReadTimestampStr) : null;
+      if (latestNotifTimestamp && (!lastReadTimestamp || latestNotifTimestamp > lastReadTimestamp)) {
+        notifDot.style.display = "inline-block";
+      }
+
+      if (notifBtn && notifMenu) {
+        notifBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          notifMenu.style.display = notifMenu.style.display === "block" ? "none" : "block";
+          notifDot.style.display = "none";
+          if (latestNotifTimestamp) localStorage.setItem('lastReadNotifTimestamp', latestNotifTimestamp.toISOString());
+        });
+        document.addEventListener("click", (e) => {
+          if (!e.target.closest(".notif-dropdown")) notifMenu.style.display = "none";
+        });
+      }
+
+      // Logout confirmation - now for sidebar logout button
+      const logoutLink = document.getElementById("logoutLink");
+      if (logoutLink) {
+        logoutLink.addEventListener("click", function(e) {
+          e.preventDefault();
+          Swal.fire({
+            title: 'Are you sure you want to logout?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, logout',
+            cancelButtonText: 'Cancel'
+          }).then((result) => {
+            if (result.isConfirmed) window.location.href = "/logout/";
+          });
+        });
+      }
+
+      // Notification item click handler
+      document.querySelectorAll('.notif-item').forEach(item => {
+        item.addEventListener('click', function (e) {
+          e.preventDefault();
+          const notifId = this.getAttribute('data-id');
+          const notifType = this.getAttribute('data-type');
+          const targetUrl = this.getAttribute('href');
+          const notifText = this.querySelector('.notif-text');
+
+          fetch('/mark-notif-read/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': '{{ csrf_token }}',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: notifId, type: notifType }),
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status && notifText) notifText.style.fontWeight = 'normal';
+            window.location.href = targetUrl;
+          })
+          .catch(() => window.location.href = targetUrl);
+        });
+      });
+
+      // Set active nav item
+      const currentPath = window.location.pathname;
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+        const onclick = link.getAttribute('onclick');
+        if (onclick && onclick.includes(currentPath)) link.classList.add('active');
+      });
+    });
+
+    // Dropdown filtering functionality
+    function handleStatusChange(status) {
+      const currentRole = document.getElementById('roleFilter').value;
+      const newUrl = `?status=${status}&role=${currentRole}`;
+      window.location.href = newUrl;
+    }
+
+    function handleRoleChange(role) {
+      const currentStatus = document.getElementById('statusFilter').value;
+      const newUrl = `?role=${role}&status=${currentStatus}`;
+      window.location.href = newUrl;
+    }
+
+    // Validation and rejection form handlers
+    document.addEventListener("DOMContentLoaded", () => {
+      // Messages from Django
+      {% if messages %}
         {% for message in messages %}
           Swal.fire({
             toast: true,
@@ -809,26 +888,8 @@
             timerProgressBar: true,
           });
         {% endfor %}
-      });
-    </script>
-  {% endif %}
+      {% endif %}
 
-  <script>
-    // Status filtering functionality
-    function filterByStatus(status) {
-      const currentRole = new URLSearchParams(window.location.search).get('role') || 'all';
-      const newUrl = `?status=${status}&role=${currentRole}`;
-      window.location.href = newUrl;
-    }
-
-    // Role filtering functionality  
-    function filterByRole(role) {
-      const currentStatus = new URLSearchParams(window.location.search).get('status') || 'pending';
-      const newUrl = `?role=${role}&status=${currentStatus}`;
-      window.location.href = newUrl;
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
       // Validation form handlers
       document.querySelectorAll('.validate-form').forEach(form => {
         form.addEventListener('submit', function(e) {
@@ -872,5 +933,57 @@
       });
     });
   </script>
+
+
+<script>
+  // Generate Report Button with SweetAlert Modal
+const generateReportBtn = document.getElementById("generateReportBtn");
+if (generateReportBtn) {
+  generateReportBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Select Month for Report',
+      input: 'month',
+      showCancelButton: true,
+      confirmButtonColor: '#3498db',
+      cancelButtonColor: '#95a5a6',
+      confirmButtonText: 'Generate Report',
+      cancelButtonText: 'Cancel',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Please select a month first!';
+        }
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Show loading message briefly
+        Swal.fire({
+          title: 'Generating Report...',
+          text: 'Please wait while we prepare your report.',
+          icon: 'info',
+          allowOutsideClick: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        const reportUrl = `/generate-admin-report/?month=${result.value}`;
+
+        // Open in a new browser tab
+        setTimeout(() => {
+          window.open(reportUrl, '_blank');
+          Swal.close();
+        }, 1000);
+      }
+    });
+  });
+}
+
+
+
+
+</script>
+
 </body>
 </html>
