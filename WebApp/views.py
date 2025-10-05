@@ -5851,25 +5851,41 @@ This is an automated message. Please do not reply.
 © 2025 PPMS Cluster 4. All rights reserved.
             """
 
-            send_mail(
-                subject,
-                plain_message,
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                html_message=html_message,
-                fail_silently=True,
-            )
-         
+            # ========== Background email sending ==========
+            # Capture all data before threading
+            email_subject = subject
+            email_plain = plain_message
+            email_html = html_message
+            recipient_email = email
+            from_email = settings.DEFAULT_FROM_EMAIL
+
+            def send_removal_email():
+                try:
+                    send_mail(
+                        subject=email_subject,
+                        message=email_plain,
+                        from_email=from_email,
+                        recipient_list=[recipient_email],
+                        html_message=email_html,
+                        fail_silently=False
+                    )
+                    print(f"[DEBUG] ✅ Removal email sent successfully to {recipient_email}")
+                except Exception as e:
+                    print(f"[EMAIL ERROR]: {e}")
+
+            # Start email sending in background thread
+            import threading
+            threading.Thread(target=send_removal_email).start()
 
             # Delete account
             bns.delete()
             
-            # Return JSON for AJAX requests
+            # Return JSON for AJAX requests (happens immediately)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'name': name, 'type': 'BNS'})
             
             # Fallback for regular form submission
-            messages.success(request, f"{name} has been successfully removed and notified via email.")
+            messages.success(request, f"{name} has been successfully removed and notification email is being sent.")
             
         except Account.DoesNotExist:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -6137,25 +6153,41 @@ This is an automated message. Please do not reply.
 © 2025 PPMS Cluster 4. All rights reserved.
             """
 
-            send_mail(
-                subject,
-                plain_message,
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                html_message=html_message,
-                fail_silently=True,
-            )
-         
+            # ========== Background email sending ==========
+            # Capture all data before threading
+            email_subject = subject
+            email_plain = plain_message
+            email_html = html_message
+            recipient_email = email
+            from_email = settings.DEFAULT_FROM_EMAIL
+
+            def send_removal_email():
+                try:
+                    send_mail(
+                        subject=email_subject,
+                        message=email_plain,
+                        from_email=from_email,
+                        recipient_list=[recipient_email],
+                        html_message=email_html,
+                        fail_silently=False
+                    )
+                    print(f"[DEBUG] ✅ Removal email sent successfully to {recipient_email}")
+                except Exception as e:
+                    print(f"[EMAIL ERROR]: {e}")
+
+            # Start email sending in background thread
+            import threading
+            threading.Thread(target=send_removal_email).start()
 
             # Delete account
             bhw.delete()
             
-            # Return JSON for AJAX requests
+            # Return JSON for AJAX requests (happens immediately)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'name': name, 'type': 'BHW'})
             
             # Fallback for regular form submission
-            messages.success(request, f"{name} has been successfully removed and notified via email.")
+            messages.success(request, f"{name} has been successfully removed and notification email is being sent.")
             
         except Account.DoesNotExist:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -6444,25 +6476,41 @@ This is an automated message. Please do not reply.
 © 2025 PPMS Cluster 4. All rights reserved.
             """
 
-            send_mail(
-                subject,
-                plain_message,
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                html_message=html_message,
-                fail_silently=True,
-            )
-        
+            # ========== Background email sending ==========
+            # Capture all data before threading
+            email_subject = subject
+            email_plain = plain_message
+            email_html = html_message
+            recipient_email = email
+            from_email = settings.DEFAULT_FROM_EMAIL
+
+            def send_removal_email():
+                try:
+                    send_mail(
+                        subject=email_subject,
+                        message=email_plain,
+                        from_email=from_email,
+                        recipient_list=[recipient_email],
+                        html_message=email_html,
+                        fail_silently=False
+                    )
+                    print(f"[DEBUG] ✅ Removal email sent successfully to {recipient_email}")
+                except Exception as e:
+                    print(f"[EMAIL ERROR]: {e}")
+
+            # Start email sending in background thread
+            import threading
+            threading.Thread(target=send_removal_email).start()
 
             # Delete account
             midwife.delete()
             
-            # Return JSON for AJAX requests
+            # Return JSON for AJAX requests (happens immediately)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'name': name, 'type': 'Midwife'})
             
             # Fallback for regular form submission
-            messages.success(request, f"{name} has been successfully removed and notified via email.")
+            messages.success(request, f"{name} has been successfully removed and notification email is being sent.")
             
         except Account.DoesNotExist:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -7155,25 +7203,41 @@ This is an automated message. Please do not reply.
 © 2025 PPMS Cluster 4. All rights reserved.
             """
 
-            send_mail(
-                subject,
-                plain_message,
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                html_message=html_message,
-                fail_silently=True,
-            )
-         
+            # ========== Background email sending ==========
+            # Capture all data before threading
+            email_subject = subject
+            email_plain = plain_message
+            email_html = html_message
+            recipient_email = email
+            from_email = settings.DEFAULT_FROM_EMAIL
+
+            def send_removal_email():
+                try:
+                    send_mail(
+                        subject=email_subject,
+                        message=email_plain,
+                        from_email=from_email,
+                        recipient_list=[recipient_email],
+                        html_message=email_html,
+                        fail_silently=False
+                    )
+                    print(f"[DEBUG] ✅ Removal email sent successfully to {recipient_email}")
+                except Exception as e:
+                    print(f"[EMAIL ERROR]: {e}")
+
+            # Start email sending in background thread
+            import threading
+            threading.Thread(target=send_removal_email).start()
 
             # Delete account
             nurse.delete()
             
-            # Return JSON for AJAX requests
+            # Return JSON for AJAX requests (happens immediately)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({'success': True, 'name': name, 'type': 'Nurse'})
             
             # Fallback for regular form submission
-            messages.success(request, f"{name} has been successfully removed and notified via email.")
+            messages.success(request, f"{name} has been successfully removed and notification email is being sent.")
             
         except Account.DoesNotExist:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -9422,6 +9486,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
