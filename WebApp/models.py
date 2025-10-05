@@ -81,6 +81,14 @@ class Account(models.Model):
         self.full_name = " ".join(p for p in parts if p).strip()
     
         super().save(*args, **kwargs)
+
+     def delete(self, *args, **kwargs):
+        # Delete associated User when Account is deleted
+        try:
+            User.objects.filter(username=self.email).delete()
+        except Exception as e:
+            print(f"Error deleting associated User: {e}")
+        super().delete(*args, **kwargs)
     
     # Helper method to clean any field value
     def clean_field_value(self, field_value):
@@ -954,3 +962,4 @@ class FCMToken(models.Model):
 
     def __str__(self):
         return f"{self.account.email} - {self.token}"
+
