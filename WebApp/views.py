@@ -7910,6 +7910,7 @@ def create_preschooler_activity_log(preschooler, activity, performed_by_user):
             logger.error(f"DEBUG: Error creating preschooler activity log: {e}")
 
 
+
 @admin_required
 def admin_logs(request):
     if request.session.get('user_role') != 'admin':
@@ -9284,6 +9285,7 @@ def save_temperature(request):
             'status': 'error',
             'message': 'An unexpected error occurred while saving temperature'
         })
+
 
 
 
