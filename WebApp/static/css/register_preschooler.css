@@ -10,109 +10,114 @@
 
 body {
   font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f4f6f8;
+  background-color: #f9fafc;
   color: #1a1a1a;
+  padding: 20px;
 }
 
 button,
 input[type="button"],
 input[type="submit"],
-.back-btn,
-.add-schedule-btn,
-.view-vaccine-card,
-.modal-buttons button,
-.modal-content button[type="submit"] {
+.icon-btn {
   font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Topbar */
+.container {
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+/* Top Bar/Header */
 .topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background-color: #1e1e2f;
   color: white;
   padding: 20px;
   border-radius: 10px;
-  margin: 20px auto 0;
-  max-width: 1100px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-weight: 600;
-  font-size: 18px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.top-icons .icon {
-  margin-left: 20px;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-/* Layout Section */
-.main-section {
-  max-width: 1100px;
-  margin: 30px auto;
-  padding: 0 20px;
-}
-
-.table-header {
   margin-bottom: 20px;
 }
 
-.table-header h2 {
-  font-size: 20px;
+.logo-title {
+  font-size: 22px;
   font-weight: 600;
+  letter-spacing: 1px;
 }
 
-/* Table */
-.table-wrapper {
-  background-color: white;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  overflow-x: auto;
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: white;
 }
 
+/* Search bar */
+.search-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin: 25px 0 20px;
+}
+
+.search-bar input {
+  padding: 12px 18px;
+  width: 320px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 30px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 4px rgba(0, 123, 255, 0.4);
+}
+
+/* Table Styling */
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
-}
-
-th, td {
-  border: 1px solid #e0e0e0;
-  padding: 12px;
-  text-align: center;
+  background-color: #ffffff;
 }
 
 th {
   background-color: #f4f6f8;
-  font-weight: 600;
+  color: #555;
+  padding: 12px;
+  font-size: 14px;
+  text-align: left;
 }
 
-/* Back Button */
-.back-btn {
-  display: inline-block;
-  margin-top: 20px;
-  padding: 10px 16px;
-  background-color: #007bff;
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: background-color 0.3s ease;
+td {
+  padding: 12px;
+  font-size: 14px;
+  color: #1a1a1a;
+  border: 1px solid #e0e0e0;
 }
 
-.back-btn:hover {
-  background-color: #0056b3;
+tr:nth-child(even) td {
+  background-color: #fafafa;
 }
 
-/* Modal */
+tr:hover td {
+  background-color: #f4f4f4;
+}
+
+.parent-row.selected {
+  background-color: #d0eaff;
+}
+
+/* Modal Styling */
 .modal {
   display: none;
   position: fixed;
-  z-index: 10;
-  left: 0;
+  z-index: 1000;
   top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   background-color: rgba(0,0,0,0.5);
@@ -122,161 +127,157 @@ th {
 
 .modal-content {
   background: white;
-  padding: 25px;
+  padding: 30px;
   width: 90%;
-  max-width: 800px;
+  max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
   border-radius: 12px;
   position: relative;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
 
-.close-btn {
+.close-button {
   position: absolute;
   right: 20px;
   top: 15px;
   font-size: 24px;
   cursor: pointer;
+  color: #333;
 }
 
-/* Modal Inner Tables */
-.preschooler-details table {
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group select {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-.preschooler-details th,
-.preschooler-details td {
+  padding: 10px;
+  border-radius: 6px;
   border: 1px solid #ccc;
-  padding: 8px;
-  text-align: center;
+  font-size: 14px;
 }
 
-/* Modal Button */
-.add-schedule-btn {
-  margin-top: 10px;
-  background-color: #28a745;
+/* Submit Button */
+button[type="submit"] {
+  background-color: #4CAF50;
   color: white;
   border: none;
-  padding: 8px 14px;
+  padding: 12px;
+  width: 100%;
   border-radius: 6px;
   font-weight: bold;
+  font-size: 15px;
   cursor: pointer;
 }
 
-.add-schedule-btn:hover {
-  background-color: #218838;
+button[type="submit"]:hover {
+  background-color: #45a049;
 }
 
-.view-vaccine-card {
-  background-color: #007bff;
-  color: white;
-  border: none;
+/* Custom Context Menu */
+#customMenu {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  display: none;
+  z-index: 1000;
+}
+
+#customMenu ul {
+  list-style: none;
+  margin: 0;
+  padding: 5px 0;
+}
+
+#customMenu li {
   padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: bold;
   cursor: pointer;
-  margin-top: 10px;
-  white-space: nowrap;
-  transition: background-color 0.3s ease-in-out;
-  max-width: 200px;
-  max-height: 45px;
 }
 
-.view-vaccine-card:hover {
-  background-color: #0056b3;
+#customMenu li:hover {
+  background-color: #f0f0f0;
 }
 
-/* Responsive */
-@media screen and (max-width: 768px) {
-  .topbar, .main-section {
-    padding: 15px;
-    margin: 10px;
-  }
-
-  table th, table td {
-    padding: 8px;
-    font-size: 12px;
-  }
-
-  .back-btn {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-
-  .view-vaccine-card, .add-schedule-btn {
-    font-size: 13px;
-    padding: 6px 10px;
-  }
+.rtn-btn {
+  display: block;
+  position: relative;
+  width: 56px;
+  height: 56px;
+  margin: 0;
+  overflow: hidden;
+  outline: none;
+  background-color: transparent;
+  cursor: pointer;
+  border: 0;
 }
 
-.modal {
-      display: none;
-      position: fixed;
-      z-index: 999;
-      padding-top: 100px;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.4);
-    }
+.rtn-btn:before,
+.rtn-btn:after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  inset: 7px;
+}
 
-    .modal-content {
-      background-color: #fff;
-      margin: auto;
-      padding: 20px;
-      border-radius: 8px;
-      width: 400px;
-      text-align: center;
-    }
+.rtn-btn:before {
+  border: 4px solid #f0eeef;
+  transition: opacity 0.4s cubic-bezier(0.77, 0, 0.175, 1) 80ms,
+    transform 0.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) 80ms;
+}
 
-    .close-btn {
-      float: right;
-      font-size: 24px;
-      cursor: pointer;
-    }
+.rtn-btn:after {
+  border: 4px solid #96daf0;
+  transform: scale(1.3);
+  transition: opacity 0.4s cubic-bezier(0.165, 0.84, 0.44, 1),
+    transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  opacity: 0;
+}
 
-    .modal-buttons button {
-      margin: 10px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-    }
+.rtn-btn:hover:before,
+.rtn-btn:focus:before {
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 0.4s cubic-bezier(0.165, 0.84, 0.44, 1),
+    transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
 
-    .modal-buttons button:hover {
-      background-color: #0056b3;
-    }
+.rtn-btn:hover:after,
+.rtn-btn:focus:after {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.4s cubic-bezier(0.77, 0, 0.175, 1) 80ms,
+    transform 0.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) 80ms;
+}
 
-    .modal-content input {
-      margin: 8px;
-      padding: 10px;
-      width: 80%;
-      font-size: 14px;
-    }
 
-    .modal-content button[type="submit"] {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 10px 20px;
-      cursor: pointer;
-    }
+.button-box {
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
 
-    .modal-content button[type="submit"]:hover {
-      background-color: #1e7e34;
-    }
+.button-elem {
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin: 17px 18px 0 18px;
+  transform: rotate(180deg);
+  fill: #f0eeef;
+}
 
-    .clickable-name {
-      color: #007bff;
-      cursor: pointer;
-      font-weight: 500;
-    }
-
-    .clickable-name:hover {
-      text-decoration: underline;
-    }
+.rtn-btn:hover .rtn-btn-box,
+.rtn-btn:focus .rtn-btn-box {
+  transition: 0.4s;
+  transform: translateX(-56px);
+}
