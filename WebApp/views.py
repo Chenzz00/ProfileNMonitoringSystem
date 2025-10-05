@@ -7867,14 +7867,13 @@ def create_parent_activity_log(parent, activity, performed_by_user):
                 activity=activity,
                 performed_by=user_info  # Assuming you have this field
             )
-            
+        except Exception as e:  # ← THIS WAS MISSING
             print(f"DEBUG: Error creating parent activity log: {e}")
-
 
 def create_preschooler_activity_log(preschooler, activity, performed_by_user):
     """Create preschooler activity log with barangay validation"""
     user_barangay = get_user_barangay(performed_by_user)
-
+    
     # Only create log if preschooler and user are in same barangay
     if user_barangay and preschooler.barangay == user_barangay:
         try:
@@ -7892,24 +7891,18 @@ def create_preschooler_activity_log(preschooler, activity, performed_by_user):
                         break
                     except model_class.DoesNotExist:
                         continue
-
+            
             if not user_info:
                 user_info = performed_by_user.email
-
-            # Create the log entry
+            
             PreschoolerActivityLog.objects.create(
                 preschooler_name=f"{preschooler.first_name} {preschooler.last_name}",
                 barangay=user_barangay,
                 activity=activity,
                 performed_by=user_info
             )
-
-            logger.info(f"[DEBUG] Preschooler activity log created for {preschooler.first_name}")
-
-        except Exception as e:
-            logger.error(f"DEBUG: Error creating preschooler activity log: {e}")
-
-
+        except Exception as e:  # ← THIS WAS MISSING
+            print(f"DEBUG: Error creating preschooler activity log: {e}")
 
 @admin_required
 def admin_logs(request):
@@ -9285,6 +9278,7 @@ def save_temperature(request):
             'status': 'error',
             'message': 'An unexpected error occurred while saving temperature'
         })
+
 
 
 
