@@ -4439,14 +4439,14 @@ def register(request):
         password     = request.POST.get("password")
         confirm      = request.POST.get("confirm")
         birthdate    = request.POST.get("birthdate")
-        sex          = request.POST.get("sex")  # ✅ Added from first code
+        sex          = request.POST.get("sex")
         house_number = request.POST.get("house_number")   
         block        = request.POST.get("block")
         lot          = request.POST.get("lot")
         phase        = request.POST.get("phase")
         street       = request.POST.get("street")
-        subdivision  = request.POST.get("city")
-        city         = request.POST.get("subdivision")
+        subdivision  = request.POST.get("subdivision")  # ✅ FIXED
+        city         = request.POST.get("city")         # ✅ FIXED
         province     = request.POST.get("province")
         barangay_id  = request.POST.get("barangay_id")
         role         = request.POST.get("role")
@@ -4461,9 +4461,24 @@ def register(request):
             messages.error(request, "Passwords do not match.")
             return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
 
-        if User.objects.filter(username=email).exists() or Account.objects.filter(email=email).exists():
-            messages.error(request, "This email is already registered.")
-            return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
+        # ✅ FIXED: Check both tables but handle cleanup
+        user_exists = User.objects.filter(username=email).exists()
+        account_exists = Account.objects.filter(email=email).exists()
+        
+        if user_exists or account_exists:
+            # If User exists but Account doesn't (orphaned User), delete the User
+            if user_exists and not account_exists:
+                try:
+                    User.objects.filter(username=email).delete()
+                    print(f"[DEBUG] 🗑️ Deleted orphaned User for email: {email}")
+                except Exception as e:
+                    print(f"[DEBUG] ❌ Error deleting orphaned User: {e}")
+                    messages.error(request, "An error occurred. Please try again.")
+                    return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
+            else:
+                # Both exist or Account exists
+                messages.error(request, "This email is already registered.")
+                return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
 
         # Convert birthdate string to date object
         try:
@@ -4487,7 +4502,7 @@ def register(request):
             # Step 2: Get Barangay
             barangay = Barangay.objects.get(id=int(barangay_id))
 
-            # Step 3: Create Account with sex included ✅
+            # Step 3: Create Account with sex included
             print("[DEBUG] Creating Account with all info...")
             account = Account.objects.create(
                 first_name=first_name,
@@ -4505,7 +4520,7 @@ def register(request):
                 city=city,
                 province=province,
                 birthdate=birthdate_obj,
-                sex=sex,  # ✅ Added here
+                sex=sex,
                 password=make_password(password),
                 user_role=role,
                 is_validated=False,
@@ -4514,291 +4529,295 @@ def register(request):
             )
 
         except Barangay.DoesNotExist:
+            # Cleanup: Delete created User if Account creation fails
+            if 'user' in locals():
+                user.delete()
             messages.error(request, "Invalid barangay selected.")
             return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
         except Exception as e:
+            # Cleanup: Delete created User if Account creation fails
+            if 'user' in locals():
+                user.delete()
             print(f"[DEBUG] ❌ Registration error: {e}")
             messages.error(request, f"Registration failed: {str(e)}")
             return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
 
-        # Send Clean Email Confirmation
-        try:
-            # Create full_name variable
-            full_name_parts = [first_name]
-            if middle_name:
-                full_name_parts.append(middle_name)
-            full_name_parts.append(last_name)
-            if suffix:
-                full_name_parts.append(suffix)
-            full_name = " ".join(full_name_parts)
+        # Prepare email data
+        full_name_parts = [first_name]
+        if middle_name:
+            full_name_parts.append(middle_name)
+        full_name_parts.append(last_name)
+        if suffix:
+            full_name_parts.append(suffix)
+        full_name = " ".join(full_name_parts)
+        
+        # Role-specific badge classes
+        role_classes = {
+            'BHW': 'bhw',
+            'BNS': 'bns', 
+            'Midwife': 'midwife',
+            'Nurse': 'nurse'
+        }
+        role_class = role_classes.get(role, 'bhw')
+        
+        # Role display names
+        role_display = {
+            'BHW': 'BHW (Barangay Health Worker)',
+            'BNS': 'BNS (Barangay Nutrition Scholar)',
+            'Midwife': 'Midwife',
+            'Nurse': 'Nurse'
+        }
+        role_name = role_display.get(role, role)
+        
+        # Get current date
+        current_date = datetime.now().strftime('%B %d, %Y')
+        
+        subject = f'PPMS Registration Confirmation - {role}'
+        
+        html_message = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPMS Registration Confirmation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+        body {{
+            font-family: 'Inter', Arial, sans-serif;
+            background-color: #f9fafb;
+            padding: 40px 20px;
+            color: #334155;
+            line-height: 1.6;
+        }}
+        
+        .container {{
+            max-width: 560px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }}
+        
+        .header {{
+            padding: 24px 32px;
+            text-align: center;
+            color: #111827;
+            border-bottom: 4px solid #198754;
+        }}
+        .header h1 {{
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            color: #111827;
+        }}
+        .header p {{
+            font-size: 16px;
+            margin: 4px 0 0 0;
+            color: #6b7280;
+        }}
+        
+        .content {{
+            padding: 32px;
+        }}
+        
+        .greeting {{
+            font-size: 18px;
+            margin-bottom: 24px;
+            color: #1e293b;
+        }}
+        
+        .message {{
+            font-size: 16px;
+            margin-bottom: 32px;
+            color: #64748b;
+        }}
+        
+        .status {{
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 32px;
+            text-align: center;
+        }}
+        
+        .status-icon {{
+            font-size: 32px;
+            margin-bottom: 12px;
+        }}
+        
+        .status h3 {{
+            font-size: 18px;
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 8px;
+        }}
+        
+        .status p {{
+            font-size: 14px;
+            color: #92400e;
+        }}
+        
+        .details {{
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+            padding: 24px;
+            border-radius: 6px;
+            margin: 24px 0;
+        }}
+        
+        .details h4 {{
+            margin-bottom: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #065f46;
+        }}
+        
+        .detail-item {{
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }}
+        
+        .detail-item:last-child {{
+            margin-bottom: 0;
+        }}
+        
+        .detail-label {{
+            font-weight: bold;
+            color: #065f46;
+            display: inline;
+        }}
+        
+        .detail-value {{
+            color: #065f46;
+            display: inline;
+            margin-left: 4px;
+        }}
+        
+        .role-badge {{
+            display: inline-block;
+            background: #6366f1;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+        
+        .role-badge.bhw {{ background: #10b981; }}
+        .role-badge.bns {{ background: #3b82f6; }}
+        .role-badge.midwife {{ background: #ec4899; }}
+        .role-badge.nurse {{ background: #8b5cf6; }}
+        
+        .footer {{
+            background: #f1f5f9;
+            padding: 32px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }}
+        
+        .footer h3 {{
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }}
+        
+        .footer p {{
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }}
+        
+        .footer-divider {{
+            margin: 24px 0;
+            height: 1px;
+            background: #e2e8f0;
+        }}
+        
+        .footer-small {{
+            font-size: 12px;
+            color: #94a3b8;
+        }}
+        
+        @media (max-width: 600px) {{
+            .content {{ 
+                padding: 28px 20px; 
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PPMS Cluster 4</h1>
+            <p>Imus City Healthcare Management</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Hello <strong>{full_name}</strong>,
+            </div>
             
-            # Role-specific badge classes
-            role_classes = {
-                'BHW': 'bhw',
-                'BNS': 'bns', 
-                'Midwife': 'midwife',
-                'Nurse': 'nurse'
-            }
-            role_class = role_classes.get(role, 'bhw')
+            <div class="message">
+                Thank you for registering with PPMS Cluster 4. We've received your application to join our healthcare team as a <span class="role-badge {role_class}">{role}</span>.
+            </div>
             
-            # Role display names
-            role_display = {
-                'BHW': 'BHW (Barangay Health Worker)',
-                'BNS': 'BNS (Barangay Nutrition Scholar)',
-                'Midwife': 'Midwife',
-                'Nurse': 'Nurse'
-            }
-            role_name = role_display.get(role, role)
+            <div class="status">
+                <div class="status-icon">⏳</div>
+                <h3>Pending Approval</h3>
+                <p>Your account is under review by our admin team</p>
+            </div>
             
-            # Get current date
-            current_date = datetime.now().strftime('%B %d, %Y')
-            
-            subject = f'PPMS Registration Confirmation - {role}'
-            
-            html_message = f"""
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>PPMS Registration Confirmation</title>
-                <style>
-                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-                    
-                    body {{
-                        font-family: 'Inter', Arial, sans-serif;
-                        background-color: #f9fafb;
-                        padding: 40px 20px;
-                        color: #334155;
-                        line-height: 1.6;
-                    }}
-                    
-                    .container {{
-                        max-width: 560px;
-                        margin: 0 auto;
-                        background: white;
-                        border-radius: 12px;
-                        overflow: hidden;
-                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-                    }}
-                    
-                    .header {{
-                        padding: 24px 32px;
-                        text-align: center;
-                        color: #111827;
-                        border-bottom: 4px solid #198754;
-                    }}
-                    .header h1 {{
-                        font-size: 24px;
-                        font-weight: 600;
-                        margin: 0;
-                        color: #111827;
-                    }}
-                    .header p {{
-                        font-size: 16px;
-                        margin: 4px 0 0 0;
-                        color: #6b7280;
-                    }}
-                    
-                    .content {{
-                        padding: 32px;
-                    }}
-                    
-                    .greeting {{
-                        font-size: 18px;
-                        margin-bottom: 24px;
-                        color: #1e293b;
-                    }}
-                    
-                    .message {{
-                        font-size: 16px;
-                        margin-bottom: 32px;
-                        color: #64748b;
-                    }}
-                    
-                    .status {{
-                        background: #fef3c7;
-                        border: 1px solid #f59e0b;
-                        border-radius: 8px;
-                        padding: 20px;
-                        margin-bottom: 32px;
-                        text-align: center;
-                    }}
-                    
-                    .status-icon {{
-                        font-size: 32px;
-                        margin-bottom: 12px;
-                    }}
-                    
-                    .status h3 {{
-                        font-size: 18px;
-                        font-weight: 600;
-                        color: #92400e;
-                        margin-bottom: 8px;
-                    }}
-                    
-                    .status p {{
-                        font-size: 14px;
-                        color: #92400e;
-                    }}
-                    
-                    .details {{
-                        background: #ecfdf5;
-                        border: 1px solid #10b981;
-                        padding: 24px;
-                        border-radius: 6px;
-                        margin: 24px 0;
-                    }}
-                    
-                    .details h4 {{
-                        margin-bottom: 16px;
-                        font-size: 16px;
-                        font-weight: 600;
-                        color: #065f46;
-                    }}
-                    
-                    .detail-item {{
-                        margin-bottom: 12px;
-                        line-height: 1.6;
-                    }}
-                    
-                    .detail-item:last-child {{
-                        margin-bottom: 0;
-                    }}
-                    
-                    .detail-label {{
-                        font-weight: bold;
-                        color: #065f46;
-                        display: inline;
-                    }}
-                    
-                    .detail-value {{
-                        color: #065f46;
-                        display: inline;
-                        margin-left: 4px;
-                    }}
-                    
-                    .role-badge {{
-                        display: inline-block;
-                        background: #6366f1;
-                        color: white;
-                        padding: 4px 12px;
-                        border-radius: 20px;
-                        font-size: 12px;
-                        font-weight: 500;
-                        text-transform: uppercase;
-                        letter-spacing: 0.5px;
-                    }}
-                    
-                    .role-badge.bhw {{ background: #10b981; }}
-                    .role-badge.bns {{ background: #3b82f6; }}
-                    .role-badge.midwife {{ background: #ec4899; }}
-                    .role-badge.nurse {{ background: #8b5cf6; }}
-                    
-                    .footer {{
-                        background: #f1f5f9;
-                        padding: 32px;
-                        text-align: center;
-                        border-top: 1px solid #e2e8f0;
-                    }}
-                    
-                    .footer h3 {{
-                        font-size: 18px;
-                        font-weight: 600;
-                        color: #1e293b;
-                        margin-bottom: 8px;
-                    }}
-                    
-                    .footer p {{
-                        font-size: 14px;
-                        color: #64748b;
-                        margin-bottom: 4px;
-                    }}
-                    
-                    .footer-divider {{
-                        margin: 24px 0;
-                        height: 1px;
-                        background: #e2e8f0;
-                    }}
-                    
-                    .footer-small {{
-                        font-size: 12px;
-                        color: #94a3b8;
-                    }}
-                    
-                    @media (max-width: 600px) {{
-                        .content {{ 
-                            padding: 28px 20px; 
-                        }}
-                    }}
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>PPMS Cluster 4</h1>
-                        <p>Imus City Healthcare Management</p>
-                    </div>
-                    
-                    <div class="content">
-                        <div class="greeting">
-                            Hello <strong>{full_name}</strong>,
-                        </div>
-                        
-                        <div class="message">
-                            Thank you for registering with PPMS Cluster 4. We've received your application to join our healthcare team as a <span class="role-badge {role_class}">{role}</span>.
-                        </div>
-                        
-                        <div class="status">
-                            <div class="status-icon">⏳</div>
-                            <h3>Pending Approval</h3>
-                            <p>Your account is under review by our admin team</p>
-                        </div>
-                        
-                        <div class="details">
-                            <h4>Registration Summary</h4>
-                            <div class="detail-item">
-                                <span class="detail-label">Full Name:</span>
-                                <span class="detail-value">{full_name}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Sex:</span>
-                                <span class="detail-value">{sex}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Email:</span>
-                                <span class="detail-value">{email}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Role:</span>
-                                <span class="detail-value">{role_name}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Barangay:</span>
-                                <span class="detail-value">{barangay.name}</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Date Submitted:</span>
-                                <span class="detail-value">{current_date}</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="footer">
-                        <h3>PPMS Cluster 4</h3>
-                        <p>Imus City Healthcare Management</p>
-                        <div class="footer-divider"></div>
-                        <p class="footer-small">
-                            This is an automated message. Please do not reply.<br>
-                            © 2025 PPMS Cluster 4. All rights reserved.
-                        </p>
-                    </div>
+            <div class="details">
+                <h4>Registration Summary</h4>
+                <div class="detail-item">
+                    <span class="detail-label">Full Name:</span>
+                    <span class="detail-value">{full_name}</span>
                 </div>
-            </body>
-            </html>
-            """
+                <div class="detail-item">
+                    <span class="detail-label">Sex:</span>
+                    <span class="detail-value">{sex}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Email:</span>
+                    <span class="detail-value">{email}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Role:</span>
+                    <span class="detail-value">{role_name}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Barangay:</span>
+                    <span class="detail-value">{barangay.name}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Date Submitted:</span>
+                    <span class="detail-value">{current_date}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <h3>PPMS Cluster 4</h3>
+            <p>Imus City Healthcare Management</p>
+            <div class="footer-divider"></div>
+            <p class="footer-small">
+                This is an automated message. Please do not reply.<br>
+                © 2025 PPMS Cluster 4. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+"""
 
-            plain_message = f"""
+        plain_message = f"""
 PPMS Registration Confirmation
 
 Hello {full_name},
@@ -4821,25 +4840,31 @@ Imus City Healthcare Management
 
 This is an automated message. Please do not reply.
 © 2025 PPMS Cluster 4. All rights reserved.
-            """
+"""
 
-            send_mail(
-                subject,
-                plain_message,
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                html_message=html_message,
-                fail_silently=False,
-            )
+        # ========== Background email sending ==========
+        def send_confirmation_email():
+            try:
+                send_mail(
+                    subject,
+                    plain_message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    html_message=html_message,
+                    fail_silently=False,
+                )
+                print("[DEBUG] ✅ Email sent successfully")
+            except Exception as e:
+                print(f"[EMAIL ERROR]: {e}")
 
-        except Exception as email_error:
-            print(f"[DEBUG] ❌ Email error: {email_error}")
-            print(f"[DEBUG] ❌ Email error type: {type(email_error).__name__}")
+        # Start email sending in background thread
+        threading.Thread(target=send_confirmation_email).start()
 
-        # Success!
-        messages.success(request, f"{role} registration successful. Pending admin approval.")
+        # Success message and redirect
+        messages.success(request, "Registration successful! Please check your email for confirmation.")
         return redirect('login')
 
+    # GET request - show registration form
     return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
 
 
@@ -6578,131 +6603,148 @@ def validate_account(request, account_id):
         account.is_rejected = False
         account.save()
 
+        # ========== Background email sending ==========
         if account.email:
             from datetime import datetime
+            
+            # Capture all necessary data before threading
+            full_name = account.full_name
+            user_role = account.user_role
+            barangay_name = account.barangay.name if account.barangay else "N/A"
+            email = account.email
             current_date = datetime.now().strftime('%B %d, %Y')
 
-            subject = 'Account Validated - PPMS Cluster 4'
+            def send_validation_email():
+                try:
+                    subject = 'Account Validated - PPMS Cluster 4'
 
-            html_message = f"""
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body {{
-                        font-family: Arial, sans-serif;
-                        background-color: #f9f9f9;
-                        padding: 20px;
-                        color: #333;
-                    }}
-                    .container {{
-                        background-color: #fff;
-                        padding: 0;
-                        border-radius: 10px;
-                        max-width: 600px;
-                        margin: auto;
-                        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-                        overflow: hidden;
-                    }}
-                    .header {{
-                        padding: 20px;
-                        text-align: center;
-                        font-size: 22px;
-                        font-weight: bold;
-                        color: #111827;
-                    }}
-                    .divider {{
-                        height: 4px;
-                        background-color: #198754; /* ✅ Green divider */
-                    }}
-                    .content {{
-                        padding: 32px;
-                    }}
-                    .content p {{
-                        margin-bottom: 16px;
-                        font-size: 15px;
-                    }}
-                    .details {{
-                        background: #ecfdf5;
-                        border: 1px solid #10b981;
-                        padding: 16px;
-                        border-radius: 6px;
-                        margin: 24px 0;
-                    }}
-                    .details h4 {{
-                        margin-bottom: 12px;
-                        font-size: 16px;
-                        font-weight: 600;
-                        color: #065f46;
-                    }}
-                    .footer {{
-                        text-align: center;
-                        font-size: 12px;
-                        color: #777;
-                        margin-top: 30px;
-                        border-top: 1px solid #e2e8f0;
-                        padding: 12px;
-                    }}
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        Account Validated
-                    </div>
-                    <div class="divider"></div>
-                    <div class="content">
-                        <p>Hello <strong>{account.full_name}</strong>,</p>
-                        <p>Your PPMS account has been successfully 
-                        <strong>validated</strong>. You can now log in using your registered email address.</p>
+                    html_message = f"""
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <style>
+                            body {{
+                                font-family: Arial, sans-serif;
+                                background-color: #f9f9f9;
+                                padding: 20px;
+                                color: #333;
+                            }}
+                            .container {{
+                                background-color: #fff;
+                                padding: 0;
+                                border-radius: 10px;
+                                max-width: 600px;
+                                margin: auto;
+                                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                                overflow: hidden;
+                            }}
+                            .header {{
+                                padding: 20px;
+                                text-align: center;
+                                font-size: 22px;
+                                font-weight: bold;
+                                color: #111827;
+                            }}
+                            .divider {{
+                                height: 4px;
+                                background-color: #198754; /* ✅ Green divider */
+                            }}
+                            .content {{
+                                padding: 32px;
+                            }}
+                            .content p {{
+                                margin-bottom: 16px;
+                                font-size: 15px;
+                            }}
+                            .details {{
+                                background: #ecfdf5;
+                                border: 1px solid #10b981;
+                                padding: 16px;
+                                border-radius: 6px;
+                                margin: 24px 0;
+                            }}
+                            .details h4 {{
+                                margin-bottom: 12px;
+                                font-size: 16px;
+                                font-weight: 600;
+                                color: #065f46;
+                            }}
+                            .footer {{
+                                text-align: center;
+                                font-size: 12px;
+                                color: #777;
+                                margin-top: 30px;
+                                border-top: 1px solid #e2e8f0;
+                                padding: 12px;
+                            }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div class="header">
+                                Account Validated
+                            </div>
+                            <div class="divider"></div>
+                            <div class="content">
+                                <p>Hello <strong>{full_name}</strong>,</p>
+                                <p>Your PPMS account has been successfully 
+                                <strong>validated</strong>. You can now log in using your registered email address.</p>
 
-                        <div class="details">
-                            <h4>Account Details</h4>
-                            <p><strong>Role:</strong> {account.user_role}</p>
-                            <p><strong>Barangay:</strong> {account.barangay.name if account.barangay else "N/A"}</p>
-                            <p><strong>Email:</strong> {account.email}</p>
-                            <p><strong>Date Validated:</strong> {current_date}</p>
+                                <div class="details">
+                                    <h4>Account Details</h4>
+                                    <p><strong>Role:</strong> {user_role}</p>
+                                    <p><strong>Barangay:</strong> {barangay_name}</p>
+                                    <p><strong>Email:</strong> {email}</p>
+                                    <p><strong>Date Validated:</strong> {current_date}</p>
+                                </div>
+
+                                <p>Thank you for being part of the Preschooler Profiling and Monitoring System (PPMS).</p>
+                            </div>
+                            <div class="footer">
+                                &copy; 2025 PPMS Cluster 4 - Imus City Healthcare Management<br>
+                                This is an automated message. Please do not reply.
+                            </div>
                         </div>
+                    </body>
+                    </html>
+                    """
 
-                        <p>Thank you for being part of the Preschooler Profiling and Monitoring System (PPMS).</p>
-                    </div>
-                    <div class="footer">
-                        &copy; 2025 PPMS Cluster 4 - Imus City Healthcare Management<br>
-                        This is an automated message. Please do not reply.
-                    </div>
-                </div>
-            </body>
-            </html>
-            """
-
-            plain_message = f"""
-Hello {account.full_name},
+                    plain_message = f"""
+Hello {full_name},
 
 Your PPMS account has been successfully validated. 
 You can now log in using your registered email address.
 
 Account Details:
-- Role: {account.user_role}
-- Barangay: {account.barangay.name if account.barangay else "N/A"}
-- Email: {account.email}
+- Role: {user_role}
+- Barangay: {barangay_name}
+- Email: {email}
 - Date Validated: {current_date}
 
 Thank you for being part of the Preschooler Profiling and Monitoring System (PPMS).
-"""
+                    """
 
-            send_mail(
-                subject,
-                plain_message,
-                settings.DEFAULT_FROM_EMAIL,
-                [account.email],
-                html_message=html_message,
-                fail_silently=True,
-            )
+                    send_mail(
+                        subject,
+                        plain_message,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [email],
+                        html_message=html_message,
+                        fail_silently=False,
+                    )
+                    print(f"[DEBUG] ✅ Validation email sent successfully to {email}")
+                except Exception as e:
+                    print(f"[EMAIL ERROR]: {e}")
 
+            # Start email sending in background thread
+            import threading
+            threading.Thread(target=send_validation_email).start()
+
+        # Success message and redirect (happens immediately without waiting for email)
         messages.success(
             request,
-            f"{account.full_name} ({account.user_role}) has been validated and notified."
+            f"{account.full_name} ({account.user_role}) has been validated and will be notified via email."
         )
         return redirect('validate')
     
@@ -7359,7 +7401,7 @@ def register_parent(request):
             email = request.POST.get('email', '').strip()
             contact_number = request.POST.get('contact_number', '').strip()
             birthdate = request.POST.get('birthdate', '').strip()
-            sex = request.POST.get('sex', '').strip()  # ✅ Added
+            sex = request.POST.get('sex', '').strip()
 
             # Basic validation
             if not all([first_name, last_name, email, contact_number, birthdate, sex]):
@@ -7479,12 +7521,24 @@ def register_parent(request):
 
             logger.info(f"Authorization passed - Role: {current_user_info['role']}, Barangay: {user_barangay}")
 
-            # Check if email already exists
-            if Parent.objects.filter(email__iexact=email).exists():
+            # ✅ FIXED: Check for existing records with proper orphan cleanup
+            parent_exists = Parent.objects.filter(email__iexact=email).exists()
+            user_exists = User.objects.filter(email__iexact=email).exists()
+            account_exists = Account.objects.filter(email__iexact=email).exists()
+            
+            # Handle orphaned User records (User exists but no Parent/Account)
+            if user_exists and not parent_exists and not account_exists:
+                try:
+                    User.objects.filter(email__iexact=email).delete()
+                    logger.info(f"🗑️ Deleted orphaned User for email: {email}")
+                except Exception as e:
+                    logger.error(f"❌ Error deleting orphaned User: {e}")
+                    messages.error(request, "An error occurred. Please try again.")
+                    return redirect('register_parent')
+            elif parent_exists:
                 messages.error(request, "A parent with this email already exists.")
                 return redirect('register_parent')
-                
-            if User.objects.filter(email__iexact=email).exists():
+            elif account_exists:
                 messages.error(request, "A user with this email already exists.")
                 return redirect('register_parent')
 
@@ -7518,70 +7572,135 @@ def register_parent(request):
                 )
                 logger.info("Django User created successfully")
 
-                # Create Parent with correct field names
-                logger.info("Creating Parent record")
-                parent = Parent.objects.create(
-                    first_name=first_name,
-                    middle_name=middle_name,
-                    suffix=suffix,
-                    last_name=last_name,
-                    sex=sex,  # ✅ Added
-                    email=email,
-                    contact_number=contact_number,
-                    birthdate=birthdate_obj,
-                    address=address,
-                    barangay=user_barangay,
-                    must_change_password=True,
-                    password=raw_password,
-                    created_at=timezone.now()
-                )
-                logger.info("Parent created successfully")
+                try:
+                    # Create Parent with correct field names
+                    logger.info("Creating Parent record")
+                    parent = Parent.objects.create(
+                        first_name=first_name,
+                        middle_name=middle_name,
+                        suffix=suffix,
+                        last_name=last_name,
+                        sex=sex,
+                        email=email,
+                        contact_number=contact_number,
+                        birthdate=birthdate_obj,
+                        address=address,
+                        barangay=user_barangay,
+                        must_change_password=True,
+                        password=raw_password,
+                        created_at=timezone.now()
+                    )
+                    logger.info("Parent created successfully")
 
-                # Create Account - also assign to same barangay
-                logger.info("Creating Account record")
-                account = Account.objects.create(
-                    email=email,
-                    first_name=first_name,
-                    middle_name=middle_name,
-                    suffix=suffix,
-                    last_name=last_name,
-                    sex=sex,  # ✅ Added
-                    contact_number=contact_number,
-                    birthdate=birthdate_obj,
-                    user_role='parent',
-                    barangay=user_barangay,
-                    is_validated=False,
-                    is_rejected=False,
-                    last_activity=timezone.now(),
-                    password=raw_password,
-                    must_change_password=True
-                )
-                logger.info("Account created successfully")
+                    # Create Account - also assign to same barangay
+                    logger.info("Creating Account record")
+                    account = Account.objects.create(
+                        email=email,
+                        first_name=first_name,
+                        middle_name=middle_name,
+                        suffix=suffix,
+                        last_name=last_name,
+                        sex=sex,
+                        contact_number=contact_number,
+                        birthdate=birthdate_obj,
+                        user_role='parent',
+                        barangay=user_barangay,
+                        is_validated=False,
+                        is_rejected=False,
+                        last_activity=timezone.now(),
+                        password=raw_password,
+                        must_change_password=True
+                    )
+                    logger.info("Account created successfully")
+                    
+                except Exception as e:
+                    # If Parent or Account creation fails, delete the User to prevent orphans
+                    logger.error(f"❌ Error creating Parent/Account: {e}")
+                    user.delete()
+                    logger.info("🗑️ Rolled back User creation due to error")
+                    raise  # Re-raise to trigger outer exception handling
 
-            # Send email (outside transaction)
-            try:
-                subject = "PPMS Cluster 4 – Parent Registration Successful"
-                html_message = f"""
-                <html>
-                <body style='font-family: Arial, sans-serif; background-color: #f9fafb; padding: 20px;'>
-                    <div style='max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px;'>
-                        <h2 style='text-align: center;'>Registration Successful!</h2>
-                        <p>Hello <strong>{full_name}</strong>,</p>
-                        <p>Your parent account has been registered for <strong>{user_barangay.name}</strong>.</p>
-                        <div style='background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;'>
-                            <strong>Email:</strong> {email}<br>
-                            <strong>Password:</strong> {raw_password}
+            # ========== Background email sending ==========
+            def send_parent_registration_email():
+                try:
+                    subject = "PPMS Cluster 4 – Parent Registration Successful"
+                    html_message = f"""
+                    <html>
+                    <body style='font-family: Arial, sans-serif; background-color: #f9fafb; padding: 20px;'>
+                        <div style='max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
+                            <div style='text-align: center; border-bottom: 3px solid #198754; padding-bottom: 20px; margin-bottom: 20px;'>
+                                <h1 style='color: #198754; margin: 0;'>PPMS Cluster 4</h1>
+                                <p style='color: #6b7280; margin: 5px 0 0 0;'>Imus City Healthcare Management</p>
+                            </div>
+                            
+                            <h2 style='text-align: center; color: #1e293b;'>Registration Successful!</h2>
+                            
+                            <p style='font-size: 16px; color: #334155;'>Hello <strong>{full_name}</strong>,</p>
+                            
+                            <p style='font-size: 16px; color: #334155;'>
+                                Your parent account has been successfully registered for <strong>{user_barangay.name}</strong>.
+                            </p>
+                            
+                            <div style='background: #ecfdf5; border: 1px solid #10b981; padding: 20px; border-radius: 8px; margin: 20px 0;'>
+                                <h3 style='color: #065f46; margin-top: 0;'>Login Credentials</h3>
+                                <p style='margin: 10px 0; color: #065f46;'>
+                                    <strong>Email:</strong> {email}<br>
+                                    <strong>Password:</strong> <code style='background: #d1fae5; padding: 4px 8px; border-radius: 4px; font-size: 14px;'>{raw_password}</code>
+                                </p>
+                            </div>
+                            
+                            <div style='background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                                <p style='margin: 0; color: #92400e;'>
+                                    <strong>⚠️ Important:</strong> You must change your password on first login for security purposes.
+                                </p>
+                            </div>
+                            
+                            <div style='text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;'>
+                                <p style='font-size: 13px; color: #6b7280;'>
+                                    This is an automated message. Please do not reply.<br>
+                                    © 2025 PPMS Cluster 4. All rights reserved.
+                                </p>
+                            </div>
                         </div>
-                        <p><strong>Important:</strong> You must change your password on first login.</p>
-                    </div>
-                </body>
-                </html>
-                """
-                plain_message = f"Hello {full_name},\n\nYour parent account for {user_barangay.name} has been created.\nEmail: {email}\nPassword: {raw_password}"
-                send_mail(subject, plain_message, settings.DEFAULT_FROM_EMAIL, [email], html_message=html_message, fail_silently=True)
-            except Exception as email_error:
-                logger.warning(f"Email sending failed: {email_error}")
+                    </body>
+                    </html>
+                    """
+                    plain_message = f"""
+PPMS Cluster 4 – Parent Registration Successful
 
+Hello {full_name},
+
+Your parent account has been successfully registered for {user_barangay.name}.
+
+Login Credentials:
+Email: {email}
+Password: {raw_password}
+
+⚠️ IMPORTANT: You must change your password on first login for security purposes.
+
+PPMS Cluster 4
+Imus City Healthcare Management
+
+This is an automated message. Please do not reply.
+© 2025 PPMS Cluster 4. All rights reserved.
+                    """
+                    
+                    send_mail(
+                        subject, 
+                        plain_message, 
+                        settings.DEFAULT_FROM_EMAIL, 
+                        [email], 
+                        html_message=html_message, 
+                        fail_silently=False
+                    )
+                    logger.info(f"✅ Email sent successfully to {email}")
+                except Exception as email_error:
+                    logger.warning(f"[EMAIL ERROR]: {email_error}")
+
+            # Start email sending in background thread
+            threading.Thread(target=send_parent_registration_email).start()
+
+            # Success message (displayed immediately without waiting for email)
             messages.success(request, f"Parent '{full_name}' registered successfully in {user_barangay.name}!\nEmail: {email}\nPassword: {raw_password}")
             return redirect('register_parent')
 
@@ -9303,6 +9422,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
