@@ -117,24 +117,36 @@ def receive_esp32_data_simple(request):
                     'message': 'device_id is required for multi-device support'
                 }, status=400)
             
+            # Update device status (CREATE if doesn't exist - FIXED)
+            if device_id not in DEVICE_STATUS:
+                print(f"DEBUG: Creating new device entry for {device_id}")
+                DEVICE_STATUS[device_id] = {
+                    'device_name': device_id,  # Use device_id as name initially
+                    'last_seen': None,
+                    'is_online': False,
+                    'measurements_today': 0,
+                    'last_measurement_type': None
+                }
+
             # Update device status
-            if device_id in DEVICE_STATUS:
-                DEVICE_STATUS[device_id]['last_seen'] = timezone.now()
-                DEVICE_STATUS[device_id]['is_online'] = True
-                DEVICE_STATUS[device_id]['last_measurement_type'] = measurement_type
-                DEVICE_STATUS[device_id]['measurements_today'] += 1
+            DEVICE_STATUS[device_id]['last_seen'] = timezone.now()
+            DEVICE_STATUS[device_id]['is_online'] = True
+            DEVICE_STATUS[device_id]['last_measurement_type'] = measurement_type
+            DEVICE_STATUS[device_id]['measurements_today'] += 1
+            
+            print(f"DEBUG: Updated device status for {device_id}: {DEVICE_STATUS[device_id]}")
             
             # Initialize device data if not exists
             if device_id not in ESP32_DATA_CACHE:
                 ESP32_DATA_CACHE[device_id] = {}
-                print("DEBUG: Initialized new cache entry for device {device_id}")
+                print(f"DEBUG: Initialized new cache entry for device {device_id}")
             else:
-                print("DEBUG: Existing cache for device {device_id}: {ESP32_DATA_CACHE[device_id]}")
+                print(f"DEBUG: Existing cache for device {device_id}: {ESP32_DATA_CACHE[device_id]}")
             
             # Store data based on measurement type - MERGE with existing data
             if measurement_type == 'BMI':
                 # Add BMI data while preserving any existing temperature data
-                print("DEBUG: Adding BMI data to device {device_id}...")
+                print(f"DEBUG: Adding BMI data to device {device_id}...")
                 ESP32_DATA_CACHE[device_id].update({
                     'weight': validated_data['weight'],
                     'height': validated_data['height'],
@@ -145,18 +157,18 @@ def receive_esp32_data_simple(request):
                     'bmi_timestamp': str(timezone.now()),
                     'has_bmi_data': True
                 })
-                print("DEBUG: After BMI update for {device_id}: {ESP32_DATA_CACHE[device_id]}")
+                print(f"DEBUG: After BMI update for {device_id}: {ESP32_DATA_CACHE[device_id]}")
                 
             elif measurement_type == 'TEMPERATURE':
                 # Add temperature data while preserving any existing BMI data
-                print("DEBUG: Adding temperature data to device {device_id}...")
+                print(f"DEBUG: Adding temperature data to device {device_id}...")
                 ESP32_DATA_CACHE[device_id].update({
                     'temperature': validated_data['temperature'],
                     'temperature_status': validated_data.get('temperature_status'),
                     'temp_timestamp': str(timezone.now()),
                     'has_temperature_data': True
                 })
-                print("DEBUG: After temperature update for {device_id}: {ESP32_DATA_CACHE[device_id]}")
+                print(f"DEBUG: After temperature update for {device_id}: {ESP32_DATA_CACHE[device_id]}")
                 
             else:
                 # Legacy support - store all available data
@@ -186,7 +198,7 @@ def receive_esp32_data_simple(request):
             })
             
         else:
-            print("DEBUG: Validation failed: {serializer.errors}")
+            print(f"DEBUG: Validation failed: {serializer.errors}")
             return JsonResponse({
                 'status': 'error',
                 'message': 'Validation failed',
@@ -200,13 +212,12 @@ def receive_esp32_data_simple(request):
         }, status=400)
         
     except Exception as e:
-        print("DEBUG: Exception occurred: {str(e)}")
+        print(f"DEBUG: Exception occurred: {str(e)}")
         return JsonResponse({
             'status': 'error',
             'message': str(e)
         }, status=500)
-
-
+        
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_esp32_data_simple(request):
@@ -219,7 +230,7 @@ def get_esp32_data_simple(request):
     device_id = request.GET.get('device_id')
     force_clear = request.GET.get('clear', 'false').lower() == 'true'
     
-    print("DEBUG: get_esp32_data_simple called - device_id: {device_id}, force_clear: {force_clear}")
+    print(f"DEBUG: get_esp32_data_simple called - device_id: {device_id}, force_clear: {force_clear}")
     
     # If no device_id specified, return available devices
     if not device_id:
@@ -256,9 +267,9 @@ def get_esp32_data_simple(request):
         if device_id in ESP32_DATA_CACHE:
             cleared_data = ESP32_DATA_CACHE[device_id].copy()
             del ESP32_DATA_CACHE[device_id]
-            print("DEBUG: FORCE CLEARED data for device {device_id}: {cleared_data}")
+            print(f"DEBUG: FORCE CLEARED data for device {device_id}: {cleared_data}")
         else:
-            print("DEBUG: No data to clear for device {device_id} (already empty)")
+            print(f"DEBUG: No data to clear for device {device_id} (already empty)")
         
         return JsonResponse({
             'status': 'no_data',
@@ -270,7 +281,7 @@ def get_esp32_data_simple(request):
     
     # Normal data retrieval logic for specific device
     esp32_data = ESP32_DATA_CACHE.get(device_id, {})
-    print("DEBUG: Retrieved ESP32 data for {device_id}: {esp32_data}")
+    print(f"DEBUG: Retrieved ESP32 data for {device_id}: {esp32_data}")
     
     if esp32_data:
         has_bmi = esp32_data.get('has_bmi_data', False)
@@ -298,10 +309,10 @@ def get_esp32_data_simple(request):
         # Only clear if we have BOTH BMI and temperature data
         if is_complete:
             del ESP32_DATA_CACHE[device_id]
-            print("DEBUG: Auto-cleared COMPLETE data for device {device_id} (BMI + Temperature)")
+            print(f"DEBUG: Auto-cleared COMPLETE data for device {device_id} (BMI + Temperature)")
             response_data['data_cleared'] = True
         else:
-            print("DEBUG: Keeping PARTIAL data for device {device_id} (BMI: {has_bmi}, Temp: {has_temp})")
+            print(f"DEBUG: Keeping PARTIAL data for device {device_id} (BMI: {has_bmi}, Temp: {has_temp})")
             response_data['data_cleared'] = False
         
         return JsonResponse(response_data)
@@ -313,6 +324,8 @@ def get_esp32_data_simple(request):
             'device_name': DEVICE_STATUS.get(device_id, {}).get('device_name', device_id),
             'waiting_for': ['BMI', 'Temperature']
         })
+
+
 
 
 @csrf_exempt
@@ -338,7 +351,7 @@ def clear_esp32_data(request):
                 # Fallback to POST parameters
                 device_id = request.POST.get('device_id')
     except Exception as e:
-        print("DEBUG: Error parsing clear request: {e}")
+        print(f"DEBUG: Error parsing clear request: {e}")
         device_id = None
     
     # If no device_id specified, show available devices
@@ -354,7 +367,7 @@ def clear_esp32_data(request):
     if device_id in ESP32_DATA_CACHE:
         cleared_data = ESP32_DATA_CACHE[device_id].copy()
         del ESP32_DATA_CACHE[device_id]
-        print("DEBUG: POST CLEAR - Forcefully cleared data for device {device_id}: {cleared_data}")
+        print(f"DEBUG: POST CLEAR - Forcefully cleared data for device {device_id}: {cleared_data}")
         return JsonResponse({
             'status': 'success',
             'message': f'Data forcefully cleared for device {device_id}',
@@ -362,7 +375,7 @@ def clear_esp32_data(request):
             'cleared_data': cleared_data
         })
     else:
-        print("DEBUG: POST CLEAR - No data to clear for device {device_id} (cache was already empty)")
+        print(f"DEBUG: POST CLEAR - No data to clear for device {device_id} (cache was already empty)")
         return JsonResponse({
             'status': 'success',  # Still return success even if no data
             'message': f'No data found for device {device_id} (already clear)',
@@ -374,10 +387,13 @@ def clear_esp32_data(request):
 @csrf_exempt
 @require_http_methods(["GET"])
 def get_device_status(request):
+    update_device_online_status()  
     """
     Get status of all ESP32 devices
     """
     global ESP32_DATA_CACHE, DEVICE_STATUS
+    
+    print(f"DEBUG: get_device_status called - DEVICE_STATUS: {DEVICE_STATUS}")
     
     device_statuses = []
     for device_id, status in DEVICE_STATUS.items():
@@ -400,6 +416,8 @@ def get_device_status(request):
         }
         device_statuses.append(device_info)
     
+    print(f"DEBUG: Returning {len(device_statuses)} devices")
+    
     return JsonResponse({
         'status': 'success',
         'devices': device_statuses,
@@ -407,6 +425,7 @@ def get_device_status(request):
         'online_devices': len([d for d in device_statuses if d['is_online']]),
         'devices_with_data': len([d for d in device_statuses if d['has_cached_data']])
     })
+
 
 
 @csrf_exempt
@@ -426,7 +445,6 @@ def debug_esp32_cache(request):
         'timestamp': str(timezone.now())
     })
 
-
 @csrf_exempt
 @require_http_methods(["POST"])
 def clear_all_esp32_data(request):
@@ -439,7 +457,7 @@ def clear_all_esp32_data(request):
     cleared_data = ESP32_DATA_CACHE.copy()
     ESP32_DATA_CACHE.clear()
     
-    print("DEBUG: Cleared all ESP32 data ({device_count} devices): {cleared_data}")
+    print(f"DEBUG: Cleared all ESP32 data ({device_count} devices): {cleared_data}")
     
     return JsonResponse({
         'status': 'success',
@@ -506,12 +524,20 @@ def receive_esp32_data(request):
             device_id = validated_data.get('device_id')
             measurement_type = validated_data.get('measurement_type', 'UNKNOWN').upper()
             
-            # Update device tracking
-            if device_id in DEVICE_STATUS:
-                DEVICE_STATUS[device_id]['last_seen'] = timezone.now()
-                DEVICE_STATUS[device_id]['is_online'] = True
-                DEVICE_STATUS[device_id]['last_measurement_type'] = measurement_type
-                DEVICE_STATUS[device_id]['measurements_today'] += 1
+            # Update device tracking (CREATE if doesn't exist)
+            if device_id not in DEVICE_STATUS:
+                DEVICE_STATUS[device_id] = {
+                    'device_name': device_id,
+                    'last_seen': None,
+                    'is_online': False,
+                    'measurements_today': 0,
+                    'last_measurement_type': None
+                }
+
+            DEVICE_STATUS[device_id]['last_seen'] = timezone.now()
+            DEVICE_STATUS[device_id]['is_online'] = True
+            DEVICE_STATUS[device_id]['last_measurement_type'] = measurement_type
+            DEVICE_STATUS[device_id]['measurements_today'] += 1
             
             # Initialize device data if not exists
             if device_id not in ESP32_DATA_CACHE:
@@ -558,10 +584,10 @@ def receive_esp32_data(request):
             response_serializer = ESP32ResponseSerializer(response_data)
             
             # Debug logging
-            print("=== ESP32 DATA RECEIVED ({measurement_type}) ===")
-            print("Device: {device_id}")
-            print("Data: {validated_data}")
-            print("Cache: {ESP32_DATA_CACHE[device_id]}")
+            print(f"=== ESP32 DATA RECEIVED ({measurement_type}) ===")
+            print(f"Device: {device_id}")
+            print(f"Data: {validated_data}")
+            print(f"Cache: {ESP32_DATA_CACHE[device_id]}")
             print("=" * 50)
             
             return Response(response_serializer.data, status=status.HTTP_200_OK)
@@ -577,12 +603,29 @@ def receive_esp32_data(request):
             
             response_serializer = ESP32ResponseSerializer(response_data)
             
-            print("=== VALIDATION FAILED ===")
-            print("Errors: {serializer.errors}")
-            print("Raw data: {request.data}")
+            print(f"=== VALIDATION FAILED ===")
+            print(f"Errors: {serializer.errors}")
+            print(f"Raw data: {request.data}")
             print("=" * 30)
             
             return Response(response_serializer.data, status=status.HTTP_400_BAD_REQUEST)
+            
+    except Exception as e:
+        # Unexpected error
+        response_data = {
+            'status': 'error',
+            'message': f'Server error: {str(e)}',
+            'server_timestamp': timezone.now()
+        }
+        
+        response_serializer = ESP32ResponseSerializer(response_data)
+        
+        print(f"=== SERVER ERROR ===")
+        print(f"Error: {str(e)}")
+        print(f"Raw data: {request.data}")
+        print("=" * 20)
+        
+        return Response(response_serializer.data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
     except Exception as e:
         # Unexpected error
@@ -7217,6 +7260,7 @@ def submit_bmi(request):
     # If GET → redirect to preschoolers
     return redirect('preschoolers')
 
+
     
 
     
@@ -9206,6 +9250,50 @@ def save_temperature(request):
             'status': 'error',
             'message': 'An unexpected error occurred while saving temperature'
         })
+
+#10/6/2025
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def announce_device(request):
+    """
+    ESP32 announces itself as online when it connects to WiFi
+    """
+    global DEVICE_STATUS
+
+    try:
+        data = json.loads(request.body)
+        device_id = data.get("device_id")
+        device_name = data.get("device_name", device_id)
+
+        if not device_id:
+            return JsonResponse({
+                "status": "error",
+                "message": "device_id is required"
+            }, status=400)
+
+        # Create or update device status
+        DEVICE_STATUS[device_id] = {
+            "device_name": device_name,
+            "last_seen": timezone.now(),
+            "is_online": True,
+            "measurements_today": DEVICE_STATUS.get(device_id, {}).get("measurements_today", 0),
+            "last_measurement_type": DEVICE_STATUS.get(device_id, {}).get("last_measurement_type", None),
+        }
+
+        return JsonResponse({
+            "status": "success",
+            "message": f"Device {device_id} announced online",
+            "device_id": device_id,
+            "device_name": device_name
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=500)
+
 
 
 
