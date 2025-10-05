@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PPMS Cluster 4 Imus City - Registered Workers</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" type="image/png" href="{% static 'media/logo.png' %}">
+  
+  <style>
+    /* Override background for this page */
+    body {
+      background: url('{% static "media/loginbg.png" %}') center/cover no-repeat fixed;
+    }
+    
+    .background-image {
+      background-image: url('{% static "media/loginbg.png" %}');
+    }
+
+    /* Sidebar styles */
+    .sidebar-profile {
+      padding: 20px 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: white;
+    }
+    
+    .profile-image {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .profile-info h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+    }
+    
+    .profile-info p {
+      margin: 2px 0 0 0;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .logout-nav-item {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin-top: auto;
+    }
+    
+    .logout-nav-item .nav-link {
+      color: #ff6b6b;
+    }
+    
+    .logout-nav-item .nav-link:hover {
+      background-color: rgba(255, 107, 107, 0.1);
+      color: #ff6b6b;
+    }
+    
+    .nav-menu {
+      display: flex;
+      flex-direction: column;
+      height: calc(100% - 140px);
+      padding: 20px 0 0 0;
+    }
+    
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar-header {
+      flex-shrink: 0;
+    }
+
+    /* Page specific styles */
+    .page-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 30px;
+      margin: 30px auto 0;
+      max-width: 1200px;
+    }
+
+    .page-container h2 {
+      font-size: 2em;
+      margin-bottom: 30px;
+      font-weight: 400;
+      color: #333;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-family: 'Poppins', sans-serif;
+      text-align: center;
+    }
+
+    /* Filter Section Styles - Force horizontal layout */
+    .filter-section {
+      margin-bottom: 25px !important;
+      display: flex !important;
+      flex-direction: row !important;
+      justify-content: center !important;
+      align-items: flex-start !important;
+      gap: 15px !important;
+      max-width: 500px !important;
+      margin-left: auto !important;
+      margin-right: auto !important;
+      padding: 0 10px !important;
+      width: 100% !important;
+    }
+
+    .filter-wrapper {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 8px !important;
+      flex: 1 !important;
+      max-width: 220px !important;
+      min-width: 180px !important;
+      align-items: flex-start !important;
+    }
+
+    .filter-select {
+      padding: 12px 35px 12px 16px !important;
+      border: 2px solid #5bdab3;
+      background: white;
+      color: #333;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 13px !important;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.3s ease;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235bdab3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+
+    .filter-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 20px;
+      line-height: 20px;
+    }
+
+    .filter-select {
+      padding: 12px 40px 12px 16px;
+      border: 2px solid #5bdab3;
+      background: white;
+      color: #333;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.3s ease;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235bdab3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+    }
+
+    .filter-select:hover,
+    .filter-select:focus {
+      border-color: #1565c0;
+      box-shadow: 0 2px 8px rgba(21, 101, 192, 0.2);
+      outline: none;
+    }
+
+    /* Enhanced table container */
+    .table-container {
+      overflow-x: auto;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+      scrollbar-color: #5bdab3 #f0f0f0;
+    }
+
+    .table-container::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+      background: #5bdab3;
+      border-radius: 4px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb:hover {
+      background: #1565c0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      min-width: 900px;
+    }
+
+    table th,
+    table td {
+      border: 1px solid #e6e6e6;
+      padding: 15px;
+      text-align: left;
+      font-size: 14px;
+      color: #333;
+      font-weight: 400;
+      vertical-align: middle;
+    }
+
+    table th {
+      background-color: #f8f9fa;
+      color: #333;
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: none;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      text-align: center;
+    }
+
+    table td {
+      text-align: center;
+    }
+
+    .table-striped > tbody > tr:nth-of-type(odd) > td {
+      background-color: rgba(248, 249, 250, 0.5);
+    }
+
+    .table-hover > tbody > tr:hover > td {
+      background-color: rgba(91, 218, 179, 0.1);
+    }
+
+    .btn {
+      background-color: #5bdab3;
+      color: #1e1e2f;
+      padding: 8px 16px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 12px;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
+      display: inline-block;
+    }
+
+    .btn:hover {
+      background-color: #1565c0;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    }
+
+    .remove-btn {
+      background-color: #ef5350;
+      color: white;
+      box-shadow: 0 2px 6px rgba(239, 83, 80, 0.3);
+    }
+
+    .remove-btn:hover {
+      background-color: #d32f2f;
+      color: white;
+      box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+    }
+
+    /* Debug button styles */
+    .debug-btn {
+      background: #ff4444;
+      color: white;
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* Pagination */
+    .pagination-section {
+      text-align: center;
+      margin-top: 20px;
+      color: #333;
+      font-size: 14px;
+      font-weight: 400;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .pagination-section span {
+      margin: 0 15px;
+      color: #666;
+    }
+
+    .pagination-section .btn {
+      margin: 0 5px;
+      padding: 12px 20px;
+      font-size: 14px;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+      .page-container {
+        margin: 20px auto 0;
+        padding: 20px;
+      }
+
+      .page-container h2 {
+        font-size: 1.6em;
+        margin-bottom: 25px;
+      }
+
+      .filter-section {
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+        max-width: 300px;
+        padding: 0;
+      }
+
+      .filter-wrapper {
+        width: 100%;
+        max-width: 280px;
+        flex: none;
+      }
+
+      .filter-select {
+        padding: 10px 35px 10px 14px;
+        font-size: 13px;
+        width: 100%;
+      }
+
+      table {
+        min-width: 800px;
+      }
+
+      table th,
+      table td {
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+
+      .btn {
+        font-size: 11px;
+        padding: 6px 12px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .filter-section {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+        padding: 0 20px;
+      }
+      
+      .filter-wrapper {
+        width: 100%;
+        max-width: 300px;
+      }
+
+      .filter-select {
+        padding: 8px 30px 8px 12px;
+        font-size: 12px;
+      }
+
+      table {
+        min-width: 700px;
+      }
+
+      table th,
+      table td {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+
+      .btn {
+        font-size: 10px;
+        padding: 5px 10px;
+      }
+    }
+
+    /* Role badge styles */
+    .role-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    
+    .role-badge.bhw {
+      background: rgba(76, 175, 80, 0.1);
+      color: #4caf50;
+      border: 1px solid rgba(76, 175, 80, 0.3);
+    }
+    
+    .role-badge.bns {
+      background: rgba(33, 150, 243, 0.1);
+      color: #2196f3;
+      border: 1px solid rgba(33, 150, 243, 0.3);
+    }
+    
+    .role-badge.midwife {
+      background: rgba(156, 39, 176, 0.1);
+      color: #9c27b0;
+      border: 1px solid rgba(156, 39, 176, 0.3);
+    }
+    
+    .role-badge.nurse {
+      background: rgba(255, 152, 0, 0.1);
+      color: #ff9800;
+      border: 1px solid rgba(255, 152, 0, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="background-image"></div>
+  <!-- Sidebar Overlay for Mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Left Sidebar Navigation -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1 class="sidebar-title">PPMS Admin</h1>
+    </div>
+    
+    <!-- Profile Section in Sidebar -->
+    <div class="sidebar-profile">
+      {% if account.profile_photo and account.profile_photo.image %}
+        <img src="{{ account.profile_photo.image.url }}" alt="Profile" class="profile-image">
+      {% else %}
+        <img src="{% static 'media/default-profile.jpg' %}" alt="Default Profile" class="profile-image">
+      {% endif %}
+      <div class="profile-info">
+        <h3>Admin</h3>
+        <p>Administrator</p>
+      </div>
+    </div>
+    
+    <nav class="nav-menu">
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/admin-dashboard/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+          </svg>
+          Dashboard
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/registered-barangays/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+          </svg>
+          Barangay List
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/registered-preschoolers/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+          </svg>
+          Preschoolers
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/admin-registered-parents/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+          </svg>
+          Parents
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link active" onclick="location.href='/healthcare-workers/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+          </svg>
+          Registered Workers
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/validate/'">
+          <div class="nav-link-content" style="position: relative; display: inline-flex; align-items: center;">
+            <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span>Account Validation</span>
+            <span id="validation-badge" class="notification-badge">0</span>
+          </div>
+        </button>
+      </div>
+      
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/admin-logs/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+          </svg>
+          Activity Logs
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" id="generateReportBtn">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+          </svg>
+          Generate Report
+        </button>
+      </div>
+      
+      <div class="nav-item">
+        <button class="nav-link" onclick="location.href='/manage-announcements/'">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zM9 8a1 1 0 012 0v4a1 1 0 11-2 0V8zM11 8a1 1 0 012 0v4a1 1 0 11-2 0V8z" clip-rule="evenodd"/>
+          </svg>
+          Announcements
+        </button>
+      </div>
+      
+      <!-- Logout at bottom of navigation -->
+      <div class="nav-item logout-nav-item">
+        <button class="nav-link" id="logoutLink">
+          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"/>
+          </svg>
+          Logout
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div style="display: flex; align-items: center; gap: 15px;">
+        <button class="mobile-toggle" id="mobileToggle">☰</button>
+        <div class="greeting">Registered Workers</div>
+      </div>
+      <div class="top-icons">
+        <!-- Notification -->
+        <div class="notif-dropdown">
+          <button class="icon-btn" id="notifBtn" style="position: relative;">
+            <img src="{% static 'media/notification.png' %}" alt="Notifications" style="width: 2.5rem; height: 2.5rem;">
+            <span id="notifDot"></span>
+          </button>
+
+          <div class="dropdown" id="notifMenu" style="max-height: 400px; overflow-y: auto; width: 320px; min-width: 280px;">
+            {% if notifications %}
+              {% for notif in notifications %}
+                {% if notif.type == 'account' %}
+                  <a href="/validate/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}" style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; align-items: center;">
+                      <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      <span class="notif-text">New {{ notif.user_role }} account named <strong>{{ notif.full_name }}</strong> requesting for validation.</span>
+                    </div>
+                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
+                  </a>
+                {% elif notif.type == 'preschooler' %}
+                  <a href="/registered-preschoolers/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}" style="display: flex; flex-direction: column; gap: 2px;">
+                    <div style="display: flex; align-items: center;">
+                      {% if notif.bhw_image %}
+                        <img src="{{ notif.bhw_image }}" alt="BHW Profile" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      {% else %}
+                        <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                      {% endif %}
+                      <span class="notif-text">
+                        New preschooler is being registered.<br>
+                        Name: <strong>{{ notif.full_name }}</strong>
+                      </span>
+                    </div>
+                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
+                  </a>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <div class="dropdown-item">No notifications available.</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+      <div class="page-container">
+        <h2>Registered Workers</h2>
+        
+        <!-- Message Display Section -->
+        {% if messages %}
+          <div class="messages-container" style="margin-bottom: 20px;">
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags }}" style="
+                padding: 15px 20px;
+                margin-bottom: 10px;
+                border-radius: 8px;
+                border-left: 4px solid;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                font-family: 'Poppins', sans-serif;
+                font-weight: 500;
+                {% if message.tags == 'success' %}
+                  border-left-color: #4caf50;
+                  color: #2e7d32;
+                  background-color: rgba(76, 175, 80, 0.1);
+                {% elif message.tags == 'error' %}
+                  border-left-color: #f44336;
+                  color: #c62828;
+                  background-color: rgba(244, 67, 54, 0.1);
+                {% elif message.tags == 'warning' %}
+                  border-left-color: #ff9800;
+                  color: #ef6c00;
+                  background-color: rgba(255, 152, 0, 0.1);
+                {% else %}
+                  border-left-color: #2196f3;
+                  color: #1565c0;
+                  background-color: rgba(33, 150, 243, 0.1);
+                {% endif %}
+              ">
+                <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}" style="margin-right: 8px;"></i>
+                {{ message }}
+              </div>
+            {% endfor %}
+          </div>
+
+          <!-- Auto-hide messages after 5 seconds -->
+          <script>
+            setTimeout(function() {
+              const messages = document.querySelector('.messages-container');
+              if (messages) {
+                messages.style.transition = 'opacity 0.5s ease';
+                messages.style.opacity = '0';
+                setTimeout(() => messages.remove(), 500);
+              }
+            }, 5000);
+          </script>
+        {% endif %}
+        
+        <!-- Filter Section - Updated with Role Filter -->
+        <div class="filter-section">
+          <div class="filter-wrapper">
+            <label for="role-filter" class="filter-label">
+              <i class="fas fa-user-tag"></i> Filter by Role
+            </label>
+            <select id="role-filter" class="filter-select">
+              <option value="all">All Roles</option>
+              <option value="bhw">Health Workers (BHW)</option>
+              <option value="bns">BNS</option>
+              <option value="midwife">Midwives</option>
+              <option value="nurse">Nurses</option>
+            </select>
+          </div>
+          
+          <div class="filter-wrapper">
+            <label for="barangay-filter" class="filter-label">
+              <i class="fas fa-map-marker-alt"></i> Filter by Barangay
+            </label>
+            <select id="barangay-filter" class="filter-select">
+              <option value="all">All Barangays</option>
+              {% for barangay in barangays %}
+                <option value="{{ barangay.name|lower }}">{{ barangay.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- Single Table Content - All Workers -->
+        <div class="table-container">
+          <table class="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Barangay</th>
+                <th>Contact Number</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Last Activity</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- BHW Workers -->
+              {% for bhw in bhws %}
+                <tr data-role="bhw" data-barangay="{% if bhw.barangay %}{{ bhw.barangay.name|lower }}{% elif bhw.bhw_data and bhw.bhw_data.barangay %}{{ bhw.bhw_data.barangay.name|lower }}{% else %}no barangay{% endif %}">
+                  <td>{{ bhw.full_name }}</td>
+                  <td><span class="role-badge bhw">Health Worker (BHW)</span></td>
+                  <td>
+                    {% if bhw.barangay %}
+                      {{ bhw.barangay.name }}
+                    {% elif bhw.bhw_data and bhw.bhw_data.barangay %}
+                      {{ bhw.bhw_data.barangay.name }}
+                    {% else %}
+                      No Barangay
+                    {% endif %}
+                  </td>
+                  <td>{{ bhw.contact_number }}</td>
+                  <td>{{ bhw.email }}</td>
+                  <td>Active</td>
+                  <td>
+                    {% if bhw.last_activity_display == "🟢 Online" %}
+                      <span style="color: green;">🟢 Online</span>
+                    {% else %}
+                      <span style="color: gray;">{{ bhw.last_activity_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <form method="post" action="{% url 'remove_bhw' bhw.account_id %}" class="remove-form">
+                      {% csrf_token %}
+                      <button type="button" class="btn remove-btn" data-name="{{ bhw.full_name }}" data-type="BHW">Remove</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+
+              <!-- BNS Workers -->
+              {% for bns in bnss %}
+                <tr data-role="bns" data-barangay="{% if bns.barangay %}{{ bns.barangay.name|lower }}{% elif bns.bns_data and bns.bns_data.barangay %}{{ bns.bns_data.barangay.name|lower }}{% else %}no barangay{% endif %}">
+                  <td>{{ bns.full_name }}</td>
+                  <td><span class="role-badge bns">BNS</span></td>
+                  <td>
+                    {% if bns.barangay %}
+                      {{ bns.barangay.name }}
+                    {% elif bns.bns_data and bns.bns_data.barangay %}
+                      {{ bns.bns_data.barangay.name }}
+                    {% else %}
+                      No Barangay
+                    {% endif %}
+                  </td>
+                  <td>{{ bns.contact_number }}</td>
+                  <td>{{ bns.email }}</td>
+                  <td>Active</td>
+                  <td>
+                    {% if bns.last_activity_display == "🟢 Online" %}
+                      <span style="color: green;">🟢 Online</span>
+                    {% else %}
+                      <span style="color: gray;">{{ bns.last_activity_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <form method="post" action="{% url 'remove_bns' bns.pk %}" class="remove-form">
+                      {% csrf_token %}
+                      <button type="button" class="btn remove-btn" data-name="{{ bns.full_name }}" data-type="BNS">Remove</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+
+              <!-- Midwife Workers -->
+              {% for midwife in midwives %}
+                <tr data-role="midwife" data-barangay="{% if midwife.barangay %}{{ midwife.barangay.name|lower }}{% elif midwife.midwife_data and midwife.midwife_data.barangay %}{{ midwife.midwife_data.barangay.name|lower }}{% else %}no barangay{% endif %}">
+                  <td>{{ midwife.full_name }}</td>
+                  <td><span class="role-badge midwife">Midwife</span></td>
+                  <td>
+                    {% if midwife.barangay %}
+                      {{ midwife.barangay.name }}
+                    {% elif midwife.midwife_data and midwife.midwife_data.barangay %}
+                      {{ midwife.midwife_data.barangay.name }}
+                    {% else %}
+                      No Barangay
+                    {% endif %}
+                  </td>
+                  <td>{{ midwife.contact_number }}</td>
+                  <td>{{ midwife.email }}</td>
+                  <td>Active</td>
+                  <td>
+                    {% if midwife.last_activity_display == "🟢 Online" %}
+                      <span style="color: green;">🟢 Online</span>
+                    {% else %}
+                      <span style="color: gray;">{{ midwife.last_activity_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <form method="post" action="{% url 'remove_midwife' midwife.account_id %}" class="remove-form">
+                      {% csrf_token %}
+                      <button type="button" class="btn remove-btn" data-name="{{ midwife.full_name }}" data-type="Midwife">Remove</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+
+              <!-- Nurse Workers -->
+              {% for nurse in nurses %}
+                <tr data-role="nurse" data-barangay="{% if nurse.barangay %}{{ nurse.barangay.name|lower }}{% elif nurse.nurse_data and nurse.nurse_data.barangay %}{{ nurse.nurse_data.barangay.name|lower }}{% else %}no barangay{% endif %}">
+                  <td>{{ nurse.full_name }}</td>
+                  <td><span class="role-badge nurse">Nurse</span></td>
+                  <td>
+                    {% if nurse.barangay %}
+                      {{ nurse.barangay.name }}
+                    {% elif nurse.nurse_data and nurse.nurse_data.barangay %}
+                      {{ nurse.nurse_data.barangay.name }}
+                    {% else %}
+                      No Barangay
+                    {% endif %}
+                  </td>
+                  <td>{{ nurse.contact_number }}</td>
+                  <td>{{ nurse.email }}</td>
+                  <td>Active</td>
+                  <td>
+                    {% if nurse.last_activity_display == "🟢 Online" %}
+                      <span style="color: green;">🟢 Online</span>
+                    {% else %}
+                      <span style="color: gray;">{{ nurse.last_activity_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <form method="post" action="{% url 'remove_nurse' nurse.account_id %}" class="remove-form">
+                      {% csrf_token %}
+                      <button type="button" class="btn remove-btn" data-name="{{ nurse.full_name }}" data-type="Nurse">Remove</button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+
+              <!-- Empty state when no workers found -->
+              <tr id="no-results-row" style="display:none;">
+                <td colspan="8" style="text-align:center; padding: 40px; color: #999;">
+                  No workers found matching the selected filters.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Section -->
+        <div class="pagination-section">
+          <span id="pagination-info">Page 1 of 1</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const notifBtn = document.getElementById("notifBtn");
+      const notifMenu = document.getElementById("notifMenu");
+      const notifDot = document.getElementById("notifDot");
+      const mobileToggle = document.getElementById("mobileToggle");
+      const sidebar = document.getElementById("sidebar");
+      const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+      // Mobile sidebar toggle
+      if (mobileToggle) {
+        mobileToggle.addEventListener("click", () => {
+          sidebar.classList.toggle("open");
+          sidebarOverlay.classList.toggle("active");
+        });
+        sidebarOverlay.addEventListener("click", () => {
+          sidebar.classList.remove("open");
+          sidebarOverlay.classList.remove("active");
+        });
+      }
+
+      // Notification red dot
+      const latestNotifTimestampStr = "{{ latest_notif_timestamp }}";
+      const latestNotifTimestamp = latestNotifTimestampStr ? new Date(latestNotifTimestampStr) : null;
+      let lastReadTimestampStr = localStorage.getItem('lastReadNotifTimestamp');
+      let lastReadTimestamp = lastReadTimestampStr ? new Date(lastReadTimestampStr) : null;
+      if (latestNotifTimestamp && (!lastReadTimestamp || latestNotifTimestamp > lastReadTimestamp)) {
+        notifDot.style.display = "inline-block";
+      }
+
+      if (notifBtn && notifMenu) {
+        notifBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          notifMenu.style.display = notifMenu.style.display === "block" ? "none" : "block";
+          notifDot.style.display = "none";
+          if (latestNotifTimestamp) localStorage.setItem('lastReadNotifTimestamp', latestNotifTimestamp.toISOString());
+        });
+        document.addEventListener("click", (e) => {
+          if (!e.target.closest(".notif-dropdown")) notifMenu.style.display = "none";
+        });
+      }
+
+      // Logout confirmation
+      const logoutLink = document.getElementById("logoutLink");
+      if (logoutLink) {
+        logoutLink.addEventListener("click", function(e) {
+          e.preventDefault();
+          Swal.fire({
+            title: 'Are you sure you want to logout?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, logout',
+            cancelButtonText: 'Cancel'
+          }).then((result) => {
+            if (result.isConfirmed) window.location.href = "/logout/";
+          });
+        });
+      }
+
+      // Notification item click handler
+      document.querySelectorAll('.notif-item').forEach(item => {
+        item.addEventListener('click', function (e) {
+          e.preventDefault();
+          const notifId = this.getAttribute('data-id');
+          const notifType = this.getAttribute('data-type');
+          const targetUrl = this.getAttribute('href');
+          const notifText = this.querySelector('.notif-text');
+
+          fetch('/mark-notif-read/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': '{{ csrf_token }}',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: notifId, type: notifType }),
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status && notifText) notifText.style.fontWeight = 'normal';
+            window.location.href = targetUrl;
+          })
+          .catch(() => window.location.href = targetUrl);
+        });
+      });
+
+      // Set active nav item
+      const currentPath = window.location.pathname;
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+        const onclick = link.getAttribute('onclick');
+        if (onclick && onclick.includes(currentPath)) link.classList.add('active');
+      });
+
+      // Filter functionality
+      const roleFilter = document.getElementById('role-filter');
+      const barangayFilter = document.getElementById('barangay-filter');
+      const noResultsRow = document.getElementById('no-results-row');
+      
+      function applyFilters() {
+        const selectedRole = roleFilter.value.toLowerCase();
+        const selectedBarangay = barangayFilter.value.toLowerCase();
+        
+        console.log('Applying filters:', { role: selectedRole, barangay: selectedBarangay });
+        
+        const tableRows = document.querySelectorAll('table tbody tr[data-role]');
+        let visibleCount = 0;
+        
+        tableRows.forEach(row => {
+          const rowRole = row.getAttribute('data-role');
+          const rowBarangay = row.getAttribute('data-barangay');
+          
+          let showRow = true;
+          
+          // Apply role filter
+          if (selectedRole !== 'all' && rowRole !== selectedRole) {
+            showRow = false;
+          }
+          
+          // Apply barangay filter
+          if (selectedBarangay !== 'all') {
+            if (selectedBarangay === 'no barangay') {
+              if (rowBarangay !== 'no barangay' && rowBarangay !== '' && rowBarangay !== null) {
+                showRow = false;
+              }
+            } else {
+              if (rowBarangay !== selectedBarangay && !rowBarangay.includes(selectedBarangay)) {
+                showRow = false;
+              }
+            }
+          }
+          
+          if (showRow) {
+            row.style.display = '';
+            visibleCount++;
+          } else {
+            row.style.display = 'none';
+          }
+        });
+        
+        // Show/hide no results message
+        if (visibleCount === 0) {
+          noResultsRow.style.display = '';
+        } else {
+          noResultsRow.style.display = 'none';
+        }
+        
+        console.log(`Filter applied: ${visibleCount} rows visible`);
+      }
+
+      // Add event listeners for filters
+      if (roleFilter) {
+        roleFilter.addEventListener('change', applyFilters);
+      }
+      
+      if (barangayFilter) {
+        barangayFilter.addEventListener('change', applyFilters);
+      }
+
+      // DEBUG FUNCTION - Remove in production
+      window.debugData = function() {
+        console.log('=== HEALTHCARE WORKERS DEBUG ===');
+        
+        const allRows = document.querySelectorAll('table tbody tr[data-role]');
+        console.log(`Total rows found: ${allRows.length}`);
+        
+        const roleCount = {};
+        const barangayCount = {};
+        
+        allRows.forEach((row, i) => {
+          const role = row.getAttribute('data-role');
+          const barangay = row.getAttribute('data-barangay');
+          const name = row.children[0]?.textContent?.trim() || 'N/A';
+          
+          roleCount[role] = (roleCount[role] || 0) + 1;
+          barangayCount[barangay] = (barangayCount[barangay] || 0) + 1;
+          
+          console.log(`Row ${i}: ${name} | Role: ${role} | Barangay: ${barangay}`);
+        });
+        
+        console.log('\nRole distribution:', roleCount);
+        console.log('Barangay distribution:', barangayCount);
+      };
+
+      // Remove button handler
+    // Remove button handler with SweetAlert
+// Enhanced remove button handler with detailed debugging
+document.querySelectorAll('.remove-btn').forEach(button => {
+  button.addEventListener('click', function(e) {
+    e.preventDefault();
+    
+    const name = this.getAttribute('data-name');
+    const type = this.getAttribute('data-type');
+    const form = this.closest('form');
+    
+    console.log('Remove button clicked:', { name, type, formAction: form.action });
+    
+    Swal.fire({
+      title: 'Are you sure?',
+      html: `Do you want to remove <strong>${name}</strong> (${type}) from the system?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, remove them',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        console.log('User confirmed removal');
+        
+        // Get CSRF token
+        const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+        console.log('CSRF Token found:', csrfToken ? 'Yes' : 'No');
+        
+        // Send AJAX request
+        fetch(form.action, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest', // Important for AJAX detection
+          },
+          body: new URLSearchParams({
+            'csrfmiddlewaretoken': csrfToken
+          })
+        })
+        .then(response => {
+          console.log('Response status:', response.status);
+          console.log('Response headers:', response.headers);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          return response.json();
+        })
+        .then(data => {
+          console.log('Response data:', data);
+          
+          if (data.success) {
+            // Success - remove the row and show success message
+            const row = this.closest('tr');
+            row.style.transition = 'all 0.3s ease';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(-20px)';
+            
+            setTimeout(() => {
+              row.remove();
+              applyFilters(); // Reapply filters to update counts
+            }, 300);
+            
+            // Clean success message
+            Swal.fire({
+              icon: 'success',
+              title: 'Successfully Removed!',
+              html: `<strong>${data.name}</strong> (${data.type}) has been removed from the system and notified via email.`,
+              timer: 3000,
+              showConfirmButton: false,
+              background: '#f8f9fa',
+              color: '#2e7d32'
+            });
+          } else {
+            // Error from server
+            console.error('Server error:', data.error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error!',
+              text: data.error || 'Failed to remove the worker. Please try again.',
+              confirmButtonColor: '#d33'
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Fetch error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Network Error!',
+            text: `Failed to remove the worker: ${error.message}`,
+            confirmButtonColor: '#d33'
+          });
+        });
+      }
+    });
+  });
+});
+
+      // Initialize filters
+      setTimeout(() => {
+        console.log('=== INITIALIZING PAGE ===');
+        applyFilters();
+        console.log('Page initialization complete. Use debugData() function to check data.');
+      }, 500);
+    });
+
+
+    function updateValidationBadge() {
+    fetch("{% url 'pending-validation-count' %}")
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById("validation-badge");
+            if (data.pending_count > 0) {
+                badge.textContent = data.pending_count;
+                badge.style.display = "inline-block";
+            } else {
+                badge.style.display = "none";
+            }
+        })
+        .catch(error => console.error("Error fetching pending count:", error));
+}
+
+// Update every 5 seconds
+setInterval(updateValidationBadge, 5000);
+
+// Run immediately on load
+updateValidationBadge();
+  </script>
+
+<script>
+  // Generate Report Button with SweetAlert Modal
+const generateReportBtn = document.getElementById("generateReportBtn");
+if (generateReportBtn) {
+  generateReportBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+    Swal.fire({
+      title: 'Select Month for Report',
+      input: 'month',
+      showCancelButton: true,
+      confirmButtonColor: '#3498db',
+      cancelButtonColor: '#95a5a6',
+      confirmButtonText: 'Generate Report',
+      cancelButtonText: 'Cancel',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Please select a month first!';
+        }
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Show loading message briefly
+        Swal.fire({
+          title: 'Generating Report...',
+          text: 'Please wait while we prepare your report.',
+          icon: 'info',
+          allowOutsideClick: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        const reportUrl = `/generate-admin-report/?month=${result.value}`;
+
+        // Open in a new browser tab
+        setTimeout(() => {
+          window.open(reportUrl, '_blank');
+          Swal.close();
+        }, 1000);
+      }
+    });
+  });
+}
+
+
+
+
+</script>
+
+</body>
+</html>
