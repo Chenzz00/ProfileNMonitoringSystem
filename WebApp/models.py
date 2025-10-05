@@ -303,56 +303,133 @@ class Barangay(models.Model):
     
 class Parent(models.Model):
     parent_id = models.AutoField(primary_key=True)
+
+    # Names
     first_name = models.CharField(max_length=100, blank=True, null=True)
     middle_name = models.CharField(max_length=100, blank=True, null=True)
     suffix = models.CharField(max_length=10, blank=True, null=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
     full_name = models.CharField(max_length=200, editable=False, blank=True)  # auto-generated
+
+    # Contact
     contact_number = models.CharField(max_length=15, blank=True, null=True)
-    age = models.IntegerField(blank=True, null=True)  # Optional: can be kept for historical record
+    email = models.EmailField(max_length=254, unique=True, blank=True, null=True)
+    password = models.CharField(max_length=100)
+
+    # Other details
+    age = models.IntegerField(blank=True, null=True)  # Optional: historical record
     birthdate = models.DateField(blank=True, null=True)
     registered_preschoolers = models.ManyToManyField('Preschooler', blank=True, related_name='parents')
     mother_name = models.CharField(max_length=100, blank=True, null=True)
     father_name = models.CharField(max_length=100, blank=True, null=True)
-    email = models.EmailField(max_length=254, unique=True, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
-    password = models.CharField(max_length=100)
     barangay = models.ForeignKey('Barangay', on_delete=models.SET_NULL, null=True, blank=True)
+
     created_at = models.DateTimeField(default=timezone.now)
     must_change_password = models.BooleanField(default=True)
-    
-    def save(self, *args, **kwargs):
-    # ✅ AUTO-GENERATE FULL_NAME with middle + suffix
+
+    # ==============================
+    # CLEAN FIELD HELPER
+    # ==============================
+    def clean_field_value(self, field_value):
+        """Clean field value, return None if it's a placeholder like NA"""
+        if not field_value:
+            return None
+
+        str_value = str(field_value).strip().lower()
+        invalid_values = {'na', 'n/a', 'none', 'null', '--', 'no address provided', ''}
+
+        if str_value in invalid_values:
+            return None
+
+        return str(field_value).strip()
+
+    # ==============================
+    # NAME PROPERTIES
+    # ==============================
+    @property
+    def clean_first_name(self):
+        return self.clean_field_value(self.first_name)
+
+    @property
+    def clean_middle_name(self):
+        return self.clean_field_value(self.middle_name)
+
+    @property
+    def clean_last_name(self):
+        return self.clean_field_value(self.last_name)
+
+    @property
+    def clean_suffix(self):
+        return self.clean_field_value(self.suffix)
+
+    @property
+    def clean_full_name(self):
+        """Return full name without NA values"""
         parts = []
-        if self.first_name:
-            parts.append(self.first_name.strip())
-        if self.middle_name:
-            parts.append(self.middle_name.strip())
-        if self.last_name:
-            parts.append(self.last_name.strip())
-        if self.suffix:
-            parts.append(self.suffix.strip())
+        if self.clean_first_name:
+            parts.append(self.clean_first_name)
+        if self.clean_middle_name:
+            parts.append(self.clean_middle_name)
+        if self.clean_last_name:
+            parts.append(self.clean_last_name)
+        if self.clean_suffix:
+            parts.append(self.clean_suffix)
 
-        self.full_name = " ".join(parts).strip()
+        return " ".join(parts) if parts else None
 
+    # ==============================
+    # CONTACT / ADDRESS
+    # ==============================
+    @property
+    def clean_contact_number(self):
+        return self.clean_field_value(self.contact_number)
+
+    @property
+    def clean_address(self):
+        """Return address without NA values, even inside phrases like 'House NA'"""
+        if not self.address:
+            return None
+
+        # Split address into comma-separated parts
+        parts = [part.strip() for part in self.address.split(",")]
+        cleaned_parts = []
+
+        for part in parts:
+            words = part.split()
+            valid_words = []
+            for word in words:
+                if not word:
+                    continue
+                lw = word.strip().lower()
+                if lw in {"na", "n/a", "none", "null", "--"}:
+                    continue  # drop placeholder words
+                valid_words.append(word.strip())
+            if valid_words:
+                cleaned_parts.append(" ".join(valid_words))
+
+        return ", ".join(cleaned_parts) if cleaned_parts else None
+
+
+    # ==============================
+    # AUTO GENERATE FULL NAME
+    # ==============================
+    def save(self, *args, **kwargs):
+        parts = [
+            self.clean_first_name or "",
+            self.clean_middle_name or "",
+            self.clean_last_name or "",
+            self.clean_suffix or ""
+        ]
+        self.full_name = " ".join(p for p in parts if p).strip()
         super().save(*args, **kwargs)
 
     def __str__(self):
         return self.full_name or self.email or f"Parent {self.parent_id}"
-    
-    @property
-    def clean_address(self):
-        """Return address without NA/N/A values"""
-        if not self.editable_address:
-            return None
-        invalid = {"na", "n/a"}
-        # split by commas
-        parts = [part.strip() for part in self.editable_address.split(",")]
-        # keep only valid parts
-        cleaned = [p for p in parts if p.lower() not in invalid]
-        return ", ".join(cleaned) if cleaned else None
-    
 
+    # ==============================
+    # COMPUTED AGE
+    # ==============================
     @property
     def computed_age(self):
         if self.birthdate:
@@ -368,97 +445,99 @@ class Preschooler(models.Model):
     middle_name = models.CharField(max_length=100, blank=True, null=True)
     suffix = models.CharField(max_length=10, blank=True, null=True)
     last_name = models.CharField(max_length=100)
-    
-    # Modified to use WHO standard M/F format
+
     SEX_CHOICES = [
         ('M', 'Male'),
         ('F', 'Female'),
     ]
     sex = models.CharField(max_length=1, choices=SEX_CHOICES)
-    
     birth_date = models.DateField()
+
+    # ⚠️ Suggest removing this field if not really needed
     age = models.IntegerField()
+
     address = models.CharField(max_length=255, blank=True, null=True)
     parent_id = models.ForeignKey('Parent', on_delete=models.CASCADE, blank=True, null=True)
     bhw_id = models.ForeignKey('BHW', on_delete=models.CASCADE, blank=True, null=True)
     barangay = models.ForeignKey('Barangay', on_delete=models.CASCADE, blank=True, null=True)
     nutritional_status = models.CharField(max_length=50, blank=True, null=True)
     profile_photo = models.ImageField(upload_to='preschoolers/', null=True, blank=True)
-    
-    # Existing birth fields
-    birth_weight = models.FloatField(blank=True, null=True, help_text="Birth weight in kilograms")
-    birth_height = models.FloatField(blank=True, null=True, help_text="Birth length/height in centimeters")
-    place_of_birth = models.CharField(max_length=255, blank=True, null=True, help_text="Place where the child was born")
-    time_of_birth = models.TimeField(blank=True, null=True, help_text="Time when the child was born (HH:MM)")
-    
-    # New birth fields
+
+    # Birth details
+    birth_weight = models.FloatField(blank=True, null=True)
+    birth_height = models.FloatField(blank=True, null=True)
+    place_of_birth = models.CharField(max_length=255, blank=True, null=True)
+    time_of_birth = models.TimeField(blank=True, null=True)
+
     TYPE_OF_BIRTH_CHOICES = [
         ('Normal', 'Normal'),
         ('CS', 'Cesarean Section (CS)'),
     ]
-    type_of_birth = models.CharField(
-        max_length=20, 
-        choices=TYPE_OF_BIRTH_CHOICES, 
-        blank=True, 
-        null=True,
-        help_text="Type of delivery"
-    )
-    
+    type_of_birth = models.CharField(max_length=20, choices=TYPE_OF_BIRTH_CHOICES, blank=True, null=True)
+
     PLACE_OF_DELIVERY_CHOICES = [
         ('Home', 'Home'),
         ('Lying-in', 'Lying-in'),
         ('Hospital', 'Hospital'),
         ('Others', 'Others'),
     ]
-    place_of_delivery = models.CharField(
-        max_length=20, 
-        choices=PLACE_OF_DELIVERY_CHOICES, 
-        blank=True, 
-        null=True,
-        help_text="Place where delivery occurred"
-    )
+    place_of_delivery = models.CharField(max_length=20, choices=PLACE_OF_DELIVERY_CHOICES, blank=True, null=True)
 
-    @property
-    def age_in_months(self):
-        if not self.birth_date:
-            return None
-        
-        today = date.today()
-        birth_date = self.birth_date
-        
-        months = (today.year - birth_date.year) * 12 + (today.month - birth_date.month)
-        
-        if today.day < birth_date.day:
-            months -= 1
-        
-        # Key fix: ensure newborns show 0 instead of negative
-        return max(0, months)
-    
-    # Existing fields
     is_archived = models.BooleanField(default=False)
     date_registered = models.DateTimeField(default=timezone.now)
     is_notif_read = models.BooleanField(default=False)
-    
-    # ✅ Auto-generate full_name
-    def save(self, *args, **kwargs):
-        name_parts = [self.first_name]
 
-        if self.middle_name and self.middle_name.strip().lower() != "na":
-            name_parts.append(self.middle_name)
+    @property
+    def full_name(self):
+        invalid_values = {"na", "n/a", "none", "null", "--"}
+        name_parts = []
 
-        if self.last_name:
-            name_parts.append(self.last_name)
+        if self.first_name and self.first_name.strip().lower() not in invalid_values:
+            name_parts.append(self.first_name.strip())
 
-        if self.suffix and self.suffix.strip().lower() != "na":
-            name_parts.append(self.suffix)
+        if self.middle_name and self.middle_name.strip().lower() not in invalid_values:
+            name_parts.append(self.middle_name.strip())
 
-        self.full_name = " ".join(part.strip() for part in name_parts if part)
+        if self.last_name and self.last_name.strip().lower() not in invalid_values:
+            name_parts.append(self.last_name.strip())
 
-        super().save(*args, **kwargs)
+        if self.suffix and self.suffix.strip().lower() not in invalid_values:
+            name_parts.append(self.suffix.strip())
+
+        return " ".join(name_parts)
+
+    @property
+    def age_in_years_months(self):
+        """Return age as (years, months)."""
+        if not self.birth_date:
+            return None, None
+
+        today = date.today()
+        years = today.year - self.birth_date.year
+        months = today.month - self.birth_date.month
+
+        if today.day < self.birth_date.day:
+            months -= 1
+        if months < 0:
+            years -= 1
+            months += 12
+
+        return years, months
+
+    @property
+    def age_in_months(self):
+        """Age in total months (newborns = 0, not negative)."""
+        if not self.birth_date:
+            return None
+        today = date.today()
+        months = (today.year - self.birth_date.year) * 12 + (today.month - self.birth_date.month)
+        if today.day < self.birth_date.day:
+            months -= 1
+        return max(0, months)
 
     def __str__(self):
-        return f"{self.first_name} {self.middle_name} {self.last_name} ({self.preschooler_id})"
-    
+        return f"{self.full_name} ({self.preschooler_id})"
+
     class Meta:
         verbose_name = "Preschooler"
         verbose_name_plural = "Preschoolers"
