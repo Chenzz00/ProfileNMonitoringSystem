@@ -5170,6 +5170,7 @@ def registered_bns(request):
         'total_bns_count': bns_list.count()  # Para makita ninyo ang total
     })
 
+@admin_required
 def registered_preschoolers(request):
     preschoolers_qs = Preschooler.objects.filter(is_archived=False) \
         .select_related('parent_id', 'barangay') \
@@ -5180,7 +5181,10 @@ def registered_preschoolers(request):
 
     today = date.today()
 
-    # Process nutritional status and delivery place color coding
+    # --- Pending validation count ---
+    pending_validation_count = get_pending_validation_count()
+
+    # --- Process nutritional status and delivery place color coding ---
     for p in preschoolers_qs:
         latest_bmi = p.bmi_records[0] if hasattr(p, 'bmi_records') and p.bmi_records else None
 
@@ -5230,7 +5234,9 @@ def registered_preschoolers(request):
     return render(request, 'HTML/registered_preschoolers.html', {
         'preschoolers': page_obj,
         'barangays': barangays,
+        'pending_validation_count': pending_validation_count,  # ✅ added here
     })
+
 
 
 
@@ -5487,6 +5493,8 @@ def admin_registered_parents(request):
     user_email = request.session.get('email')
     user_role = request.session.get('user_role', '').lower()
 
+    pending_validation_count = get_pending_validation_count()
+    
     if user_role != 'admin':
         return render(request, 'unauthorized.html')
 
@@ -5500,6 +5508,7 @@ def admin_registered_parents(request):
     return render(request, 'HTML/admin_registeredparents.html', {
         'parents': page_obj,
         'user_email': user_email,
+        'pending_validation_count': pending_validation_count,
         'user_role': user_role
     })
 
@@ -8109,6 +8118,9 @@ def admin_logs(request):
     parent_logs_all = ParentActivityLog.objects.select_related('parent', 'barangay').order_by('-timestamp')
     preschooler_logs_all = PreschoolerActivityLog.objects.select_related('barangay').order_by('-timestamp')
 
+    # --- Pending validation count ---
+    pending_validation_count = get_pending_validation_count()
+
     # Paginate
     parent_paginator = Paginator(parent_logs_all, 10)  # 10 per page
     preschooler_paginator = Paginator(preschooler_logs_all, 20)
@@ -8119,9 +8131,11 @@ def admin_logs(request):
     context = {
         'parent_logs': parent_paginator.get_page(parent_page),
         'preschooler_logs': preschooler_paginator.get_page(preschooler_page),
+        'pending_validation_count': pending_validation_count,  # ✅ added here
     }
 
     return render(request, 'HTML/admin_logs.html', context)
+
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -8155,13 +8169,18 @@ def manage_announcements(request):
     except Exception as e:
         messages.error(request, 'Error loading announcements. Please ensure the database is properly set up.')
         announcements = []
-    
+
+    # --- Pending validation count ---
+    pending_validation_count = get_pending_validation_count()
+
     context = {
         'announcements': announcements,
         'account': request.user,
+        'pending_validation_count': pending_validation_count,  # ✅ added here
     }
-    
+
     return render(request, 'HTML/manage_announcements.html', context)
+
 
 def add_announcement(request):
     """
@@ -8343,7 +8362,7 @@ def healthcare_workers(request):
     ).select_related('barangay')
     
   
-    
+     pending_validation_count = get_pending_validation_count()
     for bhw in bhw_list:
         try:
             bhw.bhw_data = BHW.objects.filter(email=bhw.email).first()
@@ -8495,6 +8514,7 @@ def healthcare_workers(request):
         'bnss': bns_list,
         'midwives': midwife_list,
         'nurses': nurse_list,
+        'pending_validation_count': pending_validation_count,
     }
     
     return render(request, 'HTML/healthcare_workers.html', context)
@@ -9518,6 +9538,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
