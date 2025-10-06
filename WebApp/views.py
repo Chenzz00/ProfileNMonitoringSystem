@@ -6529,6 +6529,26 @@ This is an automated message. Please do not reply.
 
     return redirect('healthcare_workers')
 
+
+
+def get_pending_validation_count():
+    """Return the correct number of pending validation accounts (BHW, BNS, Midwife, Nurse)."""
+    base_filter = (
+        Q(user_role__iexact='BHW') |
+        Q(user_role__iexact='healthworker') |
+        Q(user_role__iexact='BNS') |
+        Q(user_role__iexact='bns') |
+        Q(user_role__iexact='Barangay Nutritional Scholar') |
+        Q(user_role__iexact='Midwife') |
+        Q(user_role__iexact='Nurse')
+    )
+
+    return Account.objects.filter(
+        base_filter,
+        is_validated=False,
+        is_rejected=False
+    ).count()
+    
 @admin_required
 def validate(request):
     """Display BHW, BNS, Midwife, and Nurse accounts - focusing on pending validation by default"""
@@ -8253,10 +8273,10 @@ from django.db.models import Count, Q
 
 @admin_required
 def registered_barangays(request):
-    # ✅ Count pending account validations (for notification badge)
-    pending_validation_count = Account.objects.filter(is_validated=False).count()
-
     query = request.GET.get("search", "").strip()
+
+    # ✅ Use helper function for pending validation count
+    pending_validation_count = get_pending_validation_count()
 
     barangays = (
         Barangay.objects
@@ -8268,7 +8288,7 @@ def registered_barangays(request):
                     output_field=IntegerField(),
                 )
             ),
-            bhw_bns_count=Sum(  # merged column for BHW + BNS
+            bhw_bns_count=Sum(
                 Case(
                     When(account__user_role="BHW", then=1),
                     When(account__user_role="Barangay Nutritional Scholar", then=1),
@@ -8279,13 +8299,11 @@ def registered_barangays(request):
         .order_by("name")
     )
 
-    # ✅ Ensure no None values
     for b in barangays:
         b.preschooler_count = b.preschooler_count or 0
         b.parent_count = b.parent_count or 0
         b.bhw_bns_count = b.bhw_bns_count or 0
 
-    # ✅ Apply search filter
     if query:
         barangays = barangays.filter(
             Q(name__icontains=query) |
@@ -8293,16 +8311,18 @@ def registered_barangays(request):
             Q(hall_address__icontains=query)
         )
 
-    # ✅ Pagination
     paginator = Paginator(barangays, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    # ✅ Pass pending validation count to template
-    return render(request, "HTML/barangay_list.html", {
-        "barangays": page_obj,
-        "pending_validation_count": pending_validation_count,
-    })
+    return render(
+        request,
+        "HTML/barangay_list.html",
+        {
+            "barangays": page_obj,
+            "pending_validation_count": pending_validation_count,  # ✅ added from helper
+        },
+    )
 
 
 def healthcare_workers(request):
@@ -9502,6 +9522,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
