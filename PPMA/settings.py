@@ -151,10 +151,13 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                # Add your custom context processor here:
+                "WebApp.context_processors.pending_validation_count",
             ],
         },
     },
 ]
+
 
 WSGI_APPLICATION = "PPMA.wsgi.application"
 ASGI_APPLICATION = "PPMA.asgi.application"
@@ -254,5 +257,6 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
 
