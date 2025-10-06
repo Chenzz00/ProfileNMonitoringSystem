@@ -6569,23 +6569,7 @@ This is an automated message. Please do not reply.
 
 
 
-def get_pending_validation_count():
-    """Return the correct number of pending validation accounts (BHW, BNS, Midwife, Nurse)."""
-    base_filter = (
-        Q(user_role__iexact='BHW') |
-        Q(user_role__iexact='healthworker') |
-        Q(user_role__iexact='BNS') |
-        Q(user_role__iexact='bns') |
-        Q(user_role__iexact='Barangay Nutritional Scholar') |
-        Q(user_role__iexact='Midwife') |
-        Q(user_role__iexact='Nurse')
-    )
 
-    return Account.objects.filter(
-        base_filter,
-        is_validated=False,
-        is_rejected=False
-    ).count()
     
 @admin_required
 def validate(request):
@@ -9569,6 +9553,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
