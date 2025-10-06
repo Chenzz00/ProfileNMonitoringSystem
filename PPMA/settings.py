@@ -105,10 +105,17 @@ MIDDLEWARE = [
 # =======================
 # CORS / CSRF
 # =======================
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "https://profilenmonitoringsystem-production.up.railway.app",
+]
+
 CORS_ALLOW_HEADERS = [
     "accept", "accept-encoding", "authorization", "content-type", "dnt",
     "origin", "user-agent", "x-csrftoken", "x-requested-with",
+]
+
+CSRF_TRUSTED_ORIGINS += [
+    "https://profilenmonitoringsystem-production.up.railway.app",
 ]
 
 # =======================
@@ -242,3 +249,4 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
