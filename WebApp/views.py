@@ -5172,6 +5172,9 @@ def registered_bns(request):
 
 @admin_required
 def registered_preschoolers(request):
+    # -------------------------
+    # Query preschoolers
+    # -------------------------
     preschoolers_qs = Preschooler.objects.filter(is_archived=False) \
         .select_related('parent_id', 'barangay') \
         .prefetch_related(
@@ -5181,27 +5184,24 @@ def registered_preschoolers(request):
 
     today = date.today()
 
-    # =========================
-    # Pending validation count (using base_filter like Admin view)
-    # =========================
-    from django.db.models import Q
-
+    # -------------------------
+    # Pending validation count (same as Admin view)
+    # -------------------------
     base_filter = (
         Q(user_role__iexact='BHW') |
         Q(user_role__iexact='Barangay Nutritional Scholar') |
         Q(user_role__iexact='Midwife') |
         Q(user_role__iexact='Nurse')
     )
-
     pending_validation_count = Account.objects.filter(
         base_filter,
         is_validated=False,
         is_rejected=False
     ).count() or 0
 
-    # =========================
+    # -------------------------
     # Process nutritional status and delivery place color coding
-    # =========================
+    # -------------------------
     for p in preschoolers_qs:
         latest_bmi = p.bmi_records[0] if hasattr(p, 'bmi_records') and p.bmi_records else None
 
@@ -5218,7 +5218,7 @@ def registered_preschoolers(request):
                     age_months += 12
                 total_age_months = age_years * 12 + age_months
 
-                # --- Compute BMI and classify using WHO ---
+                # --- Compute BMI and classify ---
                 bmi_value = calculate_bmi(latest_bmi.weight, latest_bmi.height)
                 z = bmi_zscore(p.sex, total_age_months, bmi_value)
                 p.nutritional_status = classify_bmi_for_age(z)
@@ -5229,7 +5229,7 @@ def registered_preschoolers(request):
         else:
             p.nutritional_status = "N/A"
 
-        # --- Add color coding for place of delivery ---
+        # --- Delivery place color coding ---
         delivery_place = getattr(p, 'place_of_delivery', None)
         if delivery_place == 'Home':
             p.delivery_class = 'delivery-home'
@@ -5242,18 +5242,23 @@ def registered_preschoolers(request):
         else:
             p.delivery_class = 'delivery-na'
 
+    # -------------------------
+    # Pagination
+    # -------------------------
     paginator = Paginator(preschoolers_qs, 10)  # 10 preschoolers per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     barangays = Barangay.objects.all()
 
+    # -------------------------
+    # Render template
+    # -------------------------
     return render(request, 'HTML/registered_preschoolers.html', {
         'preschoolers': page_obj,
         'barangays': barangays,
-        'pending_validation_count': pending_validation_count,  # ✅ added here
+        'pending_validation_count': pending_validation_count,  # ✅ passed to template
     })
-
 
 
 
@@ -9564,6 +9569,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
