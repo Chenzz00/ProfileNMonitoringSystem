@@ -1253,22 +1253,27 @@ def index(request):
 
 @admin_required
 def addbarangay(request):
+    # ✅ Count pending account validations (for notification badge)
+    pending_validations = Account.objects.filter(is_validated=False).count()
+
     if request.method == 'POST':
         name = request.POST.get('barangay-name', '').strip()
         phone_number = request.POST.get('phone-number', '').strip()
         hall_address = request.POST.get('hall-address', '').strip()
 
-        
-
         # ✅ Check for empty barangay name
         if not name:
             messages.error(request, "Barangay name is required.")
-            return render(request, 'HTML/addbarangay.html')
+            return render(request, 'HTML/addbarangay.html', {
+                'pending_validations': pending_validations
+            })
 
         # ✅ Check if barangay name already exists
         if Barangay.objects.filter(name__iexact=name).exists():
             messages.error(request, f"A barangay named '{name}' already exists.")
-            return render(request, 'HTML/addbarangay.html')
+            return render(request, 'HTML/addbarangay.html', {
+                'pending_validations': pending_validations
+            })
 
         # ✅ Try saving the barangay
         try:
@@ -1280,10 +1285,13 @@ def addbarangay(request):
             messages.success(request, f"Barangay {name} was added successfully!")
             return redirect('addbarangay')
         except Exception as e:
-            
+            print(f"⚠️ Error saving barangay: {e}")
             messages.error(request, "Something went wrong while saving. Please try again.")
     
-    return render(request, 'HTML/addbarangay.html')
+    # ✅ Always pass pending validation count to template
+    return render(request, 'HTML/addbarangay.html', {
+        'pending_validations': pending_validations
+    })
 
 @admin_required
 @admin_required
@@ -9489,6 +9497,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
