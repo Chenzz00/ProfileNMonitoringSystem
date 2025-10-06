@@ -8362,7 +8362,7 @@ def healthcare_workers(request):
     ).select_related('barangay')
     
   
-     pending_validation_count = get_pending_validation_count()
+    pending_validation_count = get_pending_validation_count()
     for bhw in bhw_list:
         try:
             bhw.bhw_data = BHW.objects.filter(email=bhw.email).first()
@@ -9538,6 +9538,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
