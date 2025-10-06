@@ -1304,8 +1304,8 @@ textarea[readonly].archived-input {
           <tr>
             <td>{{ record.date_recorded|date:"M d, Y" }}</td>
             <td>{% if record.temperature %}{{ record.temperature|floatformat:1 }}{% else %}N/A{% endif %}</td>
-            <td>{{ record.height|floatformat:1 }}</td>
-            <td>{{ record.weight|floatformat:1 }}</td>
+            <td>{{ record.height|floatformat:2 }}</td>
+            <td>{{ record.weight|floatformat:2 }}</td>
             <td>{{ record.bmi_value|floatformat:2 }}</td>
             <td>{{ nutritional_status }}</td>
             <td>{{ record.weight_for_age_status }}</td>
@@ -3309,5 +3309,6 @@ function goBack() {
 
 </body>
 </html>
+
 
 
