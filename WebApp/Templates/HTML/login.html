@@ -13,6 +13,7 @@
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="{% static 'javascript/login.js' %}" defer></script>
+  <link rel="icon" type="image/png" href="{% static 'media/logo.png' %}">
 
   <style>
     body {
@@ -426,13 +427,13 @@
           </div>
 
           <div class="slide-nav">
-            <button class="nav-btn" onclick="previousSlide()">❮ Prev</button>
+            <button class="btn" style="width: auto; min-width: 70px; padding: 6px 12px; font-size: 13px; margin: 0 15px;" onclick="previousSlide()">❮ Prev</button>
             <div class="slide-indicators">
               {% for announcement in announcements %}
                 <span class="indicator {% if forloop.first %}active{% endif %}" onclick="currentSlide({{ forloop.counter0 }})"></span>
               {% endfor %}
             </div>
-            <button class="nav-btn" onclick="nextSlide()">Next ❯</button>
+            <button class="btn" style="width: auto; min-width: 70px; padding: 6px 12px; font-size: 13px; margin: 0 15px;" onclick="nextSlide()">Next ❯</button>
           </div>
         {% else %}
           <div class="no-announcements">
