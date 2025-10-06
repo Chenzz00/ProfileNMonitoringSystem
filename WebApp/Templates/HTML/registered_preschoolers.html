@@ -9,10 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
-  <link rel="icon" type="image/png" href="{% static 'media/PPMS-logo.png' %}">
+  <link rel="icon" type="image/png" href="{% static 'media/logo.png' %}">
   
   <style>
-    
+    /* Override background for this page */
     body {
       background: url('{% static "media/loginbg.png" %}') center/cover no-repeat fixed;
     }
@@ -21,7 +21,7 @@
       background-image: url('{% static "media/loginbg.png" %}');
     }
 
-   
+    /* Additional styles for the profile in sidebar */
     .sidebar-profile {
       padding: 20px 15px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -530,15 +530,15 @@
         </button>
       </div>
       
-     <div class="nav-item">
+      <div class="nav-item">
         <button class="nav-link" onclick="location.href='/validate/'">
-          <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-          </svg>
-          Account Validation
-          {% if pending_validation_count > 0 %}
-            <span class="badge bg-danger ms-auto">{{ pending_validation_count }}</span>
-          {% endif %}
+          <div class="nav-link-content" style="position: relative; display: inline-flex; align-items: center;">
+            <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span>Account Validation</span>
+            <span id="validation-badge" class="notification-badge">0</span>
+          </div>
         </button>
       </div>
       
@@ -868,7 +868,27 @@
     });
 
 
-   
+    function updateValidationBadge() {
+    fetch("{% url 'pending-validation-count' %}")
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById("validation-badge");
+            if (data.pending_count > 0) {
+                badge.textContent = data.pending_count;
+                badge.style.display = "inline-block";
+            } else {
+                badge.style.display = "none";
+            }
+        })
+        .catch(error => console.error("Error fetching pending count:", error));
+}
+
+// Update every 5 seconds
+setInterval(updateValidationBadge, 5000);
+
+// Run immediately on load
+updateValidationBadge();
+  </script>
 
 <script>
   // Generate Report Button with SweetAlert Modal
@@ -920,38 +940,5 @@ if (generateReportBtn) {
 
 </script>
 
-<script>
-    function updateValidationBadge() {
-    fetch("{% url 'pending-validation-count' %}")
-        .then(response => response.json())
-        .then(data => {
-            const badge = document.getElementById("validation-badge");
-            if (data.pending_count > 0) {
-                badge.textContent = data.pending_count;
-                badge.style.display = "inline-block";
-            } else {
-                badge.style.display = "none";
-            }
-        })
-        .catch(error => console.error("Error fetching pending count:", error));
-}
-
-// Update every 5 seconds
-setInterval(updateValidationBadge, 5000);
-
-// Run immediately on load
-updateValidationBadge();
-  </script>
-
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
