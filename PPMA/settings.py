@@ -107,16 +107,21 @@ MIDDLEWARE = [
 # =======================
 CORS_ALLOWED_ORIGINS = [
     "https://profilenmonitoringsystem-production.up.railway.app",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
 ]
+
+CORS_ALLOW_CREDENTIALS = True  # <-- Important for logged-in AJAX requests
 
 CORS_ALLOW_HEADERS = [
     "accept", "accept-encoding", "authorization", "content-type", "dnt",
     "origin", "user-agent", "x-csrftoken", "x-requested-with",
 ]
 
-CSRF_TRUSTED_ORIGINS += [
+CSRF_TRUSTED_ORIGINS = [
     "https://profilenmonitoringsystem-production.up.railway.app",
 ]
+
 
 # =======================
 # REST Framework
@@ -249,4 +254,5 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
