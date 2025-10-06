@@ -8281,31 +8281,21 @@ from django.db.models import Count, Q
 def registered_barangays(request):
     query = request.GET.get("search", "").strip()
 
-    barangays = (
-        Barangay.objects
-        .annotate(
-            preschooler_count=Count("preschooler", distinct=True),
-            parent_count=Sum(
-                Case(
-                    When(account__user_role="Parent", then=1),
-                    output_field=IntegerField(),
-                )
-            ),
-            bhw_bns_count=Sum(  # merged column
-                Case(
-                    When(account__user_role="BHW", then=1),
-                    When(account__user_role="Barangay Nutritional Scholar", then=1),
-                    output_field=IntegerField(),
-                )
-            ),
-        )
-        .order_by("name")
-    )
+    barangays = Barangay.objects.annotate(
+        preschooler_count=Count("preschooler", distinct=True),
+        parent_count=Count(
+            "account",
+            filter=Q(account__user_role="Parent"),
+            distinct=True
+        ),
+        bhw_bns_count=Count(
+            "account",
+            filter=Q(account__user_role__in=["BHW", "Barangay Nutritional Scholar"]),
+            distinct=True
+        ),
+    ).order_by("name")
 
-    for b in barangays:
-        b.preschooler_count = b.preschooler_count or 0
-        b.parent_count = b.parent_count or 0
-        b.bhw_bns_count = b.bhw_bns_count or 0
+    # No need for the loop setting zeros; Count will return 0 automatically
 
     if query:
         barangays = barangays.filter(
@@ -8319,7 +8309,7 @@ def registered_barangays(request):
     page_obj = paginator.get_page(page_number)
 
     return render(request, "HTML/barangay_list.html", {"barangays": page_obj})
-
+    
 @admin_required 
 def healthcare_workers(request):
     """Improved healthcare workers view with better BNS handling"""
@@ -9522,6 +9512,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
