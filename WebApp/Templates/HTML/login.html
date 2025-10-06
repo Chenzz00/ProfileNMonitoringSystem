@@ -5,6 +5,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
   <link rel="stylesheet" href="{% static 'css/login.css' %}" />
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -77,12 +81,35 @@
       animation: fade 0.6s;
     }
 
+    /* Responsive announcement image */
     .announcement-image {
-      width: 500px;
-      height: 300px;
+      width: 100%;
+      max-width: 500px;
+      height: auto;
+      min-height: 200px;
       object-fit: cover;
       border-radius: 10px;
       margin-bottom: 10px;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      .announcement-image {
+        max-width: 100%;
+        height: auto;
+        min-height: 150px;
+      }
+
+      .announcements-container {
+        max-width: 100%;
+        padding: 10px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .announcement-image {
+        min-height: 120px;
+      }
     }
 
     .announcement-title {
@@ -172,6 +199,14 @@
       animation: fadeIn 0.3s ease-in-out;
     }
 
+    /* Mobile modal adjustments */
+    @media (max-width: 768px) {
+      .modal-content {
+        margin: 40px auto;
+        width: 95%;
+      }
+    }
+
     .modal-header {
       background: linear-gradient(135deg, #5bdab3, #4bc79f);
       color: white;
@@ -185,6 +220,12 @@
       margin: 0;
       line-height: 1.3;
       padding-right: 40px;
+    }
+
+    @media (max-width: 576px) {
+      .modal-title {
+        font-size: 18px;
+      }
     }
 
     .modal-close {
@@ -216,13 +257,34 @@
       overflow-y: auto;
     }
 
+    @media (max-width: 768px) {
+      .modal-body {
+        padding: 20px;
+        max-height: 70vh;
+      }
+    }
+
+    /* Responsive modal image */
     .modal-image {
       width: 100%;
-      height: 250px;
+      height: auto;
+      max-height: 300px;
       object-fit: cover;
       border-radius: 12px;
       margin-bottom: 20px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    @media (max-width: 768px) {
+      .modal-image {
+        max-height: 250px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .modal-image {
+        max-height: 200px;
+      }
     }
 
     .modal-content-text {
@@ -340,9 +402,9 @@
               <div class="slide {% if forloop.first %}active{% endif %}">
                 <div class="slide-content" onclick="openAnnouncementModal('{{ announcement.id }}')">
                   {% if announcement.image %}
-                    <img src="{{ announcement.image.url }}" alt="{{ announcement.title }}" class="announcement-image">
+                    <img src="{{ announcement.image.url }}" alt="{{ announcement.title }}" class="announcement-image img-fluid">
                   {% else %}
-                    <img src="{% static 'media/announcement.png' %}" alt="Announcement" class="announcement-image">
+                    <img src="{% static 'media/announcement.png' %}" alt="Announcement" class="announcement-image img-fluid">
                   {% endif %}
                   
                   <div class="announcement-title">{{ announcement.title }}</div>
@@ -405,12 +467,15 @@
         <button class="modal-close" onclick="closeAnnouncementModal()">&times;</button>
       </div>
       <div class="modal-body">
-        <img id="modal-image" class="modal-image" src="" alt="Announcement Image" style="display:none;">
+        <img id="modal-image" class="modal-image img-fluid" src="" alt="Announcement Image" style="display:none;">
         <div id="modal-text" class="modal-content-text"></div>
         <div id="modal-date" class="modal-date"></div>
       </div>
     </div>
   </div>
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- Slideshow & Modal Script -->
   <script>
