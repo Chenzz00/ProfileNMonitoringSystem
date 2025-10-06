@@ -5488,29 +5488,35 @@ def forgot_password(request):
 
     return render(request, 'HTML/forgot_password.html')
 
+@admin_required
 def admin_registered_parents(request):
     # Ensure user is authenticated and is admin
     user_email = request.session.get('email')
     user_role = request.session.get('user_role', '').lower()
 
+    # --- Pending validation count (for navbar badge) ---
     pending_validation_count = get_pending_validation_count()
-    
+
     if user_role != 'admin':
         return render(request, 'unauthorized.html')
 
-    # Fetch all parents
+    # Fetch all parents with related barangay
     parents_qs = Parent.objects.select_related('barangay').order_by('-created_at')
 
-    paginator = Paginator(parents_qs, 10)  # Show 10 parents per page
+    # Pagination: 10 parents per page
+    paginator = Paginator(parents_qs, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'HTML/admin_registeredparents.html', {
+    context = {
         'parents': page_obj,
         'user_email': user_email,
-        'pending_validation_count': pending_validation_count,
-        'user_role': user_role
-    })
+        'user_role': user_role,
+        'pending_validation_count': pending_validation_count,  # ✅ added
+    }
+
+    return render(request, 'HTML/admin_registeredparents.html', context)
+
 
 def verify_otp(request, user_id):
     user = get_object_or_404(User, id=user_id)
@@ -8115,15 +8121,16 @@ def admin_logs(request):
     ParentActivityLog.objects.filter(timestamp__lt=yesterday).delete()
     PreschoolerActivityLog.objects.filter(timestamp__lt=yesterday).delete()
 
+    # Fetch latest logs
     parent_logs_all = ParentActivityLog.objects.select_related('parent', 'barangay').order_by('-timestamp')
     preschooler_logs_all = PreschoolerActivityLog.objects.select_related('barangay').order_by('-timestamp')
 
-    # --- Pending validation count ---
+    # --- Pending validation count (for notification badge) ---
     pending_validation_count = get_pending_validation_count()
 
-    # Paginate
-    parent_paginator = Paginator(parent_logs_all, 10)  # 10 per page
-    preschooler_paginator = Paginator(preschooler_logs_all, 20)
+    # Pagination
+    parent_paginator = Paginator(parent_logs_all, 10)  # 10 parent logs per page
+    preschooler_paginator = Paginator(preschooler_logs_all, 20)  # 20 preschooler logs per page
 
     parent_page = request.GET.get('parent_page')
     preschooler_page = request.GET.get('preschooler_page')
@@ -8131,10 +8138,11 @@ def admin_logs(request):
     context = {
         'parent_logs': parent_paginator.get_page(parent_page),
         'preschooler_logs': preschooler_paginator.get_page(preschooler_page),
-        'pending_validation_count': pending_validation_count,  # ✅ added here
+        'pending_validation_count': pending_validation_count,  # ✅ added
     }
 
     return render(request, 'HTML/admin_logs.html', context)
+
 
 
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -9538,6 +9546,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
