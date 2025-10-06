@@ -7847,8 +7847,7 @@ def generate_password(length=8):
     return ''.join(random.choice(characters) for _ in range(length))
 
 def change_password_first(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
+    
     
     
     if request.method == 'POST':
@@ -9523,6 +9522,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
