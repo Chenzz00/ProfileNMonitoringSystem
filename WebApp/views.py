@@ -9004,7 +9004,7 @@ def generate_nutrition_excel(request):
                 processed_count + 1,  # Child sequence number
                 preschooler.address or "{user_barangay.name}",  # Include barangay in address
                 mother_name,
-                "{preschooler.last_name}, {preschooler.first_name}",
+                f"{preschooler.last_name}, {preschooler.first_name}",
                 'NO',  # IP Group
                 preschooler.sex,
                 preschooler.birth_date.strftime('%b-%d-%Y') if preschooler.birth_date else 'N/A',
