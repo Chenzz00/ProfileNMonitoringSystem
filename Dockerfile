@@ -61,5 +61,5 @@ EXPOSE ${PORT}
 CMD bash -c "\
     python manage.py migrate --noinput && \
     python manage.py collectstatic --noinput && \
-    gunicorn PPMA.wsgi:application --bind 0.0.0.0:${PORT} --workers 4\
+    python -m gunicorn PPMA.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 1\
 "
