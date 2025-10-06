@@ -80,7 +80,7 @@ from .serializers import ESP32DataSerializer, ESP32ResponseSerializer
 import json
 from datetime import datetime, timedelta
 from .decorators import admin_required
-OFFLINE_THRESHOLD = timedelta(seconds=30)
+OFFLINE_THRESHOLD = timedelta(minutes=5)
 
 #REPORT
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -9487,6 +9487,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
