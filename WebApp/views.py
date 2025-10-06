@@ -7325,6 +7325,8 @@ from .models import classify_bmi_for_age, calculate_bmi,bmi_zscore
 
 @csrf_exempt
 def submit_bmi(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
     if request.method == 'POST':
         preschooler_id = request.POST.get('preschooler_id')
         weight = request.POST.get('weight')
@@ -9505,6 +9507,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
