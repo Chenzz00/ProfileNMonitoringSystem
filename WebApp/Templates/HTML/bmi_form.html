@@ -474,10 +474,12 @@
                             document.getElementById('height-source').style.display = 'block';
                         }
                         if (data.data.temperature && !tempInput.value) {
-                            tempInput.value = data.data.temperature;
+                            const roundedTemp = parseFloat(data.data.temperature).toFixed(1); // round to 1 decimal
+                            tempInput.value = roundedTemp;
                             tempInput.classList.add('esp32-data');
                             document.getElementById('temp-source').style.display = 'block';
                         }
+
                         
                         // Update status based on completeness
                         if (data.is_complete) {
@@ -730,3 +732,4 @@
     </script>
 </body>
 </html>
+
