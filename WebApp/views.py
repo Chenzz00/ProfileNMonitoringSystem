@@ -8283,19 +8283,13 @@ def registered_barangays(request):
 
     barangays = Barangay.objects.annotate(
         preschooler_count=Count("preschooler", distinct=True),
-        parent_count=Count(
-            "account",
-            filter=Q(account__user_role="Parent"),
-            distinct=True
-        ),
+        parent_count=Count("parent", distinct=True),  # count Parent objects linked via barangay FK
         bhw_bns_count=Count(
             "account",
             filter=Q(account__user_role__in=["BHW", "Barangay Nutritional Scholar"]),
             distinct=True
         ),
     ).order_by("name")
-
-    # No need for the loop setting zeros; Count will return 0 automatically
 
     if query:
         barangays = barangays.filter(
@@ -9512,6 +9506,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
