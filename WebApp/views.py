@@ -4070,6 +4070,10 @@ def auto_archive_aged_preschoolers():
 
 
 def preschoolers(request):
+
+    if not request.user.is_authenticated:
+        return redirect('login')
+        
     user_email = request.session.get('email')
     raw_role = (request.session.get('user_role') or '').strip().lower()
 
@@ -5098,6 +5102,8 @@ def get_preschoolers_by_barangay(request):
     return Preschooler.objects.filter(barangay=user_barangay).select_related('parent_id', 'barangay')
 
 def registered_bhw(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
     # Use same filter pattern as validate function
     bhw_list = Account.objects.filter(
         Q(user_role__iexact='healthworker') | Q(user_role__iexact='BHW'),
@@ -5136,6 +5142,9 @@ def registered_bhw(request):
 
 
 def registered_bns(request):
+
+    if not request.user.is_authenticated:
+        return redirect('login')
     # Use the same filter pattern as validate function
     bns_list = Account.objects.filter(
         Q(user_role__iexact='bns') | 
@@ -6208,6 +6217,9 @@ This is an automated message. Please do not reply.
     return redirect('healthcare_workers')
 
 def registered_midwife(request):
+
+    if not request.user.is_authenticated:
+        return redirect('login')
     midwife_list = Account.objects.filter(user_role='midwife', is_validated=True)
 
     for midwife in midwife_list:
@@ -7835,6 +7847,8 @@ def generate_password(length=8):
     return ''.join(random.choice(characters) for _ in range(length))
 
 def change_password_first(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
     
     
     if request.method == 'POST':
@@ -7877,6 +7891,8 @@ def change_password_first(request):
 
 @login_required
 def history(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
     """History view with proper barangay filtering - only shows logs from user's barangay"""
     
     # Get user's barangay using consistent logic
@@ -9507,6 +9523,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
