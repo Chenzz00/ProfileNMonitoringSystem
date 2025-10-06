@@ -1252,7 +1252,6 @@ def index(request):
 
 
 @admin_required
-@admin_required
 def addbarangay(request):
     if request.method == 'POST':
         name = request.POST.get('barangay-name', '').strip()
@@ -5169,6 +5168,8 @@ def registered_bns(request):
         'total_bns_count': bns_list.count()  # Para makita ninyo ang total
     })
 
+
+@admin_required 
 def registered_preschoolers(request):
     preschoolers_qs = Preschooler.objects.filter(is_archived=False) \
         .select_related('parent_id', 'barangay') \
@@ -5230,7 +5231,6 @@ def registered_preschoolers(request):
         'preschoolers': page_obj,
         'barangays': barangays,
     })
-
 
 
 def reportTemplate(request):
@@ -5481,34 +5481,27 @@ def forgot_password(request):
 
     return render(request, 'HTML/forgot_password.html')
 
-@admin_required
+@admin_required 
 def admin_registered_parents(request):
     # Ensure user is authenticated and is admin
     user_email = request.session.get('email')
     user_role = request.session.get('user_role', '').lower()
 
-    # --- Pending validation count (for navbar badge) ---
-    
-
     if user_role != 'admin':
         return render(request, 'unauthorized.html')
 
-    # Fetch all parents with related barangay
+    # Fetch all parents
     parents_qs = Parent.objects.select_related('barangay').order_by('-created_at')
 
-    # Pagination: 10 parents per page
-    paginator = Paginator(parents_qs, 10)
+    paginator = Paginator(parents_qs, 10)  # Show 10 parents per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    context = {
+    return render(request, 'HTML/admin_registeredparents.html', {
         'parents': page_obj,
         'user_email': user_email,
-        'user_role': user_role,
-        
-    }
-
-    return render(request, 'HTML/admin_registeredparents.html', context)
+        'user_role': user_role
+    })
 
 
 def verify_otp(request, user_id):
@@ -8098,16 +8091,12 @@ def admin_logs(request):
     ParentActivityLog.objects.filter(timestamp__lt=yesterday).delete()
     PreschoolerActivityLog.objects.filter(timestamp__lt=yesterday).delete()
 
-    # Fetch latest logs
     parent_logs_all = ParentActivityLog.objects.select_related('parent', 'barangay').order_by('-timestamp')
     preschooler_logs_all = PreschoolerActivityLog.objects.select_related('barangay').order_by('-timestamp')
 
-    # --- Pending validation count (for notification badge) ---
-   
-
-    # Pagination
-    parent_paginator = Paginator(parent_logs_all, 10)  # 10 parent logs per page
-    preschooler_paginator = Paginator(preschooler_logs_all, 20)  # 20 preschooler logs per page
+    # Paginate
+    parent_paginator = Paginator(parent_logs_all, 10)  # 10 per page
+    preschooler_paginator = Paginator(preschooler_logs_all, 20)
 
     parent_page = request.GET.get('parent_page')
     preschooler_page = request.GET.get('preschooler_page')
@@ -8115,10 +8104,10 @@ def admin_logs(request):
     context = {
         'parent_logs': parent_paginator.get_page(parent_page),
         'preschooler_logs': preschooler_paginator.get_page(preschooler_page),
-        
     }
 
     return render(request, 'HTML/admin_logs.html', context)
+
 
 
 
@@ -8154,16 +8143,12 @@ def manage_announcements(request):
     except Exception as e:
         messages.error(request, 'Error loading announcements. Please ensure the database is properly set up.')
         announcements = []
-
-    # --- Pending validation count ---
     
-
     context = {
         'announcements': announcements,
         'account': request.user,
-       
     }
-
+    
     return render(request, 'HTML/manage_announcements.html', context)
 
 
@@ -8279,9 +8264,6 @@ from django.db.models import Count, Q
 def registered_barangays(request):
     query = request.GET.get("search", "").strip()
 
-    # ✅ Use helper function for pending validation count
-    
-
     barangays = (
         Barangay.objects
         .annotate(
@@ -8292,7 +8274,7 @@ def registered_barangays(request):
                     output_field=IntegerField(),
                 )
             ),
-            bhw_bns_count=Sum(
+            bhw_bns_count=Sum(  # merged column
                 Case(
                     When(account__user_role="BHW", then=1),
                     When(account__user_role="Barangay Nutritional Scholar", then=1),
@@ -8319,16 +8301,9 @@ def registered_barangays(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    return render(
-        request,
-        "HTML/barangay_list.html",
-        {
-            "barangays": page_obj,
-           
-        },
-    )
+    return render(request, "HTML/barangay_list.html", {"barangays": page_obj})
 
-
+@admin_required 
 def healthcare_workers(request):
     """Improved healthcare workers view with better BNS handling"""
     from django.utils import timezone
@@ -8499,7 +8474,6 @@ def healthcare_workers(request):
         'bnss': bns_list,
         'midwives': midwife_list,
         'nurses': nurse_list,
-        
     }
     
     return render(request, 'HTML/healthcare_workers.html', context)
@@ -9531,6 +9505,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
