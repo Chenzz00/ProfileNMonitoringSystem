@@ -1286,22 +1286,42 @@ def addbarangay(request):
     return render(request, 'HTML/addbarangay.html')
 
 @admin_required
+@admin_required
 def Admin(request):
-    # Count health workers - include all health worker roles
+    # =========================
+    # ✅ Health worker count (validated only)
+    # =========================
     health_worker_roles = ['BHW', 'Barangay Nutritional Scholar', 'Midwife', 'Nurse']
     health_worker_count = Account.objects.filter(
         user_role__in=health_worker_roles,
-        is_validated=True  # Only count validated health workers
+        is_validated=True
     ).count() or 0
 
-    # Get preschoolers and unvalidated accounts
+    # =========================
+    # ✅ Pending validation count (for badge)
+    # =========================
+    base_filter = (
+        Q(user_role__iexact='BHW') |
+        Q(user_role__iexact='Barangay Nutritional Scholar') |
+        Q(user_role__iexact='Midwife') |
+        Q(user_role__iexact='Nurse')
+    )
+
+    pending_validation_count = Account.objects.filter(
+        base_filter,
+        is_validated=False,
+        is_rejected=False
+    ).count() or 0
+
+    # =========================
+    # ✅ Preschoolers and Accounts for notifications
+    # =========================
     preschoolers = Preschooler.objects.all()
     accounts = Account.objects.filter(is_validated=False)
 
-    # Total Vaccinated
     total_vaccinated = VaccinationSchedule.objects.filter(status='completed').count()
 
-    # Build notifications
+    # Build notifications list
     notifications = []
 
     for acc in accounts:
@@ -1321,7 +1341,7 @@ def Admin(request):
                           if child.bhw_id and child.bhw_id.account and hasattr(child.bhw_id.account, 'profile_photo') else None,
         })
 
-    # Process timestamps
+    # Normalize timestamps for sorting
     for notif in notifications:
         timestamp = notif.get('created_at') or notif.get('date_registered')
         if timestamp:
@@ -1337,12 +1357,12 @@ def Admin(request):
     latest_notifications = notifications[:15]
     latest_timestamp = latest_notifications[0]['timestamp'] if latest_notifications else None
 
-    # Total preschoolers - Fixed query
+    # =========================
+    # ✅ Preschoolers, Barangays, and Nutritional Stats
+    # =========================
     total_preschoolers = Preschooler.objects.filter(is_archived=False).count() or 0
-
     barangays = Barangay.objects.all()
 
-    # Pie chart: nutritional status
     status_totals = {
         'Severely Wasted': 0,
         'Wasted': 0,
@@ -1352,10 +1372,9 @@ def Admin(request):
         'Obese': 0,
     }
 
-    # Table summary by barangay - Fixed to ensure all barangays appear
     summary = []
     today = date.today()
-    
+
     for brgy in barangays:
         preschoolers_in_barangay = Preschooler.objects.filter(
             barangay=brgy,
@@ -1405,7 +1424,6 @@ def Admin(request):
                     elif category == "Risk of overweight":
                         nutritional_summary['risk_overweight'] += 1
                         status_totals['Risk of overweight'] += 1
-                    
                     elif category == "Overweight":
                         nutritional_summary['overweight'] += 1
                         status_totals['Overweight'] += 1
@@ -1414,67 +1432,52 @@ def Admin(request):
                         status_totals['Obese'] += 1
 
                 except Exception as e:
-                    print("⚠️ BMI classification error for preschooler {p.id}: {e}")
+                    print(f"⚠️ BMI classification error for preschooler {p.id}: {e}")
 
-        # Add barangay data even if it has 0 preschoolers
         summary.append({
             'barangay': brgy.name,
             'preschooler_count': preschooler_count,
             **nutritional_summary
         })
 
-    # NEW: Enhanced Vaccination Trend Data with Dynamic Date Filtering
-    from django.db.models import Count, Q
-    from datetime import timedelta
-    from dateutil.relativedelta import relativedelta
-    
-    # Get filter parameters from request
+    # =========================
+    # ✅ Vaccination Trends
+    # =========================
     filter_month = request.GET.get('filter_month')
-    
-    # Determine center month
     if filter_month:
         try:
             center_date = datetime.strptime(filter_month, '%Y-%m').date()
         except ValueError:
-            center_date = timezone.now().date().replace(day=1)  # Current month as fallback
+            center_date = timezone.now().date().replace(day=1)
     else:
-        center_date = timezone.now().date().replace(day=1)  # Current month by default
-    
-    # Generate 11 months: center month ±5 months
+        center_date = timezone.now().date().replace(day=1)
+
     trend_labels = []
     monthly_registered_trend = []
     vaccinated_preschoolers_trend = []
-    all_months_data = []  # For JavaScript filtering
-    
-    # Generate data for the 11-month window (5 before + current + 5 after)
-    for i in range(-5, 6):  # -5 to +5 inclusive
+    all_months_data = []
+
+    for i in range(-5, 6):
         target_month = center_date + relativedelta(months=i)
-        
-        # Calculate next month for range queries
         next_month = target_month + relativedelta(months=1)
-        
-        # Month label
         month_label = target_month.strftime('%b %Y')
         trend_labels.append(month_label)
-        
-        # Monthly registrations for this specific month
+
         monthly_registered = Preschooler.objects.filter(
             date_registered__gte=target_month,
             date_registered__lt=next_month,
             is_archived=False
         ).count()
-        monthly_registered_trend.append(monthly_registered)
-        
-        # Vaccinated preschoolers in this specific month
+
         vaccinated_in_month = VaccinationSchedule.objects.filter(
             administered_date__gte=target_month,
             administered_date__lt=next_month,
             status='completed'
         ).values('preschooler').distinct().count()
-        
+
+        monthly_registered_trend.append(monthly_registered)
         vaccinated_preschoolers_trend.append(vaccinated_in_month)
-        
-        # Store month data for JavaScript
+
         all_months_data.append({
             'month': target_month.strftime('%Y-%m'),
             'label': month_label,
@@ -1482,24 +1485,20 @@ def Admin(request):
             'vaccinated': vaccinated_in_month
         })
 
-    # Generate extended data for JavaScript (±12 months for smooth transitions)
     extended_months_data = []
-    for i in range(-12, 13):  # -12 to +12 months
+    for i in range(-12, 13):
         target_month = timezone.now().date().replace(day=1) + relativedelta(months=i)
         next_month = target_month + relativedelta(months=1)
-        
         monthly_registered = Preschooler.objects.filter(
             date_registered__gte=target_month,
             date_registered__lt=next_month,
             is_archived=False
         ).count()
-        
         vaccinated_in_month = VaccinationSchedule.objects.filter(
             administered_date__gte=target_month,
             administered_date__lt=next_month,
             status='completed'
         ).values('preschooler').distinct().count()
-        
         extended_months_data.append({
             'month': target_month.strftime('%Y-%m'),
             'label': target_month.strftime('%b %Y'),
@@ -1512,10 +1511,9 @@ def Admin(request):
         'registered': monthly_registered_trend,
         'vaccinated': vaccinated_preschoolers_trend,
         'center_month': center_date.strftime('%Y-%m'),
-        'all_months': extended_months_data  # For JavaScript filtering
+        'all_months': extended_months_data
     }
 
-    # Prepare data for Barangay Bar Chart
     barangay_chart_data = {
         'barangays': [row['barangay'] for row in summary],
         'severely_wasted': [row['severely_wasted'] for row in summary],
@@ -1526,8 +1524,12 @@ def Admin(request):
         'obese': [row['obese'] for row in summary]
     }
 
+    # =========================
+    # ✅ Final Render with Added Pending Validation Count
+    # =========================
     return render(request, 'HTML/Admindashboard.html', {
         'health_worker_count': health_worker_count,
+        'pending_validation_count': pending_validation_count,  # <-- NEW
         'notifications': latest_notifications,
         'latest_notif_timestamp': latest_timestamp.isoformat() if latest_timestamp else '',
         'total_preschoolers': total_preschoolers,
@@ -1539,7 +1541,7 @@ def Admin(request):
         },
         'vaccination_trend_data': vaccination_trend_data,
         'barangay_chart_data': barangay_chart_data,
-        'current_filter_month': center_date.strftime('%Y-%m')  # For the date picker
+        'current_filter_month': center_date.strftime('%Y-%m')
     })
 
     
@@ -9487,6 +9489,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
