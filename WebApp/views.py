@@ -1254,7 +1254,7 @@ def index(request):
 @admin_required
 def addbarangay(request):
     # ✅ Count pending account validations (for notification badge)
-    pending_validations = Account.objects.filter(is_validated=False).count()
+    pending_validation_count = Account.objects.filter(is_validated=False).count()
 
     if request.method == 'POST':
         name = request.POST.get('barangay-name', '').strip()
@@ -1265,14 +1265,14 @@ def addbarangay(request):
         if not name:
             messages.error(request, "Barangay name is required.")
             return render(request, 'HTML/addbarangay.html', {
-                'pending_validations': pending_validations
+                'pending_validation_count': pending_validation_count
             })
 
         # ✅ Check if barangay name already exists
         if Barangay.objects.filter(name__iexact=name).exists():
             messages.error(request, f"A barangay named '{name}' already exists.")
             return render(request, 'HTML/addbarangay.html', {
-                'pending_validations': pending_validations
+                'pending_validation_count': pending_validation_count
             })
 
         # ✅ Try saving the barangay
@@ -1290,8 +1290,9 @@ def addbarangay(request):
     
     # ✅ Always pass pending validation count to template
     return render(request, 'HTML/addbarangay.html', {
-        'pending_validations': pending_validations
+        'pending_validation_count': pending_validation_count
     })
+
 
 @admin_required
 @admin_required
@@ -9497,6 +9498,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
