@@ -9390,11 +9390,7 @@ def test_push_notification(request):
         })
 
 
-def get_pending_validation_count(request):
-    count = Account.objects.filter(
-        is_validated=False
-    ).exclude(user_role="Parent").count()
-    return JsonResponse({'pending_count': count})
+
 
 
 @csrf_protect
@@ -9522,6 +9518,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
