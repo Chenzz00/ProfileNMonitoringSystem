@@ -274,6 +274,15 @@
       background-color: #1565c0;
       color: white;
     }
+
+    /* Hide APK download section in mobile app */
+    .apk-download-section {
+      display: block;
+    }
+
+    .apk-download-section.hide-in-app {
+      display: none;
+    }
   </style>
 </head>
 <body class="fade-in">
@@ -371,7 +380,8 @@
         {% endif %}
       </div>
 
-      <div style="text-align: center; margin-top: 20px;">
+      <!-- APK Download Section (Hidden in Mobile App) -->
+      <div class="apk-download-section" id="apkDownloadSection" style="text-align: center; margin-top: 20px;">
         <h3 style="font-size: 1.1rem; font-weight: 600; color: #333; margin-bottom: 15px;">FOR MOBILE APPLICATION</h3>
         <a href="{% static 'downloads/PPMS.apk' %}" download class="apk-download-btn-inline" title="Download PPMS Android App">
           <svg class="apk-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -404,6 +414,38 @@
 
   <!-- Slideshow & Modal Script -->
   <script>
+    // Detect if running in mobile app (WebView)
+    function isRunningInApp() {
+      // Check for custom user agent set by the app
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      
+      // Method 1: Check if Android interface is available
+      if (typeof Android !== 'undefined') {
+        return true;
+      }
+      
+      // Method 2: Check custom user agent string
+      if (userAgent.indexOf('PPMSApp') > -1) {
+        return true;
+      }
+      
+      // Method 3: Check URL parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('source') === 'app') {
+        return true;
+      }
+      
+      return false;
+    }
+
+    // Hide APK download section if in app
+    if (isRunningInApp()) {
+      const apkSection = document.getElementById('apkDownloadSection');
+      if (apkSection) {
+        apkSection.classList.add('hide-in-app');
+      }
+    }
+
     let slideIndex = 0;
     let slides = document.getElementsByClassName("slide");
     let indicators = document.getElementsByClassName("indicator");
