@@ -1287,7 +1287,7 @@ def addbarangay(request):
     return render(request, 'HTML/addbarangay.html')
 
 
-@admin_required
+
 @admin_required
 def Admin(request):
     # =========================
@@ -5181,10 +5181,27 @@ def registered_preschoolers(request):
 
     today = date.today()
 
-    # --- Pending validation count ---
-    pending_validation_count = get_pending_validation_count()
+    # =========================
+    # Pending validation count (using base_filter like Admin view)
+    # =========================
+    from django.db.models import Q
 
-    # --- Process nutritional status and delivery place color coding ---
+    base_filter = (
+        Q(user_role__iexact='BHW') |
+        Q(user_role__iexact='Barangay Nutritional Scholar') |
+        Q(user_role__iexact='Midwife') |
+        Q(user_role__iexact='Nurse')
+    )
+
+    pending_validation_count = Account.objects.filter(
+        base_filter,
+        is_validated=False,
+        is_rejected=False
+    ).count() or 0
+
+    # =========================
+    # Process nutritional status and delivery place color coding
+    # =========================
     for p in preschoolers_qs:
         latest_bmi = p.bmi_records[0] if hasattr(p, 'bmi_records') and p.bmi_records else None
 
@@ -5236,6 +5253,7 @@ def registered_preschoolers(request):
         'barangays': barangays,
         'pending_validation_count': pending_validation_count,  # ✅ added here
     })
+
 
 
 
@@ -9546,6 +9564,7 @@ def announce_device(request):
             "status": "error",
             "message": str(e)
         }, status=500)
+
 
 
 
