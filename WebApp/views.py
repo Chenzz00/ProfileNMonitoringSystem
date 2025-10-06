@@ -9526,6 +9526,15 @@ def announce_device(request):
 
 
 
+def get_pending_validation_count(request):
+    count = Account.objects.filter(
+        is_validated=False
+    ).exclude(user_role="Parent").count()
+    return JsonResponse({'pending_count': count})
+
+
+
+
 
 
 
