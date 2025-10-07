@@ -4236,8 +4236,6 @@ def profile(request):
                 account.save()
             return built_address
 
-
-        
         # ✅ FOR PARENTS, CHECK PARENT MODEL AS FALLBACK
         if account.user_role and account.user_role.lower() == 'parent':
             try:
@@ -4269,35 +4267,78 @@ def profile(request):
             return redirect('profile')
 
         # Get form data
-        full_name = request.POST.get('full_name')
-        address = request.POST.get('address')
-        contact = request.POST.get('contact_number')
+        full_name = request.POST.get('full_name', '').strip()
+        address = request.POST.get('address', '').strip()
+        contact = request.POST.get('contact_number', '').strip()
         birthdate = request.POST.get('birthdate')
         barangay_id = request.POST.get('barangay')
 
-        # ✅ Validate contact number
-        if contact and (not contact.isdigit() or len(contact) != 11):
-            messages.error(request, "Contact number must be exactly 11 digits.")
-            return redirect('profile')
-
-        # Update account fields
-        if full_name:
+        # ✅ VALIDATE FULL NAME
+        if full_name and full_name.lower() not in ['na', 'n/a', 'none', '']:
+            # Split the full name into first, middle, and last names
+            name_parts = full_name.split()
+            
+            if len(name_parts) >= 2:
+                account.first_name = name_parts[0]
+                account.last_name = name_parts[-1]
+                
+                # If there are middle names, join them
+                if len(name_parts) > 2:
+                    account.middle_name = ' '.join(name_parts[1:-1])
+                else:
+                    account.middle_name = ''
+            elif len(name_parts) == 1:
+                account.first_name = name_parts[0]
+                account.last_name = ''
+                account.middle_name = ''
+            
+            # Also update the full_name field
             account.full_name = full_name
+            
+            # ✅ If parent, also update Parent model
+            if account.user_role and account.user_role.lower() == 'parent':
+                try:
+                    parent = Parent.objects.get(email=account.email)
+                    parent.full_name = full_name
+                    parent.save()
+                except Parent.DoesNotExist:
+                    pass
+
+        # ✅ Validate contact number (must be exactly 11 digits)
         if contact:
+            if not contact.isdigit():
+                messages.error(request, "Contact number must contain only numbers.")
+                return redirect('profile')
+            
+            if len(contact) != 11:
+                messages.error(request, "Contact number must be exactly 11 digits.")
+                return redirect('profile')
+            
             account.contact_number = contact
+            
+            # ✅ If parent, also update Parent model
+            if account.user_role and account.user_role.lower() == 'parent':
+                try:
+                    parent = Parent.objects.get(email=account.email)
+                    parent.contact_number = contact
+                    parent.save()
+                except Parent.DoesNotExist:
+                    pass
+
+        # ✅ Update birthdate
         if birthdate:
             account.birthdate = birthdate or None
 
         # ✅ UPDATE ADDRESS - Store in both editable_address and complete_address
-        if address is not None and address.strip():
-            account.editable_address = address.strip()
-            account.complete_address = address.strip()
+        if address:
+            account.editable_address = address
+            account.complete_address = address
             
-            # If you want to update the parent model too for parent users
+            # If parent, update the parent model too
             if account.user_role and account.user_role.lower() == 'parent':
                 try:
                     parent = Parent.objects.get(email=account.email)
-                    parent.address = address.strip()
+                    parent.address = address
                     parent.save()
                 except Parent.DoesNotExist:
                     pass
@@ -4355,7 +4396,7 @@ def profile(request):
                 messages.error(request, "Selected barangay does not exist.")
                 return redirect('profile')
 
-        # ✅ SAVE THE ACCOUNT - This was missing!
+        # ✅ SAVE THE ACCOUNT
         account.save()
         
         # Refresh the complete address after saving
@@ -9506,6 +9547,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
