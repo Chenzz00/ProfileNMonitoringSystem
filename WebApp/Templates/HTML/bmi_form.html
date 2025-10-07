@@ -474,7 +474,7 @@
                             document.getElementById('height-source').style.display = 'block';
                         }
                         if (data.data.temperature && !tempInput.value) {
-                            const roundedTemp = parseFloat(data.data.temperature).toFixed(1); // round to 1 decimal
+                            const roundedTemp = parseFloat(data.data.temperature).toFixed(2); // round to 1 decimal
                             tempInput.value = roundedTemp;
                             tempInput.classList.add('esp32-data');
                             document.getElementById('temp-source').style.display = 'block';
@@ -732,5 +732,6 @@
     </script>
 </body>
 </html>
+
 
 
