@@ -10,8 +10,6 @@
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="icon" type="image/png" href="{% static 'media/PPMS-logo.png' %}">
-   
   
   <style>
     * {
@@ -570,7 +568,7 @@
 
     /* Modal Styles */
     .modal {
-      display: none;
+      display: none;  /* Base: hidden */
       position: fixed;
       z-index: 999999;
       left: 0;
@@ -579,12 +577,15 @@
       height: 100vh;
       background-color: rgba(0, 0, 0, 0.5);
       backdrop-filter: blur(2px);
+      opacity: 0;  /* Start invisible for transition */
+      transition: opacity 0.3s ease;  /* Smooth fade in/out */
     }
 
     .modal.show {
-      display: flex;
+      display: flex !important;  /* Override base display: none */
       justify-content: center;
       align-items: center;
+      opacity: 1;  /* Fade in when shown */
     }
 
     .modal-content {
@@ -596,6 +597,11 @@
       max-height: 90vh;
       overflow-y: auto;
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      transform: scale(0.9);  /* Optional: Start slightly scaled for open animation */
+      transition: transform 0.3s ease;
+    }
+    .modal.show .modal-content {
+      transform: scale(1);  /* Full size when shown */
     }
 
     .modal-content h3 {
@@ -1311,8 +1317,8 @@
           title: 'Are you sure you want to logout?',
           icon: 'warning',
           showCancelButton: true,
-          confirmButtonColor: '#3498db',
-          cancelButtonColor: '#95a5a6',
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
           confirmButtonText: 'Yes, logout',
           cancelButtonText: 'Cancel'
         }).then((result) => {
@@ -1380,8 +1386,8 @@
           title: 'Select Month for Immunization Report',
           input: 'month',
           showCancelButton: true,
-          confirmButtonColor: '#3498db',
-          cancelButtonColor: '#95a5a6',
+          confirmButtonColor: '#e74c3c',
+          cancelButtonColor: '#aaa',
           confirmButtonText: 'Generate Report',
           cancelButtonText: 'Cancel',
           inputValidator: (value) => {
@@ -1554,24 +1560,16 @@
         modalParentName.textContent = selectedParentName;
         hiddenParentInput.value = selectedParentName;
         hiddenParentIdInput.value = selectedParentId;
-
-        modal.classList.add("show");
-        modal.style.display = "flex";
+        modal.classList.add("show");  // Only this—CSS handles display: flex and opacity
       }
 
       closeButton.onclick = () => {
-        modal.classList.remove("show");
-        setTimeout(() => {
-          modal.style.display = "none";
-        }, 100);
+        modal.classList.remove("show");  // CSS handles fade-out and revert to display: none
       };
 
       window.onclick = (e) => {
         if (e.target === modal) {
           modal.classList.remove("show");
-          setTimeout(() => {
-            modal.style.display = "none";
-          }, 100);
         }
       };
 
@@ -1703,7 +1701,3 @@
 
 </body>
 </html>
-
-
-
-
