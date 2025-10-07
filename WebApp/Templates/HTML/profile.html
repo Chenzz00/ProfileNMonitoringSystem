@@ -10,7 +10,6 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://unpkg.com/cropperjs@1.5.13/dist/cropper.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/png" href="{% static 'media/PPMS-logo.png' %}">
   
   <style>
     * {
@@ -147,26 +146,26 @@
     }
 
     .profile-photo {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid white;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  display: block;
-  margin: 0 auto 20px auto;  /* Centers horizontally */
-  cursor: pointer;
-  position: relative;
-  z-index: 20;
-  margin-top: -60px;  /* Pulls it up to overlap the background */
-  transition: transform 0.3s ease;
-}
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid white;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      display: block;
+      margin: 0 auto 20px auto;
+      cursor: pointer;
+      position: relative;
+      z-index: 20;
+      margin-top: -60px;
+      transition: transform 0.3s ease;
+    }
 
-.profile-box form label[for="photoUpload"] {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
+    .profile-box form label[for="photoUpload"] {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
 
     .profile-photo:hover {
       transform: scale(1.05);
@@ -295,7 +294,6 @@
       flex-wrap: wrap;
     }
 
-    /* Cropper Modal */
     #cropperModal {
       display: none;
       position: fixed;
@@ -330,7 +328,6 @@
       max-height: 50vh;
     }
 
-    /* Responsive for tablets */
     @media (min-width: 576px) {
       body {
         padding: 15px;
@@ -359,7 +356,6 @@
       }
     }
 
-    /* Desktop view */
     @media (min-width: 768px) {
       body {
         padding: 20px;
@@ -412,7 +408,6 @@
       }
     }
 
-    /* Extra small devices fix */
     @media (max-width: 375px) {
       .topbar {
         height: 70px;
@@ -450,14 +445,12 @@
       }
     }
 
-    /* Zoom-friendly styles */
     @media screen and (-webkit-min-device-pixel-ratio: 2) {
       input, select, textarea {
         font-size: 16px !important;
       }
     }
 
-    /* Prevent horizontal scroll */
     html, body {
       max-width: 100%;
       overflow-x: hidden;
@@ -465,10 +458,8 @@
   </style>
 </head>
 <body>
-  <!-- Video Background -->
   <div class="video-background"></div>
 
-  <!-- Top Bar -->
   <div class="topbar">
     <button class="rtn-btn" onclick="goToDashboard('{{ account.user_role }}')">
       <div class="button-box">
@@ -484,19 +475,15 @@
     </div>
   </div>
 
-  <!-- Main Container -->
   <div class="main-container">
     <div class="profile-box">
-      <!-- Background Image Section -->
       <div class="profile-background"></div>
 
-      <!-- Hidden input form for cropping upload -->
       <form id="cropImageForm" method="POST" enctype="multipart/form-data" style="display: none;">
         {% csrf_token %}
         <input type="file" id="photoUpload" name="photo" accept="image/*">
       </form>
 
-      <!-- Editable Profile Form -->
       <form method="POST" id="profileForm">
         {% csrf_token %}
 
@@ -539,20 +526,34 @@
         </div>
 
         <div class="profile-item">
-          <span class="profile-label">Address:</span>
-          <span class="profile-value" id="addressDisplay">
-            {{ account.complete_address|default:"--" }}
-          </span>
-          <input type="text" name="address" id="addressInput" 
-                 value="{{ account.complete_address }}" style="display: none;">
+          <span class="profile-label">Sex:</span>
+          <span class="profile-value">{{ account.sex|default:"--" }}</span>
         </div>
-
 
         <div class="profile-item">
-          <span class="profile-label">Contact #:</span>
-          <span class="profile-value" id="contactDisplay">{{ account.contact_number|default:"--" }}</span>
-          <input type="text" name="contact_number" id="contactInput" value="{{ account.contact_number }}" style="display: none;">
+          <span class="profile-label">Address:</span>
+          <span class="profile-value" id="addressDisplay">{{ account.clean_address|default:"--" }}</span>
+          <input type="text" name="address" id="addressInput" value="{{ account.clean_address }}" style="display: none;">
         </div>
+
+        <div class="profile-item">
+      <span class="profile-label">Contact #:</span>
+      <span class="profile-value" id="contactDisplay">{{ account.contact_number|default:"--" }}</span>
+      
+      <input 
+          type="text" 
+          name="contact_number" 
+          id="contactInput" 
+          value="{{ account.contact_number }}" 
+          style="display: none;"
+          maxlength="11" 
+          pattern="\d{11}" 
+          inputmode="numeric"
+          oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);"
+          placeholder="Enter 11-digit number"
+      >
+    </div>
+
 
         <div class="profile-item">
           <span class="profile-label">Birthdate:</span>
@@ -572,7 +573,6 @@
     </div>
   </div>
 
-  <!-- Cropper Modal -->
   <div id="cropperModal">
     <div class="modal-content">
       <img id="imageToCrop">
@@ -583,7 +583,6 @@
     </div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://unpkg.com/cropperjs@1.5.13/dist/cropper.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -629,7 +628,6 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-      // Profile form validation
       const profileForm = document.getElementById("profileForm");
       if (profileForm) {
         profileForm.addEventListener("submit", function(e) {
@@ -660,7 +658,6 @@
         });
       }
 
-      // Barangay change logic
       const barangayDropdown = document.getElementById("barangaySelect");
       const addressField = document.getElementById("addressInput");
 
@@ -673,7 +670,6 @@
         });
       }
 
-      // Prevent zoom on input focus for iOS
       const viewportMeta = document.querySelector('meta[name="viewport"]');
       if (viewportMeta && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
         document.addEventListener('focusin', (e) => {
@@ -688,7 +684,6 @@
       }
     });
 
-    // Display messages if any
     {% if messages %}
       {% for message in messages %}
         Swal.fire({
@@ -700,5 +695,3 @@
   </script>
 </body>
 </html>
-
-
