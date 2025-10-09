@@ -77,6 +77,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from .serializers import ESP32DataSerializer, ESP32ResponseSerializer
+from django.core.files.base import ContentFile
+import cloudinary.uploader
 import json
 from datetime import datetime, timedelta
 from .decorators import admin_required
@@ -1804,23 +1806,138 @@ def dashboard(request):
     })
 
 
+
+
+@csrf_exempt
+@login_required
+def upload_preschooler_photo(request, preschooler_id):
+    """Handle preschooler profile photo upload to Cloudinary"""
+    if request.method != 'POST':
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+
+    try:
+        preschooler = get_object_or_404(Preschooler, pk=preschooler_id)
+        
+        # Verify parent ownership
+        account = Account.objects.get(email=request.user.email)
+        if preschooler.parent_id.email != account.email:
+            return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+
+        photo_file = request.FILES.get('profile_photo')
+        if not photo_file:
+            return JsonResponse({'status': 'error', 'message': 'No photo provided'}, status=400)
+
+        # Validate file type
+        if not photo_file.content_type.startswith('image/'):
+            return JsonResponse({'status': 'error', 'message': 'Invalid file type'}, status=400)
+
+        # Validate file size (max 10MB)
+        if photo_file.size > 10 * 1024 * 1024:
+            return JsonResponse({'status': 'error', 'message': 'File too large (max 10MB)'}, status=400)
+
+        # ✅ Upload to Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            photo_file,
+            folder='preschooler_photos/',
+            public_id=f'preschooler_{preschooler.preschooler_id}',
+            overwrite=True,
+            transformation=[
+                {'width': 500, 'height': 500, 'crop': 'fill', 'gravity': 'face'},
+                {'quality': 'auto:good'}
+            ]
+        )
+
+        # Get Cloudinary URL and public ID
+        cloudinary_url = upload_result.get('secure_url')
+        cloudinary_public_id = upload_result.get('public_id')
+
+        # Delete old image from Cloudinary if exists
+        if preschooler.cloudinary_public_id:
+            try:
+                cloudinary.uploader.destroy(preschooler.cloudinary_public_id)
+            except Exception as e:
+                print(f"Error deleting old image: {e}")
+
+        # Update preschooler record
+        preschooler.profile_photo = cloudinary_url
+        preschooler.cloudinary_public_id = cloudinary_public_id
+        preschooler.save()
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Photo uploaded successfully',
+            'new_photo_url': cloudinary_url
+        })
+
+    except Account.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Account not found'}, status=404)
+    except Exception as e:
+        print(f"Upload error: {e}")
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        
 @csrf_exempt
 def upload_cropped_photo(request):
+    """Handle cropped photo upload to Cloudinary"""
     if not request.user.is_authenticated:
-        return redirect('login')
+        return JsonResponse({'status': 'unauthorized'}, status=403)
 
-    if request.method == 'POST' and request.user.is_authenticated:
-        image = request.FILES.get('cropped_image')
-        account = Account.objects.get(email=request.user.email)
+    if request.method == 'POST':
+        try:
+            image = request.FILES.get('cropped_image')
+            account = Account.objects.get(email=request.user.email)
 
-        if hasattr(account, 'profile_photo'):
-            account.profile_photo.image = image
-            account.profile_photo.save()
-        else:
-            ProfilePhoto.objects.create(account=account, image=image)
+            if not image:
+                return JsonResponse({'status': 'error', 'message': 'No image provided'}, status=400)
 
-        return JsonResponse({'status': 'success'})
-    return JsonResponse({'status': 'unauthorized'}, status=403)
+            # ✅ Upload to Cloudinary with optimizations
+            upload_result = cloudinary.uploader.upload(
+                image,
+                folder='profile_photos/',
+                public_id=f'profile_{account.account_id}',
+                overwrite=True,
+                transformation=[
+                    {'width': 500, 'height': 500, 'crop': 'fill', 'gravity': 'face'},
+                    {'quality': 'auto:good'}
+                ]
+            )
+
+            # ✅ Get Cloudinary URL and public ID
+            cloudinary_url = upload_result.get('secure_url')
+            cloudinary_public_id = upload_result.get('public_id')
+
+            # ✅ Update or create ProfilePhoto
+            if hasattr(account, 'profile_photo'):
+                # Delete old image from Cloudinary if exists
+                if account.profile_photo.cloudinary_public_id:
+                    try:
+                        cloudinary.uploader.destroy(account.profile_photo.cloudinary_public_id)
+                    except Exception as e:
+                        print(f"Error deleting old image: {e}")
+                
+                account.profile_photo.image = cloudinary_url
+                account.profile_photo.cloudinary_public_id = cloudinary_public_id
+                account.profile_photo.save()
+            else:
+                ProfilePhoto.objects.create(
+                    account=account,
+                    image=cloudinary_url,
+                    cloudinary_public_id=cloudinary_public_id
+                )
+
+            return JsonResponse({
+                'status': 'success',
+                'image_url': cloudinary_url,
+                'message': 'Profile photo uploaded successfully'
+            })
+
+        except Account.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Account not found'}, status=404)
+        except Exception as e:
+            print(f"Upload error: {e}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -2957,6 +3074,7 @@ def get_vaccine_status_with_dose_tracking(preschooler, vaccine_name, total_doses
             'action': 'needs_schedule'
         }
 
+@login_required
 def parents_mypreschooler(request, preschooler_id):
     if not request.user.is_authenticated:
         return redirect('login')
@@ -2991,7 +3109,7 @@ def parents_mypreschooler(request, preschooler_id):
 
     # --- Latest BMI ---
     latest_bmi = preschooler.bmi_records[0] if preschooler.bmi_records else None
-    bmi_value = None  # ✅ default
+    bmi_value = None
 
     # --- Nutrition & BMI classifications ---
     weight_for_age_status = "N/A"
@@ -3052,7 +3170,7 @@ def parents_mypreschooler(request, preschooler_id):
         'age_months': age_months,
         'age_days': age_days,
         'latest_bmi': latest_bmi,
-        'bmi_value': bmi_value,  # ✅ now safe to use in template
+        'bmi_value': bmi_value,
         'weight_for_age_status': weight_for_age_status,
         'height_for_age_status': height_for_age_status,
         'weight_for_height_status': weight_for_height_status,
@@ -4175,6 +4293,7 @@ def preschoolers(request):
 
 @login_required
 def profile(request):
+    """User profile view with Cloudinary photo upload"""
     if not request.user.is_authenticated:
         return redirect('login')
 
@@ -4187,15 +4306,12 @@ def profile(request):
     # ✅ SIMPLIFIED ADDRESS BUILDING FUNCTION
     def build_complete_address(account):
         """Build complete address from Account model individual fields"""
-        address_parts = []
-        
         # Check if there's already an editable_address
         if hasattr(account, 'editable_address') and account.editable_address and account.editable_address.strip():
             if account.editable_address.strip().lower() not in ['n/a', 'none', 'no address provided']:
                 return account.editable_address.strip()
         
         invalid_values = {'na', 'n/a', 'none', ''}
-
         address_parts = []
 
         # House number first
@@ -4256,15 +4372,48 @@ def profile(request):
     account.complete_address = build_complete_address(account)
 
     if request.method == 'POST':
+        # ✅ HANDLE PHOTO UPLOAD WITH CLOUDINARY
         if 'photo' in request.FILES:
             photo_file = request.FILES['photo']
-            if hasattr(account, 'profile_photo') and account.profile_photo:
-                account.profile_photo.image = photo_file
-                account.profile_photo.save()
-            else:
-                ProfilePhoto.objects.create(account=account, image=photo_file)
-            messages.success(request, "Profile photo updated successfully.")
-            return redirect('profile')
+            try:
+                # Upload to Cloudinary
+                upload_result = cloudinary.uploader.upload(
+                    photo_file,
+                    folder='profile_photos/',
+                    public_id=f'profile_{account.account_id}',
+                    overwrite=True,
+                    transformation=[
+                        {'width': 500, 'height': 500, 'crop': 'fill', 'gravity': 'face'},
+                        {'quality': 'auto:good'}
+                    ]
+                )
+
+                cloudinary_url = upload_result.get('secure_url')
+                cloudinary_public_id = upload_result.get('public_id')
+
+                if hasattr(account, 'profile_photo') and account.profile_photo:
+                    # Delete old image from Cloudinary
+                    if account.profile_photo.cloudinary_public_id:
+                        try:
+                            cloudinary.uploader.destroy(account.profile_photo.cloudinary_public_id)
+                        except Exception as e:
+                            print(f"Error deleting old image: {e}")
+                    
+                    account.profile_photo.image = cloudinary_url
+                    account.profile_photo.cloudinary_public_id = cloudinary_public_id
+                    account.profile_photo.save()
+                else:
+                    ProfilePhoto.objects.create(
+                        account=account,
+                        image=cloudinary_url,
+                        cloudinary_public_id=cloudinary_public_id
+                    )
+                
+                messages.success(request, "Profile photo updated successfully.")
+                return redirect('profile')
+            except Exception as e:
+                messages.error(request, f"Error uploading photo: {str(e)}")
+                return redirect('profile')
 
         # Get form data
         full_name = request.POST.get('full_name', '').strip()
@@ -4421,6 +4570,7 @@ def profile(request):
         'dashboard_url': dashboard_url,
         'barangays': barangays,
     })
+    
 def registered_parents(request):
     # ✅ Redirect if not authenticated
     if not request.user.is_authenticated:
@@ -9571,6 +9721,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
