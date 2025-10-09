@@ -16,6 +16,18 @@ from pathlib import Path
 # =======================
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+
+# -------------------------------------------
+# ✅ CLOUDINARY CONFIGURATION
+# -------------------------------------------
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
+    secure=True
+)
+
 # =======================
 # Firebase configuration
 # =======================
@@ -256,6 +268,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
 
 
