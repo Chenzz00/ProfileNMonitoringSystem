@@ -489,9 +489,9 @@
 
         <label for="photoUpload">
           {% if account.profile_photo and account.profile_photo.image %}
-            <img src="{{ account.profile_photo.image.url }}" alt="Profile Photo" class="profile-photo">
+              <img src="{{ account.profile_photo.image.url }}" alt="Profile Photo" class="profile-photo">
           {% else %}
-            <img src="{% static 'media/default-profile.jpg' %}" alt="Default Profile" class="profile-photo">
+              <img src="{% static 'media/default-profile.jpg' %}" alt="Default Profile" class="profile-photo">
           {% endif %}
         </label>
 
@@ -695,3 +695,4 @@
   </script>
 </body>
 </html>
+
