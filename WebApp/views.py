@@ -1808,6 +1808,7 @@ def dashboard(request):
 
 
 
+
 @csrf_exempt
 @login_required
 def upload_preschooler_photo(request, preschooler_id):
@@ -3178,6 +3179,7 @@ def parents_mypreschooler(request, preschooler_id):
         'immunization_history': immunization_history,
         'nutrition_services': nutrition_services,
     })
+
 
 
 @login_required
@@ -9721,6 +9723,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
