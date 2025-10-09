@@ -6,6 +6,7 @@ import string
 from datetime import date
 from django.contrib.auth.models import User
 from .who_lms import WHO_BMI_LMS
+from cloudinary.models import CloudinaryField
 import os
 
 # Create your models here.
@@ -471,7 +472,10 @@ class Preschooler(models.Model):
     bhw_id = models.ForeignKey('BHW', on_delete=models.CASCADE, blank=True, null=True)
     barangay = models.ForeignKey('Barangay', on_delete=models.CASCADE, blank=True, null=True)
     nutritional_status = models.CharField(max_length=50, blank=True, null=True)
-    profile_photo = models.ImageField(upload_to='preschoolers/', null=True, blank=True)
+    
+    # ✅ UPDATED: Cloudinary field instead of ImageField
+    profile_photo = CloudinaryField('image', folder='preschooler_photos/', null=True, blank=True)
+    cloudinary_public_id = models.CharField(max_length=255, blank=True, null=True)  # ✅ NEW FIELD
 
     # Birth details
     birth_weight = models.FloatField(blank=True, null=True)
@@ -545,6 +549,17 @@ class Preschooler(models.Model):
             months -= 1
         return max(0, months)
 
+    def delete(self, *args, **kwargs):
+        """✅ Delete Cloudinary image when preschooler is deleted"""
+        if self.cloudinary_public_id:
+            try:
+                import cloudinary.uploader
+                cloudinary.uploader.destroy(self.cloudinary_public_id)
+                print(f"✅ Deleted preschooler photo from Cloudinary: {self.cloudinary_public_id}")
+            except Exception as e:
+                print(f"❌ Error deleting preschooler photo from Cloudinary: {e}")
+        super().delete(*args, **kwargs)
+
     def __str__(self):
         return f"{self.full_name} ({self.preschooler_id})"
 
@@ -552,7 +567,6 @@ class Preschooler(models.Model):
         verbose_name = "Preschooler"
         verbose_name_plural = "Preschoolers"
         ordering = ['-date_registered']
-
 
 class BMI(models.Model):
     bmi_id = models.AutoField(primary_key=True)
@@ -655,10 +669,22 @@ class PasswordResetOTP(models.Model):
 
 class ProfilePhoto(models.Model):
     account = models.OneToOneField('Account', on_delete=models.CASCADE, related_name='profile_photo')
-    image = models.ImageField(upload_to='profile_photos/', default='default-profile.png')
+    image = CloudinaryField('image', folder='profile_photos/', null=True, blank=True)  # ✅ Changed to CloudinaryField
+    cloudinary_public_id = models.CharField(max_length=255, blank=True, null=True)  # ✅ Added for Cloudinary tracking
+    uploaded_at = models.DateTimeField(auto_now_add=True)  # ✅ Added timestamp
 
     def __str__(self):
         return f"{self.account.full_name}'s Photo"
+    
+    def delete(self, *args, **kwargs):
+        # ✅ Delete from Cloudinary when model is deleted
+        if self.cloudinary_public_id:
+            try:
+                import cloudinary.uploader
+                cloudinary.uploader.destroy(self.cloudinary_public_id)
+            except Exception as e:
+                print(f"Error deleting from Cloudinary: {e}")
+        super().delete(*args, **kwargs)
 
 class VaccinationSchedule(models.Model):
     STATUS_CHOICES = [
@@ -962,5 +988,6 @@ class FCMToken(models.Model):
 
     def __str__(self):
         return f"{self.account.email} - {self.token}"
+
 
 
