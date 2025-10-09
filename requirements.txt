@@ -100,6 +100,8 @@ xhtml2pdf==0.2.16
 zopfli==0.2.3.post1
 social-auth-app-django==5.4.1
 social-auth-core==4.5.3
+cloudinary==1.44.1
+django-cloudinary-storage==0.3.0
 
 
 
