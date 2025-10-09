@@ -8258,11 +8258,10 @@ def edit_announcement(request, announcement_id):
     if request.method == 'POST':
         announcement.title = request.POST.get('title')
         announcement.content = request.POST.get('content')
-        announcement.priority = request.POST.get('priority', 'normal')
         announcement.is_active = request.POST.get('is_active') == 'on'
         announcement.updated_at = timezone.now()
         
-        # Handle image replacement
+        # Handle image replacement - only if a new image is uploaded
         new_image = request.FILES.get('image', None)
         if new_image:
             # Delete old image if it exists
@@ -8278,6 +8277,7 @@ def edit_announcement(request, announcement_id):
             
             # Assign new image
             announcement.image = new_image
+        # If no new image is uploaded, keep the existing image (do nothing)
         
         if announcement.title and announcement.content:
             try:
@@ -8313,6 +8313,30 @@ def delete_announcement(request, announcement_id):
             messages.error(request, f'Error deleting announcement: {str(e)}')
     
     return redirect('manage_announcements')
+
+def get_announcement(request, announcement_id):
+    """
+    API view to return announcement data as JSON for editing
+    """
+    try:
+        announcement = get_object_or_404(Announcement, id=announcement_id)
+        
+        data = {
+            'status': 'success',
+            'data': {
+                'title': announcement.title,
+                'content': announcement.content,
+                'is_active': announcement.is_active,
+                'image_url': announcement.image.url if announcement.image else None,
+            }
+        }
+        
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=400)
 
 
 
@@ -9547,6 +9571,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
