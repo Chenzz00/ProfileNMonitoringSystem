@@ -40,6 +40,9 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('parent-dashboard/', views.parent_dashboard, name='parent_dashboard'),
     path('parents-mypreschooler/<int:preschooler_id>/', views.parents_mypreschooler, name='parents_mypreschooler'),
+    path('preschooler/<int:preschooler_id>/upload-photo/', 
+            views.upload_preschooler_photo, 
+            name='upload_preschooler_photo'),
    
     path('preschoolers/', views.preschoolers, name='preschoolers'),
     path('profile/', views.profile, name='profile'),
@@ -140,4 +143,5 @@ urlpatterns = [
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
