@@ -1645,8 +1645,7 @@ def archived_details(request):
 
 def dashboard(request):
     # ✅ Redirect to login if not authenticated
-    if not request.user.is_authenticated:
-        return redirect('login')
+    
 
     # ✅ Get the current user's account (with profile photo)
     account = get_object_or_404(
@@ -2098,8 +2097,7 @@ def logout_view(request):
 from .models import BMI  # siguraduhin na naka-import
 
 def parent_dashboard(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
+    
 
     account = get_object_or_404(Account.objects.select_related('profile_photo'), email=request.user.email)
     try:
@@ -9723,6 +9721,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
