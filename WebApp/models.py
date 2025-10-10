@@ -226,12 +226,12 @@ def announcement_image_upload_path(instance, filename):
 class Announcement(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
-    image = models.ImageField(upload_to=announcement_image_upload_path, blank=True, null=True, help_text="Upload an image for this announcement")
+    image = CloudinaryField('image', folder='announcements/', null=True, blank=True, help_text="Upload an image for this announcement")
+    cloudinary_public_id = models.CharField(max_length=255, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-    
     
     class Meta:
         ordering = ['-created_at']
@@ -241,14 +241,15 @@ class Announcement(models.Model):
         return self.title
     
     def delete(self, *args, **kwargs):
-        """Delete associated image file when announcement is deleted"""
-        if self.image:
+        """Delete associated image from Cloudinary when announcement is deleted"""
+        if self.cloudinary_public_id:
             try:
-                if os.path.isfile(self.image.path):
-                    os.remove(self.image.path)
-            except:
-                pass
+                import cloudinary.uploader
+                cloudinary.uploader.destroy(self.cloudinary_public_id)
+            except Exception as e:
+                print(f"Error deleting from Cloudinary: {e}")
         super().delete(*args, **kwargs)
+
 
 class BNS(models.Model):
     bns_id = models.AutoField(primary_key=True)
@@ -988,6 +989,7 @@ class FCMToken(models.Model):
 
     def __str__(self):
         return f"{self.account.email} - {self.token}"
+
 
 
 
