@@ -1291,6 +1291,11 @@ def addbarangay(request):
 
 @admin_required
 def Admin(request):
+    # Import required modules at the top
+    from django.db.models import Count, Q
+    from datetime import timedelta
+    from dateutil.relativedelta import relativedelta
+    
     # Count health workers - include all health worker roles
     health_worker_roles = ['BHW', 'Barangay Nutritional Scholar', 'Midwife', 'Nurse']
     health_worker_count = Account.objects.filter(
@@ -1302,8 +1307,49 @@ def Admin(request):
     preschoolers = Preschooler.objects.all()
     accounts = Account.objects.filter(is_validated=False)
 
-    # Total Vaccinated
-    total_vaccinated = VaccinationSchedule.objects.filter(status='completed').count()
+    # ✅ Total Fully Vaccinated Preschoolers
+    # Define required vaccines with their required doses (from immunization schedule)
+    required_vaccines = {
+        'BCG Vaccine': 1,
+        'Hepatitis B Vaccine': 1,
+        'Pentavalent Vaccine': 3,
+        'Oral Polio Vaccine': 3,
+        'Inactivated Polio Vaccine': 2,
+        'Pneumococcal Conjugate Vaccine': 3,
+        'Measles, Mumps, and Rubella': 2,
+    }
+    # Total required doses: 1+1+3+3+2+3+2 = 15 doses
+    
+    total_vaccinated = 0
+    
+    # Get all active preschoolers
+    active_preschoolers = Preschooler.objects.filter(is_archived=False)
+    
+    for preschooler in active_preschoolers:
+        # Get all completed vaccinations for this preschooler
+        completed_vaccinations = VaccinationSchedule.objects.filter(
+            preschooler=preschooler,
+            status='completed'
+        ).values('vaccine_name').annotate(
+            doses_completed=Count('id')
+        )
+        
+        # Create a dictionary of completed vaccines
+        completed_dict = {
+            vac['vaccine_name']: vac['doses_completed'] 
+            for vac in completed_vaccinations
+        }
+        
+        # Check if preschooler has completed ALL required vaccines
+        is_fully_vaccinated = True
+        for vaccine_name, required_doses in required_vaccines.items():
+            completed_doses = completed_dict.get(vaccine_name, 0)
+            if completed_doses < required_doses:
+                is_fully_vaccinated = False
+                break
+        
+        if is_fully_vaccinated:
+            total_vaccinated += 1
 
     # Build notifications
     notifications = []
@@ -1341,7 +1387,7 @@ def Admin(request):
     latest_notifications = notifications[:15]
     latest_timestamp = latest_notifications[0]['timestamp'] if latest_notifications else None
 
-    # Total preschoolers - Fixed query
+    # Total preschoolers
     total_preschoolers = Preschooler.objects.filter(is_archived=False).count() or 0
 
     barangays = Barangay.objects.all()
@@ -1356,7 +1402,7 @@ def Admin(request):
         'Obese': 0,
     }
 
-    # Table summary by barangay - Fixed to ensure all barangays appear
+    # Table summary by barangay
     summary = []
     today = date.today()
     
@@ -1381,7 +1427,7 @@ def Admin(request):
             latest_bmi = p.bmi_set.order_by('-date_recorded').first()
             if latest_bmi:
                 try:
-                    # --- Compute age in months ---
+                    # Compute age in months
                     birth_date = p.birth_date
                     age_years = today.year - birth_date.year
                     age_months = today.month - birth_date.month
@@ -1392,7 +1438,7 @@ def Admin(request):
                         age_months += 12
                     total_age_months = age_years * 12 + age_months
 
-                    # --- Compute BMI and classify ---
+                    # Compute BMI and classify
                     bmi_value = calculate_bmi(latest_bmi.weight, latest_bmi.height)
                     z = bmi_zscore(p.sex, total_age_months, bmi_value)
                     category = classify_bmi_for_age(z)
@@ -1409,7 +1455,6 @@ def Admin(request):
                     elif category == "Risk of overweight":
                         nutritional_summary['risk_overweight'] += 1
                         status_totals['Risk of overweight'] += 1
-                    
                     elif category == "Overweight":
                         nutritional_summary['overweight'] += 1
                         status_totals['Overweight'] += 1
@@ -1418,7 +1463,7 @@ def Admin(request):
                         status_totals['Obese'] += 1
 
                 except Exception as e:
-                    print("⚠️ BMI classification error for preschooler {p.id}: {e}")
+                    print(f"⚠️ BMI classification error for preschooler {p.id}: {e}")
 
         # Add barangay data even if it has 0 preschoolers
         summary.append({
@@ -1427,11 +1472,7 @@ def Admin(request):
             **nutritional_summary
         })
 
-    # NEW: Enhanced Vaccination Trend Data with Dynamic Date Filtering
-    from django.db.models import Count, Q
-    from datetime import timedelta
-    from dateutil.relativedelta import relativedelta
-    
+    # ✅ FIXED: Enhanced Vaccination Trend Data - Count Doses by Administered Date
     # Get filter parameters from request
     filter_month = request.GET.get('filter_month')
     
@@ -1447,10 +1488,10 @@ def Admin(request):
     # Generate 11 months: center month ±5 months
     trend_labels = []
     monthly_registered_trend = []
-    vaccinated_preschoolers_trend = []
+    vaccinated_doses_trend = []
     all_months_data = []  # For JavaScript filtering
     
-    # Generate data for the 11-month window (5 before + current + 5 after)
+    # ✅ Count vaccine doses by their ADMINISTERED_DATE (when they were actually given)
     for i in range(-5, 6):  # -5 to +5 inclusive
         target_month = center_date + relativedelta(months=i)
         
@@ -1469,21 +1510,24 @@ def Admin(request):
         ).count()
         monthly_registered_trend.append(monthly_registered)
         
-        # Vaccinated preschoolers in this specific month
-        vaccinated_in_month = VaccinationSchedule.objects.filter(
-            administered_date__gte=target_month,
-            administered_date__lt=next_month,
-            status='completed'
-        ).values('preschooler').distinct().count()
+        # ✅ Count vaccine doses completed in this month
+        # Uses completion_date (datetime) to determine when vaccine was given
+        completed_doses_count = VaccinationSchedule.objects.filter(
+            status='completed',
+            completion_date__isnull=False,  # Must have a completion date
+            completion_date__date__gte=target_month,  # Extract date from datetime
+            completion_date__date__lt=next_month,
+            preschooler__is_archived=False
+        ).count()
         
-        vaccinated_preschoolers_trend.append(vaccinated_in_month)
+        vaccinated_doses_trend.append(completed_doses_count)
         
         # Store month data for JavaScript
         all_months_data.append({
             'month': target_month.strftime('%Y-%m'),
             'label': month_label,
             'registered': monthly_registered,
-            'vaccinated': vaccinated_in_month
+            'vaccinated': completed_doses_count
         })
 
     # Generate extended data for JavaScript (±12 months for smooth transitions)
@@ -1498,23 +1542,26 @@ def Admin(request):
             is_archived=False
         ).count()
         
-        vaccinated_in_month = VaccinationSchedule.objects.filter(
-            administered_date__gte=target_month,
-            administered_date__lt=next_month,
-            status='completed'
-        ).values('preschooler').distinct().count()
+        # ✅ Count vaccine doses by completion_date in this month
+        completed_doses_count = VaccinationSchedule.objects.filter(
+            status='completed',
+            completion_date__isnull=False,
+            completion_date__date__gte=target_month,
+            completion_date__date__lt=next_month,
+            preschooler__is_archived=False
+        ).count()
         
         extended_months_data.append({
             'month': target_month.strftime('%Y-%m'),
             'label': target_month.strftime('%b %Y'),
             'registered': monthly_registered,
-            'vaccinated': vaccinated_in_month
+            'vaccinated': completed_doses_count
         })
 
     vaccination_trend_data = {
         'labels': trend_labels,
         'registered': monthly_registered_trend,
-        'vaccinated': vaccinated_preschoolers_trend,
+        'vaccinated': vaccinated_doses_trend,
         'center_month': center_date.strftime('%Y-%m'),
         'all_months': extended_months_data  # For JavaScript filtering
     }
@@ -1543,7 +1590,7 @@ def Admin(request):
         },
         'vaccination_trend_data': vaccination_trend_data,
         'barangay_chart_data': barangay_chart_data,
-        'current_filter_month': center_date.strftime('%Y-%m')  # For the date picker
+        'current_filter_month': center_date.strftime('%Y-%m')  
     })
 
     
@@ -9722,6 +9769,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
