@@ -8389,6 +8389,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.http import JsonResponse
+from django.utils import timezone
+from django.contrib.auth.models import User
+from .models import Announcement
+import cloudinary.uploader
+
 @admin_required    
 def manage_announcements(request):
     """
@@ -8410,7 +8418,7 @@ def manage_announcements(request):
 
 def add_announcement(request):
     """
-    View to add a new announcement with manual user handling
+    View to add a new announcement with Cloudinary image upload
     """
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -8422,20 +8430,31 @@ def add_announcement(request):
             try:
                 # Manual user retrieval
                 if hasattr(request, 'user') and request.user.is_authenticated:
-                    # Get the actual User object from the database
                     user_obj = User.objects.get(id=request.user.id)
                     created_by = user_obj
                 else:
                     created_by = None
                 
-                announcement = Announcement.objects.create(
+                # Create announcement instance
+                announcement = Announcement(
                     title=title,
                     content=content,
-                    image=image,
                     is_active=is_active,
                     created_by=created_by,
                     created_at=timezone.now()
                 )
+                
+                # Upload image to Cloudinary if provided
+                if image:
+                    upload_result = cloudinary.uploader.upload(
+                        image,
+                        folder='announcements/',
+                        resource_type='image'
+                    )
+                    announcement.image = upload_result['secure_url']
+                    announcement.cloudinary_public_id = upload_result['public_id']
+                
+                announcement.save()
                 messages.success(request, 'Announcement added successfully!')
                 
             except User.DoesNotExist:
@@ -8447,9 +8466,10 @@ def add_announcement(request):
     
     return redirect('manage_announcements')
 
+
 def edit_announcement(request, announcement_id):
     """
-    View to edit an existing announcement with image replacement support
+    View to edit an existing announcement with Cloudinary image replacement support
     """
     announcement = get_object_or_404(Announcement, id=announcement_id)
     
@@ -8462,19 +8482,27 @@ def edit_announcement(request, announcement_id):
         # Handle image replacement - only if a new image is uploaded
         new_image = request.FILES.get('image', None)
         if new_image:
-            # Delete old image if it exists
-            if announcement.image:
+            # Delete old image from Cloudinary if it exists
+            if hasattr(announcement, 'cloudinary_public_id') and announcement.cloudinary_public_id:
                 try:
-                    # Delete the old image file from storage
-                    import os
-                    if os.path.exists(announcement.image.path):
-                        os.remove(announcement.image.path)
+                    cloudinary.uploader.destroy(announcement.cloudinary_public_id)
                 except Exception as e:
-                    # Log the error but don't fail the update
-                    print(f"Error deleting old image: {str(e)}")
+                    print(f"Error deleting old image from Cloudinary: {str(e)}")
             
-            # Assign new image
-            announcement.image = new_image
+            # Upload new image to Cloudinary
+            try:
+                upload_result = cloudinary.uploader.upload(
+                    new_image,
+                    folder='announcements/',
+                    resource_type='image'
+                )
+                announcement.image = upload_result['secure_url']
+                if hasattr(announcement, 'cloudinary_public_id'):
+                    announcement.cloudinary_public_id = upload_result['public_id']
+            except Exception as e:
+                messages.error(request, f'Error uploading image: {str(e)}')
+                return redirect('manage_announcements')
+        
         # If no new image is uploaded, keep the existing image (do nothing)
         
         if announcement.title and announcement.content:
@@ -8488,22 +8516,21 @@ def edit_announcement(request, announcement_id):
     
     return redirect('manage_announcements')
 
+
 def delete_announcement(request, announcement_id):
     """
-    View to delete an announcement
+    View to delete an announcement and its Cloudinary image
     """
     if request.method == 'POST':
         try:
             announcement = get_object_or_404(Announcement, id=announcement_id)
             
-            # Delete associated image file if it exists
-            if announcement.image:
+            # Delete associated image from Cloudinary if it exists
+            if announcement.cloudinary_public_id:
                 try:
-                    import os
-                    if os.path.exists(announcement.image.path):
-                        os.remove(announcement.image.path)
+                    cloudinary.uploader.destroy(announcement.cloudinary_public_id)
                 except Exception as e:
-                    print(f"Error deleting image file: {str(e)}")
+                    print(f"Error deleting image from Cloudinary: {str(e)}")
             
             announcement.delete()
             messages.success(request, 'Announcement deleted successfully!')
@@ -8511,6 +8538,7 @@ def delete_announcement(request, announcement_id):
             messages.error(request, f'Error deleting announcement: {str(e)}')
     
     return redirect('manage_announcements')
+
 
 def get_announcement(request, announcement_id):
     """
@@ -9769,6 +9797,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
