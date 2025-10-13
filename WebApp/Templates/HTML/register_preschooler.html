@@ -1161,97 +1161,97 @@
       <h3>Register Preschooler for <span id="modalParentName"></span></h3>
       
       <form id="registerForm">
-        {% csrf_token %}
-        <input type="hidden" id="hidden_parent_name" name="parent_name" />
-        <input type="hidden" id="hidden_parent_id" name="parent_id" />
+      {% csrf_token %}
+      <input type="hidden" id="hidden_parent_name" name="parent_name" />
+      <input type="hidden" id="hidden_parent_id" name="parent_id" />
+      
+      <!-- Basic Information -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name <span style="color: red;">*</span></label>
+          <input type="text" id="child_first_name" name="first_name" required>
+        </div>
+        <div class="form-group">
+          <label>Middle Name</label>
+          <input type="text" id="child_middle_name" name="middle_name">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Last Name <span style="color: red;">*</span></label>
+          <input type="text" id="child_last_name" name="last_name" required>    
+        </div>
+        <div class="form-group">
+          <label>Suffix</label>
+          <input type="text" id="child_suffix" name="suffix" placeholder="e.g., Jr., III">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Birthdate <span style="color: red;">*</span></label>
+          <input type="date" id="child_birthdate" name="birthdate" required>
+        </div>
+        <div class="form-group">
+          <label>Sex <span style="color: red;">*</span></label>
+          <select id="child_gender" name="gender" required>
+            <option value="" disabled selected>Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Birth Information Section -->
+      <div class="birth-info-section">
+        <div class="section-title">Birth Information</div>
         
-        <!-- Basic Information -->
+        <div class="form-group">
+          <label>Place of Birth</label>
+          <input type="text" id="place_of_birth" name="place_of_birth" placeholder="e.g., Imus General Hospital, Cavite">
+        </div>
+
+        <div class="form-group">
+          <label>Time of Birth</label>
+          <input type="time" id="time_of_birth" name="time_of_birth">
+        </div>
+
         <div class="form-row">
           <div class="form-group">
-            <label>First Name</label>
-            <input type="text" id="child_first_name" name="first_name" required>
+            <label>Birth Weight (kg)</label>
+            <input type="number" id="birth_weight" name="birth_weight" step="0.01" min="0" placeholder="e.g., 3.2">
           </div>
           <div class="form-group">
-            <label>Middle Name</label>
-            <input type="text" id="child_middle_name" name="middle_name" required>
+            <label>Birth Length (cm)</label>
+            <input type="number" id="birth_length" name="birth_length" step="0.1" min="0" placeholder="e.g., 48.5">
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label>Last Name</label>
-            <input type="text" id="child_last_name" name="last_name">    
+            <label>Type of Birth <span style="color: red;">*</span></label>
+            <select id="type_of_birth" name="type_of_birth" required>
+              <option value="" disabled selected>Select Type</option>
+              <option value="Normal">Normal</option>
+              <option value="CS">Cesarean Section (CS)</option>
+            </select>
           </div>
           <div class="form-group">
-            <label>Suffix</label>
-            <input type="text" id="child_suffix" name="suffix" placeholder="e.g., Jr., III">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Birthdate</label>
-            <input type="date" id="child_birthdate" name="birthdate" required>
-          </div>
-          <div class="form-group">
-            <label>Sex</label>
-            <select id="child_gender" name="gender" required>
-              <option value="" disabled selected>Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
+            <label>Place of Delivery <span style="color: red;">*</span></label>
+            <select id="place_of_delivery" name="place_of_delivery" required>
+              <option value="" disabled selected>Select Place</option>
+              <option value="Home">Home</option>
+              <option value="Lying-in">Lying-in</option>
+              <option value="Hospital">Hospital</option>
+              <option value="Others">Others</option>
             </select>
           </div>
         </div>
+      </div>
 
-        <!-- Birth Information Section -->
-        <div class="birth-info-section">
-          <div class="section-title">Birth Information</div>
-          
-          <div class="form-group">
-            <label>Place of Birth</label>
-            <input type="text" id="place_of_birth" name="place_of_birth" placeholder="e.g., Imus General Hospital, Cavite">
-          </div>
-
-          <div class="form-group">
-            <label>Time of Birth</label>
-            <input type="time" id="time_of_birth" name="time_of_birth">
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Birth Weight (kg)</label>
-              <input type="number" id="birth_weight" name="birth_weight" step="0.01" min="0" placeholder="e.g., 3.2">
-            </div>
-            <div class="form-group">
-              <label>Birth Length (cm)</label>
-              <input type="number" id="birth_length" name="birth_length" step="0.1" min="0" placeholder="e.g., 48.5">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>Type of Birth</label>
-              <select id="type_of_birth" name="type_of_birth">
-                <option value="" disabled selected>Select Type</option>
-                <option value="Normal">Normal</option>
-                <option value="CS">Cesarean Section (CS)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Place of Delivery</label>
-              <select id="place_of_delivery" name="place_of_delivery">
-                <option value="" disabled selected>Select Place</option>
-                <option value="Home">Home</option>
-                <option value="Lying-in">Lying-in</option>
-                <option value="Hospital">Hospital</option>
-                <option value="Others">Others</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">Register Preschooler</button>
-      </form>
+      <button type="submit" class="btn" style="width: 100%; margin-top: 20px;">Register Preschooler</button>
+    </form>
     </div>
   </div>
 
@@ -1593,110 +1593,122 @@
       validateTextInput(document.getElementById("place_of_birth"));
 
       form.addEventListener("submit", async function (e) {
-        e.preventDefault();
+    e.preventDefault();
 
-        const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
-        const firstName = document.getElementById("child_first_name").value.trim();
-        const lastName = document.getElementById("child_last_name").value.trim();
-        const birthdate = document.getElementById("child_birthdate").value;
-        const gender = document.getElementById("child_gender").value;
-        const parentId = hiddenParentIdInput.value;
+    const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+    const firstName = document.getElementById("child_first_name").value.trim();
+    const middleName = document.getElementById("child_middle_name").value.trim();
+    const lastName = document.getElementById("child_last_name").value.trim();
+    const suffix = document.getElementById("child_suffix").value.trim();
+    const birthdate = document.getElementById("child_birthdate").value;
+    const gender = document.getElementById("child_gender").value;
+    const typeOfBirth = document.getElementById("type_of_birth").value;
+    const placeOfDelivery = document.getElementById("place_of_delivery").value;
+    const parentId = hiddenParentIdInput.value;
 
-        // Required field validation
-        if (!nameRegex.test(firstName)) {
-          return Swal.fire('Invalid Input', 'First name must only contain letters and spaces.', 'warning');
-        }
-        if (!nameRegex.test(lastName)) {
-          return Swal.fire('Invalid Input', 'Last name must only contain letters and spaces.', 'warning');
-        }
-        if (!birthdate) {
-          return Swal.fire('Missing Birthdate', 'Please enter a birthdate.', 'warning');
-        }
-        if (!gender) {
-          return Swal.fire('Missing Gender', 'Please select a gender.', 'warning');
-        }
+    // Required field validation
+    if (!nameRegex.test(firstName)) {
+      return Swal.fire('Invalid Input', 'First name must only contain letters and spaces.', 'warning');
+    }
+    if (!nameRegex.test(lastName)) {
+      return Swal.fire('Invalid Input', 'Last name must only contain letters and spaces.', 'warning');
+    }
+    if (!birthdate) {
+      return Swal.fire('Missing Birthdate', 'Please enter a birthdate.', 'warning');
+    }
+    if (!gender) {
+      return Swal.fire('Missing Gender', 'Please select a gender.', 'warning');
+    }
+    if (!typeOfBirth) {
+      return Swal.fire('Missing Type of Birth', 'Please select the type of birth.', 'warning');
+    }
+    if (!placeOfDelivery) {
+      return Swal.fire('Missing Place of Delivery', 'Please select the place of delivery.', 'warning');
+    }
 
-        // Additional age validation before submission
-        const selectedBirthDate = new Date(birthdate);
-        const ageInMonths = calculateAgeInMonths(selectedBirthDate);
+    // Additional age validation before submission
+    const selectedBirthDate = new Date(birthdate);
+    const ageInMonths = calculateAgeInMonths(selectedBirthDate);
 
-        if (ageInMonths < 0) {
-          return Swal.fire('Invalid Birthdate', 'Birthdate cannot be in the future.', 'warning');
-        }
+    if (ageInMonths < 0) {
+      return Swal.fire('Invalid Birthdate', 'Birthdate cannot be in the future.', 'warning');
+    }
 
-        if (ageInMonths > 59) {
-          const years = Math.floor(ageInMonths / 12);
-          const months = ageInMonths % 12;
-          return Swal.fire({
-            title: 'Child Too Old',
-            text: `This child is ${ageInMonths} months old (${years} years, ${months} months). Only children aged 0-59 months (0-4 years, 11 months) can be registered as preschoolers.`,
-            icon: 'warning'
-          });
-        }
-
-        // Optional field validation
-        const birthWeight = document.getElementById("birth_weight").value;
-        const birthLength = document.getElementById("birth_length").value;
-
-        if (birthWeight && parseFloat(birthWeight) < 0) {
-          return Swal.fire('Invalid Birth Weight', 'Birth weight cannot be negative.', 'warning');
-        }
-
-        if (birthLength && parseFloat(birthLength) < 0) {
-          return Swal.fire('Invalid Birth Length', 'Birth length cannot be negative.', 'warning');
-        }
-
-        const data = {
-          parent_id: parentId,
-          first_name: firstName,
-          last_name: lastName,
-          birthdate: birthdate,
-          gender: gender,
-          place_of_birth: document.getElementById("place_of_birth").value.trim(),
-          birth_weight: birthWeight,
-          birth_length: birthLength,
-          time_of_birth: document.getElementById("time_of_birth").value,
-          type_of_birth: document.getElementById("type_of_birth").value,
-          place_of_delivery: document.getElementById("place_of_delivery").value,
-          csrfmiddlewaretoken: document.querySelector('[name=csrfmiddlewaretoken]').value
-        };
-
-        try {
-          const response = await fetch("{% url 'register_preschooler_entry' %}", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams(data)
-          });
-
-          const result = await response.json();
-
-          if (result.status === "success") {
-            form.reset();
-            modal.classList.remove("show");
-            setTimeout(() => {
-              modal.style.display = "none";
-            }, 100);
-
-            const ageMonths = result.data.age_months || 0;
-            const years = Math.floor(ageMonths / 12);
-            const months = ageMonths % 12;
-
-            Swal.fire({
-              title: 'Registered!',
-              text: `Preschooler ${result.data.name} has been registered successfully.`,
-              icon: 'success',
-              confirmButtonText: 'OK'
-            }).then(() => {
-              location.reload();
-            });
-          } else {
-            Swal.fire('Error', result.message || 'Registration failed.', 'error');
-          }
-        } catch (error) {
-          Swal.fire('Server Error', error.toString(), 'error');
-        }
+    if (ageInMonths > 59) {
+      const years = Math.floor(ageInMonths / 12);
+      const months = ageInMonths % 12;
+      return Swal.fire({
+        title: 'Child Too Old',
+        text: `This child is ${ageInMonths} months old (${years} years, ${months} months). Only children aged 0-59 months (0-4 years, 11 months) can be registered as preschoolers.`,
+        icon: 'warning'
       });
-    });
+    }
+
+    // Optional field validation
+    const birthWeight = document.getElementById("birth_weight").value;
+    const birthLength = document.getElementById("birth_length").value;
+
+    if (birthWeight && parseFloat(birthWeight) < 0) {
+      return Swal.fire('Invalid Birth Weight', 'Birth weight cannot be negative.', 'warning');
+    }
+
+    if (birthLength && parseFloat(birthLength) < 0) {
+      return Swal.fire('Invalid Birth Length', 'Birth length cannot be negative.', 'warning');
+    }
+
+    const data = {
+      parent_id: parentId,
+      first_name: firstName,
+      middle_name: middleName,
+      last_name: lastName,
+      suffix: suffix,
+      birthdate: birthdate,
+      gender: gender,
+      place_of_birth: document.getElementById("place_of_birth").value.trim(),
+      birth_weight: birthWeight,
+      birth_length: birthLength,
+      time_of_birth: document.getElementById("time_of_birth").value,
+      type_of_birth: typeOfBirth,
+      place_of_delivery: placeOfDelivery,
+      csrfmiddlewaretoken: document.querySelector('[name=csrfmiddlewaretoken]').value
+    };
+
+    try {
+      const response = await fetch("{% url 'register_preschooler_entry' %}", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(data)
+      });
+
+      const result = await response.json();
+
+      if (result.status === "success") {
+        form.reset();
+        modal.classList.remove("show");
+        setTimeout(() => {
+          modal.style.display = "none";
+        }, 100);
+
+        const ageMonths = result.data.age_months || 0;
+        const years = Math.floor(ageMonths / 12);
+        const months = ageMonths % 12;
+
+        Swal.fire({
+          title: 'Registered!',
+          text: `Preschooler ${result.data.name} has been registered successfully.`,
+          icon: 'success',
+          confirmButtonText: 'OK'
+        }).then(() => {
+          location.reload();
+        });
+      } else {
+        Swal.fire('Error', result.message || 'Registration failed.', 'error');
+      }
+    } catch (error) {
+      Swal.fire('Server Error', error.toString(), 'error');
+    }
+  });
+  });
   </script>
 
 </body>
