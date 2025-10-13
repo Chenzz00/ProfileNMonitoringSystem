@@ -8,46 +8,109 @@
 
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="icon" type="image/png" href="{% static 'media/PPMS-logo.png' %}">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
-            height: 100vh;
-            overflow: hidden;
-            background: #f5f5f5;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            font-size: 14px;
+            font-weight: 400;
+            background: #f8f9fa;
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
+            padding: 20px;
         }
+
+        .background-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image: url('{% static "media/loginbg.png" %}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        
         .form-container {
             background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             width: 100%;
-            max-width: 700px;
-            position: relative;
-            top: -40px;
+            max-width: 620px;
+            animation: slideIn 0.5s ease-out;
         }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
         h2 {
-            color: #333;
+            color: #2d3748;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 10px;
         }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+        
         .device-selection {
-            background: #e8f4fd;
-            border: 2px solid #007bff;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 25px;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
         }
+        
         .device-selection h3 {
-            margin: 0 0 10px 0;
-            color: #007bff;
-            font-size: 16px;
+            margin: 0 0 12px 0;
+            color: #5a67d8;
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+        
+        .device-selection h3::before {
+            content: '📡';
+            font-size: 18px;
+        }
+        
         .device-buttons {
             display: flex;
             gap: 10px;
@@ -55,196 +118,322 @@
             min-height: 50px;
             align-items: center;
         }
+        
         .device-btn {
-            background: #007bff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 5px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 14px;
+            font-weight: 500;
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
+        
         .device-btn:hover {
-            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
+        
         .device-btn.selected {
-            background: #28a745;
-            box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+            transform: scale(1.05);
         }
-        .device-btn.offline {
-            background: #dc3545;
-            opacity: 0.7;
-        }
+        
         .device-status {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             display: inline-block;
+            animation: pulse 2s infinite;
         }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        
         .status-online {
-            background: #28a745;
-            box-shadow: 0 0 5px rgba(40, 167, 69, 0.8);
+            background: #68d391;
+            box-shadow: 0 0 10px rgba(104, 211, 145, 0.8);
         }
-        .status-offline {
-            background: #dc3545;
-        }
+        
         .loading-devices {
-            color: #007bff;
+            color: #5a67d8;
             font-style: italic;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            font-size: 15px;
         }
+        
         .no-devices {
-            color: #dc3545;
-            font-weight: bold;
+            color: #e53e3e;
+            font-weight: 600;
+            padding: 15px;
+            background: rgba(254, 215, 215, 0.5);
+            border-radius: 8px;
+            text-align: center;
         }
-        .refresh-devices-btn {
-            background: #17a2b8;
-            color: white;
-            border: none;
-            padding: 5px 15px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-left: 10px;
-        }
-        .refresh-devices-btn:hover {
-            background: #138496;
-        }
+        
         .device-info {
-            background: #f8f9fa;
-            border-left: 4px solid #007bff;
+            background: white;
+            border-left: 4px solid #667eea;
+            border-radius: 10px;
             padding: 10px;
-            margin: 15px 0;
-            font-size: 14px;
+            margin-top: 12px;
+            font-size: 12px;
             display: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
+        
         .device-info.show {
             display: block;
+            animation: fadeIn 0.3s ease-in;
         }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .device-info strong {
+            color: #5a67d8;
+        }
+        
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             position: relative;
         }
+        
         label {
             display: block;
             margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 13px;
         }
-        input[type="number"], select {
+        
+        input[type="number"] {
             width: 100%;
             padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
-            box-sizing: border-box;
-            transition: border-color 0.3s;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: #f7fafc;
         }
-        input[type="number"]:focus, select:focus {
-            border-color: #007bff;
+        
+        input[type="number"]:focus {
+            border-color: #667eea;
             outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
+        
+        input[type="number"]:disabled {
+            background: #edf2f7;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
         input[type="number"].esp32-data {
-            border-color: #28a745;
-            background-color: #f8fff9;
+            border-color: #48bb78;
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            animation: highlight 0.5s ease-in;
         }
+        
+        @keyframes highlight {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
         .data-source {
             position: absolute;
-            right: 10px;
+            right: 15px;
             top: 50%;
             transform: translateY(-50%);
             font-size: 12px;
-            color: #28a745;
-            font-weight: bold;
+            color: #48bb78;
+            font-weight: 700;
+            background: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(72, 187, 120, 0.2);
         }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
         button {
-            background: #007bff;
+            flex: 1;
+            min-width: 130px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 12px 24px;
+            padding: 10px 18px;
             border: none;
-            border-radius: 5px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
             cursor: pointer;
-            margin-right: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
-        button:hover {
-            background: #0056b3;
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
+        
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
         button:disabled {
-            background: #6c757d;
+            background: #cbd5e0;
             cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
         }
+        
         .back-btn {
-            background: #6c757d;
+            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+            box-shadow: 0 4px 15px rgba(113, 128, 150, 0.3);
         }
-        .back-btn:hover {
-            background: #545b62;
+        
+        .back-btn:hover:not(:disabled) {
+            box-shadow: 0 6px 20px rgba(113, 128, 150, 0.4);
         }
+        
         .refresh-btn {
-            background: #17a2b8;
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
         }
-        .refresh-btn:hover {
-            background: #138496;
+        
+        .refresh-btn:hover:not(:disabled) {
+            box-shadow: 0 6px 20px rgba(66, 153, 225, 0.4);
         }
+        
         .clear-btn {
-            background: #dc3545;
+            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+            box-shadow: 0 4px 15px rgba(252, 129, 129, 0.3);
         }
-        .clear-btn:hover {
-            background: #c82333;
+        
+        .clear-btn:hover:not(:disabled) {
+            box-shadow: 0 6px 20px rgba(252, 129, 129, 0.4);
         }
+        
         .status-indicator {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             padding: 10px;
-            border-radius: 5px;
-            font-weight: bold;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 13px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            animation: fadeIn 0.3s ease-in;
         }
+        
         .status-waiting {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
+            background: linear-gradient(135deg, #fef5e7 0%, #fdeaa8 100%);
+            color: #744210;
+            border-left: 4px solid #f6ad55;
         }
-        .status-received {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
+        
         .status-partial {
-            background: #cce7ff;
-            color: #004085;
-            border: 1px solid #99d3ff;
+            background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
+            color: #003a8c;
+            border-left: 4px solid #4299e1;
         }
+        
         .status-complete {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            color: #22543d;
+            border-left: 4px solid #48bb78;
         }
+        
         .status-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f1aeb5;
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            color: #742a2a;
+            border-left: 4px solid #fc8181;
         }
+        
         .status-cleared {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
+            background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+            color: #234e52;
+            border-left: 4px solid #4fd1c5;
         }
+        
         .no-device-selected {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f1aeb5;
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            color: #742a2a;
+            border-left: 4px solid #fc8181;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #667eea;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 25px;
+            }
+            
+            h2 {
+                font-size: 24px;
+            }
+            
+            button {
+                min-width: 100%;
+            }
+            
+            .device-btn {
+                flex: 1 1 100%;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="background-image"></div>
+    
     <div class="form-container">
-        <h2>Input BMI for {{ preschooler.first_name }} {{ preschooler.last_name }}</h2>
+        <h2>Input BMI for jan xander Austria</h2>
 
         <!-- Dynamic Device Selection Section -->
         <div class="device-selection">
@@ -252,10 +441,9 @@
             <div class="device-buttons" id="device-buttons">
                 <div class="loading-devices">
                     <span>Loading available devices...</span>
-                    <div style="width: 20px; height: 20px; border: 2px solid #007bff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <div class="spinner"></div>
                 </div>
             </div>
-            <button type="button" class="refresh-devices-btn" id="refresh-devices" onclick="loadAvailableDevices()">Refresh Devices</button>
             
             <div class="device-info" id="device-info">
                 <strong>Selected Device:</strong> <span id="selected-device-name">None</span><br>
@@ -269,49 +457,37 @@
         <div id="status-indicator" class="status-indicator no-device-selected">
             Please select an ESP32 device above
         </div>
-
-        {% if not preschooler.preschooler_id %}
-            <div style="color:red; font-weight:bold; margin-bottom:15px;">
-                ERROR: Preschooler ID is missing! Check your view.
-            </div>
-        {% endif %}
         
-        <form id="bmi-form" method="POST" action="{% url 'submit_bmi' %}">
-            {% csrf_token %}
-            <input type="hidden" name="preschooler_id" value="{{ preschooler.preschooler_id }}">
+        <form id="bmi-form" method="POST" action="/submit_bmi">
+            <input type="hidden" name="preschooler_id" value="12345">
             <input type="hidden" name="device_id" id="selected-device-id" value="">
 
             <div class="form-group">
-                <label for="weight">Weight (kg):</label>
-                <input type="number" step="0.01" name="weight" id="weight" required min="0" max="200" disabled>
+                <label for="weight">⚖️ Weight (kg):</label>
+                <input type="number" step="0.01" name="weight" id="weight" required min="0" max="200" disabled placeholder="">
                 <span id="weight-source" class="data-source" style="display: none;">ESP32</span>
             </div>
 
             <div class="form-group">
-                <label for="height">Height (cm):</label>
-                <input type="number" step="0.01" name="height" id="height" required min="0" max="300" disabled>
+                <label for="height">📏 Height (cm):</label>
+                <input type="number" step="0.01" name="height" id="height" required min="0" max="300" disabled placeholder="">
                 <span id="height-source" class="data-source" style="display: none;">ESP32</span>
             </div>
 
             <div class="form-group">
-                <label for="temperature">Temperature (°C):</label>
-                <input type="number" step="0.1" name="temperature" id="temperature" required min="30" max="45" disabled>
+                <label for="temperature">🌡️ Temperature (°C):</label>
+                <input type="number" step="0.1" name="temperature" id="temperature" required min="30" max="45" disabled placeholder="">
                 <span id="temp-source" class="data-source" style="display: none;">ESP32</span>
             </div>
 
-            <button type="button" id="refresh-data" class="refresh-btn" disabled>Check for ESP32 Data</button>
-            <button type="button" id="clear-esp32-data" class="clear-btn" disabled>Clear ESP32 Data</button>
-            <button type="submit" disabled>Submit BMI & Temperature</button>
-            <button type="button" class="back-btn" onclick="location.href='/preschoolers'">Back</button> 
+            <div class="button-group">
+                <button type="button" id="refresh-data" class="refresh-btn" disabled>🔄 Check for Data</button>
+                <button type="button" id="clear-esp32-data" class="clear-btn" disabled>🗑️ Clear Data</button>
+                <button type="submit" disabled>✓ Submit BMI & Temperature</button>
+                <button type="button" class="back-btn" onclick="location.href='/preschoolers'">← Back</button>
+            </div>
         </form>
     </div>
-
-    <style>
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
 
     <script>
         let autoRefreshInterval;
@@ -326,7 +502,7 @@
             deviceButtons.innerHTML = `
                 <div class="loading-devices">
                     <span>Loading available devices...</span>
-                    <div style="width: 20px; height: 20px; border: 2px solid #007bff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                    <div class="spinner"></div>
                 </div>
             `;
 
@@ -339,10 +515,9 @@
                         availableDevices = data.devices;
                         displayDeviceButtons(data.devices);
                     } else {
-                        // No devices found
                         deviceButtons.innerHTML = `
                             <div class="no-devices">
-                                No ESP32 devices found. Make sure your devices are connected and sending data.
+                                ⚠️ No ESP32 devices found. Make sure your devices are connected and sending data.
                             </div>
                         `;
                     }
@@ -351,7 +526,7 @@
                     console.error('LOAD DEVICES: Error loading devices:', error);
                     deviceButtons.innerHTML = `
                         <div class="no-devices">
-                            Error loading devices. Check your connection and try again.
+                            ❌ Error loading devices. Check your connection and try again.
                         </div>
                     `;
                 });
@@ -363,23 +538,20 @@
             const deviceButtons = document.getElementById('device-buttons');
             deviceButtons.innerHTML = '';
 
-            // Filter to only show ONLINE devices
             const onlineDevices = devices.filter(device => device.is_online);
             
             if (onlineDevices.length === 0) {
-                // No online devices found
                 deviceButtons.innerHTML = `
                     <div class="no-devices">
-                        No online ESP32 devices found. Make sure your devices are powered on and connected.
+                        ⚠️ No online ESP32 devices found. Make sure your devices are powered on and connected.
                     </div>
                 `;
                 return;
             }
 
-            // Create buttons only for online devices
             onlineDevices.forEach(device => {
                 const button = document.createElement('div');
-                button.className = 'device-btn'; // No offline class since we only show online
+                button.className = 'device-btn';
                 button.dataset.deviceId = device.device_id;
                 button.innerHTML = `
                     <span class="device-status status-online"></span>
@@ -393,7 +565,7 @@
                 deviceButtons.appendChild(button);
             });
 
-            console.log(`DISPLAY DEVICES: Created ${onlineDevices.length} online device buttons (filtered from ${devices.length} total)`);
+            console.log(`DISPLAY DEVICES: Created ${onlineDevices.length} online device buttons`);
         }
 
         function selectDevice(device) {
@@ -402,7 +574,6 @@
             selectedDeviceId = device.device_id;
             document.getElementById('selected-device-id').value = device.device_id;
             
-            // Update button appearances
             const deviceButtons = document.querySelectorAll('.device-btn');
             deviceButtons.forEach(button => {
                 if (button.dataset.deviceId === device.device_id) {
@@ -412,7 +583,6 @@
                 }
             });
             
-            // Show device info
             const deviceInfo = document.getElementById('device-info');
             document.getElementById('selected-device-name').textContent = device.device_name || device.device_id;
             document.getElementById('selected-device-status').textContent = device.is_online ? 'Online' : 'Offline';
@@ -422,21 +592,17 @@
             
             deviceInfo.classList.add('show');
             
-            // Enable form elements
             const inputs = document.querySelectorAll('#weight, #height, #temperature');
             const buttons = document.querySelectorAll('#refresh-data, #clear-esp32-data, button[type="submit"]');
             
             inputs.forEach(input => input.disabled = false);
             buttons.forEach(button => button.disabled = false);
             
-            // Update status indicator
             const statusIndicator = document.getElementById('status-indicator');
             statusIndicator.className = 'status-indicator status-cleared';
-            statusIndicator.textContent = `Device ${device.device_name || device.device_id} selected. Clearing any previous data...`;
+            statusIndicator.textContent = `✓ Device ${device.device_name || device.device_id} selected. Clearing any previous data...`;
             
-            // Clear any previous data for new device
             clearESP32DataForDevice(device.device_id).then(() => {
-                // Start checking for data from selected device
                 checkForESP32Data();
                 startAutoRefresh();
             });
@@ -457,12 +623,10 @@
                     const statusIndicator = document.getElementById('status-indicator');
                     
                     if (data.status === 'success' && data.data) {
-                        // Update form inputs with ESP32 data
                         const weightInput = document.getElementById('weight');
                         const heightInput = document.getElementById('height');
                         const tempInput = document.getElementById('temperature');
                         
-                        // Set values only if they exist and form inputs are empty
                         if (data.data.weight && !weightInput.value) {
                             weightInput.value = data.data.weight;
                             weightInput.classList.add('esp32-data');
@@ -474,50 +638,46 @@
                             document.getElementById('height-source').style.display = 'block';
                         }
                         if (data.data.temperature && !tempInput.value) {
-                            const roundedTemp = parseFloat(data.data.temperature).toFixed(2); // round to 1 decimal
+                            const roundedTemp = parseFloat(data.data.temperature).toFixed(2);
                             tempInput.value = roundedTemp;
                             tempInput.classList.add('esp32-data');
                             document.getElementById('temp-source').style.display = 'block';
                         }
-
                         
-                        // Update status based on completeness
                         if (data.is_complete) {
                             statusIndicator.className = 'status-indicator status-complete';
                             statusIndicator.innerHTML = `
-                                Complete data received from ${data.device_name}!
+                                ✓ Complete data received from ${data.device_name}!
                                 <small>(${new Date(data.data.last_update).toLocaleTimeString()})</small>
                             `;
                             hasReceivedCompleteData = true;
                             
-                            // Stop auto-refresh since we have complete data
                             if (autoRefreshInterval) {
                                 clearInterval(autoRefreshInterval);
                             }
                             
                         } else {
-                            // Partial data received
                             statusIndicator.className = 'status-indicator status-partial';
                             let receivedData = [];
                             if (data.has_bmi_data) receivedData.push('BMI');
                             if (data.has_temperature_data) receivedData.push('Temperature');
                             
                             statusIndicator.innerHTML = `
-                                Partial data from ${data.device_name}: ${receivedData.join(', ')}<br>
+                                ⏳ Partial data from ${data.device_name}: ${receivedData.join(', ')}<br>
                                 <small>Still waiting for: ${data.waiting_for.join(', ')}</small>
                             `;
                         }
                         
                     } else if (data.status === 'no_data') {
                         statusIndicator.className = 'status-indicator status-waiting';
-                        statusIndicator.textContent = `Waiting for data from ${data.device_name || selectedDeviceId}... Make sure the device is connected and sending data.`;
+                        statusIndicator.textContent = `⏳ Waiting for data from ${data.device_name || selectedDeviceId}... Make sure the device is connected and sending data.`;
                     }
                 })
                 .catch(error => {
                     console.error(`CHECK: Error checking for ESP32 data from ${selectedDeviceId}:`, error);
                     const statusIndicator = document.getElementById('status-indicator');
                     statusIndicator.className = 'status-indicator status-error';
-                    statusIndicator.textContent = 'Error connecting to server. Check your internet connection.';
+                    statusIndicator.textContent = '❌ Error connecting to server. Check your internet connection.';
                 });
         }
 
@@ -528,7 +688,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    'X-CSRFToken': 'dummy-csrf-token'
                 },
                 body: JSON.stringify({
                     'device_id': deviceId
@@ -538,22 +698,18 @@
             .then(data => {
                 console.log(`CLEAR: Server response for ${deviceId}:`, data);
                 
-                // Always clear form inputs
                 clearFormInputs();
                 
-                // Update status
                 const statusIndicator = document.getElementById('status-indicator');
                 statusIndicator.className = 'status-indicator status-cleared';
-                statusIndicator.textContent = `ESP32 data cleared for ${deviceId}. Ready for new measurements.`;
+                statusIndicator.textContent = `✓ ESP32 data cleared for ${deviceId}. Ready for new measurements.`;
                 
-                // Reset flags
                 hasReceivedCompleteData = false;
                 
                 console.log(`CLEAR: ESP32 data cleared successfully for ${deviceId}`);
             })
             .catch(error => {
                 console.error(`CLEAR: Error clearing ESP32 data for ${deviceId}:`, error);
-                // Still clear form inputs even if server call fails
                 clearFormInputs();
             });
         }
@@ -568,18 +724,15 @@
             heightInput.value = '';
             tempInput.value = '';
             
-            // Remove ESP32 styling
             weightInput.classList.remove('esp32-data');
             heightInput.classList.remove('esp32-data');
             tempInput.classList.remove('esp32-data');
             
-            // Hide ESP32 indicators
             document.getElementById('weight-source').style.display = 'none';
             document.getElementById('height-source').style.display = 'none';
             document.getElementById('temp-source').style.display = 'none';
         }
 
-        // Clear ESP32 data when leaving the page
         window.addEventListener('beforeunload', function(e) {
             if (selectedDeviceId) {
                 console.log(`BEFOREUNLOAD: Clearing ESP32 data for ${selectedDeviceId}...`);
@@ -598,17 +751,14 @@
             }
         });
 
-        // Manual refresh button
         document.getElementById('refresh-data').addEventListener('click', checkForESP32Data);
 
-        // Manual clear button
         document.getElementById('clear-esp32-data').addEventListener('click', function() {
             if (selectedDeviceId) {
                 clearESP32DataForDevice(selectedDeviceId);
             }
         });
 
-        // Auto-refresh every 3 seconds until complete data is received
         function startAutoRefresh() {
             if (autoRefreshInterval) {
                 clearInterval(autoRefreshInterval);
@@ -619,16 +769,13 @@
             }
         }
 
-        // Initialize when page loads
         window.addEventListener('load', function() {
             console.log('PAGE LOAD: Starting dynamic device discovery...');
             loadAvailableDevices();
             
-            // Check device status every 1 second for real-time updates
             setInterval(loadAvailableDevices, 1000);
         });
 
-        // Form submission with confirmation
         document.getElementById('bmi-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -654,7 +801,6 @@
                 return;
             }
             
-            // Find selected device info
             const selectedDevice = availableDevices.find(d => d.device_id === selectedDeviceId);
             const deviceName = selectedDevice ? selectedDevice.device_name : selectedDeviceId;
             
@@ -671,12 +817,11 @@
                 `,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#007bff',
-                cancelButtonColor: '#6c757d',
+                confirmButtonColor: '#667eea',
+                cancelButtonColor: '#718096',
                 confirmButtonText: 'Yes, submit!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Show loading
                     Swal.fire({
                         title: 'Submitting...',
                         text: `Please wait while we submit your data from ${deviceName}.`,
@@ -687,7 +832,6 @@
                         }
                     });
                     
-                    // Submit the form
                     const form = document.getElementById('bmi-form');
                     const formData = new FormData(form);
                     
@@ -695,18 +839,18 @@
                         method: 'POST',
                         body: formData,
                         headers: {
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                            'X-CSRFToken': 'dummy-csrf-token'
                         }
                     })
                     .then(response => {
                         if (response.ok) {
-                            // Clear ESP32 data before redirecting
                             clearESP32DataForDevice(selectedDeviceId).then(() => {
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Success!',
                                     text: `BMI data submitted successfully from ${deviceName}. Device data cleared for next preschooler.`,
-                                    confirmButtonText: 'OK'
+                                    confirmButtonText: 'OK',
+                                    confirmButtonColor: '#667eea'
                                 }).then(() => {
                                     window.location.href = '/preschoolers';
                                 });
@@ -727,11 +871,7 @@
             });
         });
 
-        // Debug: Log when script loads
         console.log('Dynamic Multi-Device BMI Form script loaded');
     </script>
 </body>
 </html>
-
-
-
