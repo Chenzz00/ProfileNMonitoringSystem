@@ -1524,7 +1524,7 @@
                   data-name="{{ p.first_name }} {{ p.last_name }}"
                   title="{% if original_role == 'bns' %}Click to see options{% else %}Click to show options{% endif %}">
                 <td style="position: relative;">
-                  {{ p.first_name }} {{ p.last_name }}
+                  {{ p.first_name }} {{ p.middle_name }} {{ p.last_name }} {{ p.suffix }}
                 </td>
                 <td>{{ p.age_in_months|default_if_none:"N/A" }}</td>
                 <td>{{ p.parent_id.full_name }}</td>
@@ -2411,6 +2411,7 @@
 </div>
 </body>
 </html>
+
 
 
 
