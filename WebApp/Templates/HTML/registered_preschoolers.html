@@ -697,7 +697,7 @@
             <tbody>
               {% for p in preschoolers %}
               <tr class="preschooler-row {{ p.delivery_class|default:'delivery-na' }}">
-                <td>{{ p.first_name }} {{ p.last_name }}</td>
+                <td>{{ p.first_name }} {{ p.middle_name }} {{ p.last_name }} {{ p.suffix }}</td>
                 <td>{{ p.age_in_months|default:"N/A" }}</td>
                 <td>{{ p.parent_id.full_name }}</td>
                 {% with p.bmi_records.0 as bmi %}
@@ -942,5 +942,6 @@ if (generateReportBtn) {
 
 </body>
 </html>
+
 
 
