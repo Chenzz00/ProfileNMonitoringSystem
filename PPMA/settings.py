@@ -38,58 +38,44 @@ cloudinary.config(
 FIREBASE_KEY_PATH = BASE_DIR / "PPMA" / "firebase-key.json"
 
 def initialize_firebase():
-    """Initialize Firebase from FIREBASE_KEY_JSON (Railway-safe)."""
+    """Initialize Firebase - supports both file and environment variable."""
     if firebase_admin._apps:
         return True
 
     try:
-        firebase_json = os.environ.get("FIREBASE_KEY_JSON")
-        if not firebase_json:
-            print("⚠️ FIREBASE_KEY_JSON not found in environment variables.")
-            return False
-
-        # Remove surrounding quotes if present
-        firebase_json = firebase_json.strip().strip('"').strip("'")
+        # Method 1: Try using the JSON file (for local development)
+        if FIREBASE_KEY_PATH.exists():
+            print(f"🔧 Loading Firebase from file: {FIREBASE_KEY_PATH}")
+            cred = credentials.Certificate(str(FIREBASE_KEY_PATH))
+            firebase_admin.initialize_app(cred)
+            print("✅ Firebase initialized successfully (from file).")
+            return True
         
-        # Try to load JSON
-        try:
+        # Method 2: Try environment variable (for Railway)
+        firebase_json = os.environ.get("FIREBASE_KEY_JSON")
+        if firebase_json:
+            print("🔧 Loading Firebase from FIREBASE_KEY_JSON environment variable...")
+            
+            # Remove surrounding quotes if present
+            firebase_json = firebase_json.strip().strip('"').strip("'")
+            
+            # Parse JSON
             cred_info = json.loads(firebase_json)
-        except json.JSONDecodeError as e:
-            print(f"❌ JSON decode error: {e}")
-            return False
-
-        # Fix the private key - handle multiple escape scenarios
-        if "private_key" in cred_info:
-            key = cred_info["private_key"]
             
-            # Replace all variations of escaped newlines
-            key = key.replace("\\\\n", "\n")  # Double-escaped
-            key = key.replace("\\n", "\n")    # Single-escaped
+            # Fix the private key newlines
+            if "private_key" in cred_info:
+                key = cred_info["private_key"]
+                # Replace literal \n with actual newlines
+                key = key.replace('\\n', '\n')
+                cred_info["private_key"] = key
             
-            # Ensure proper PEM format
-            if not key.startswith("-----BEGIN PRIVATE KEY-----"):
-                key = "-----BEGIN PRIVATE KEY-----\n" + key
-            if not key.endswith("-----END PRIVATE KEY-----\n"):
-                if not key.endswith("\n"):
-                    key += "\n"
-                key += "-----END PRIVATE KEY-----\n"
-            
-            # Remove any duplicate headers/footers
-            key = key.replace("-----BEGIN PRIVATE KEY-----\n-----BEGIN PRIVATE KEY-----\n", 
-                            "-----BEGIN PRIVATE KEY-----\n")
-            key = key.replace("-----END PRIVATE KEY-----\n-----END PRIVATE KEY-----\n", 
-                            "-----END PRIVATE KEY-----\n")
-            
-            cred_info["private_key"] = key
-            
-            # Debug: Print first/last few chars to verify format
-            print(f"🔑 Private key starts with: {key[:30]}")
-            print(f"🔑 Private key ends with: {key[-30:]}")
-
-        cred = credentials.Certificate(cred_info)
-        firebase_admin.initialize_app(cred)
-        print("✅ Firebase initialized successfully (Railway).")
-        return True
+            cred = credentials.Certificate(cred_info)
+            firebase_admin.initialize_app(cred)
+            print("✅ Firebase initialized successfully (from env var).")
+            return True
+        
+        print("⚠️ FIREBASE_KEY_JSON not found in environment variables and no file found.")
+        return False
 
     except Exception as e:
         print(f"❌ Firebase initialization failed: {e}")
@@ -315,6 +301,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
 
 
