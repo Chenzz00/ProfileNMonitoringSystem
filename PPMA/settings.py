@@ -34,7 +34,6 @@ cloudinary.config(
 # =======================
 # Firebase configuration
 # =======================
-
 FIREBASE_KEY_PATH = BASE_DIR / "PPMA" / "firebase-key.json"
 
 def initialize_firebase():
@@ -43,7 +42,10 @@ def initialize_firebase():
         return True
 
     try:
-        # 1️⃣ Local JSON file (for local development)
+        import base64, json, os
+        from firebase_admin import credentials
+
+        # Local file first
         if FIREBASE_KEY_PATH.exists():
             print(f"🔧 Loading Firebase from file: {FIREBASE_KEY_PATH}")
             cred = credentials.Certificate(str(FIREBASE_KEY_PATH))
@@ -51,30 +53,28 @@ def initialize_firebase():
             print("✅ Firebase initialized successfully (from file).")
             return True
 
-        # 2️⃣ Base64 environment variable (for Railway deployment)
+        # Railway Base64 environment variable
         firebase_key_b64 = os.environ.get("FIREBASE_KEY_BASE64")
         if firebase_key_b64:
             print("🔧 Loading Firebase from FIREBASE_KEY_BASE64 environment variable...")
 
-            # Decode Base64 → JSON string
             decoded_json = base64.b64decode(firebase_key_b64).decode("utf-8")
-
-            # Parse JSON
             cred_info = json.loads(decoded_json)
 
-            # Ensure private key has proper newline formatting
-            private_key = cred_info.get("private_key", "")
-            if "\\n" in private_key:
-                private_key = private_key.replace("\\n", "\n")
-            cred_info["private_key"] = private_key
+            # 🧩 FIX PRIVATE KEY FORMATTING
+            key = cred_info.get("private_key", "")
+            if "\\n" in key:
+                key = key.replace("\\n", "\n")  # convert literal \n to newline
+            elif " " in key and "BEGIN PRIVATE KEY" in key:
+                key = key.replace(" ", "\n")  # just in case it’s space-joined
+            cred_info["private_key"] = key.strip()
 
-            # Initialize Firebase
             cred = credentials.Certificate(cred_info)
             firebase_admin.initialize_app(cred)
             print("✅ Firebase initialized successfully (from Base64 env var).")
             return True
 
-        print("⚠️ No Firebase credentials found (neither JSON file nor Base64 env var).")
+        print("⚠️ No Firebase credentials found.")
         return False
 
     except Exception as e:
@@ -298,6 +298,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
 
 
