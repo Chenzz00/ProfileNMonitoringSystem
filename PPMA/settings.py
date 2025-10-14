@@ -39,10 +39,10 @@ FIREBASE_KEY_PATH = BASE_DIR / "PPMA" / "firebase-key.json"
 def initialize_firebase():
     """Initialize Firebase for both local and Railway environments."""
     if firebase_admin._apps:
-        return True  # Already initialized
+        return True  # already initialized
 
     try:
-        # 1️⃣ Local file (development)
+        # 1) Local file (development)
         if FIREBASE_KEY_PATH.exists():
             print(f"🔧 Loading Firebase credentials from file: {FIREBASE_KEY_PATH}")
             cred = credentials.Certificate(str(FIREBASE_KEY_PATH))
@@ -50,18 +50,22 @@ def initialize_firebase():
             print("✅ Firebase initialized successfully (from file).")
             return True
 
-        # 2️⃣ Environment variable (Railway)
+        # 2) Environment variable (Railway)
         firebase_key_json = os.environ.get("FIREBASE_KEY_JSON")
         if firebase_key_json:
             print("🔧 Loading Firebase credentials from FIREBASE_KEY_JSON environment variable...")
             try:
                 cred_info = json.loads(firebase_key_json)
-                # 🔽 FIX HERE: Convert escaped newlines to real newlines
-                cred_info["private_key"] = cred_info["private_key"].replace("\\n", "\n")
             except json.JSONDecodeError:
                 print("❌ Invalid JSON in FIREBASE_KEY_JSON.")
                 return False
-        
+
+            # --- CRITICAL: convert escaped newlines to real newlines ---
+            if "private_key" in cred_info and isinstance(cred_info["private_key"], str):
+                # Replace literal backslash+n with real newline
+                cred_info["private_key"] = cred_info["private_key"].replace("\\n", "\n").strip()
+
+            # Initialize
             cred = credentials.Certificate(cred_info)
             firebase_admin.initialize_app(cred)
             print("✅ Firebase initialized successfully (from environment variable).")
@@ -72,12 +76,10 @@ def initialize_firebase():
 
     except Exception as e:
         print(f"❌ Firebase initialization failed: {e}")
-        import traceback
-        traceback.print_exc()
+        import traceback; traceback.print_exc()
         return False
 
-
-# Initialize Firebase automatically on import
+# Initialize at import
 FIREBASE_INITIALIZED = initialize_firebase()
 # =======================
 # Security
@@ -290,6 +292,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
 
 
