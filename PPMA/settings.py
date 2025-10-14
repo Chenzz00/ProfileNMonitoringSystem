@@ -48,24 +48,43 @@ def initialize_firebase():
             print("⚠️ FIREBASE_KEY_JSON not found in environment variables.")
             return False
 
-        # Try to load JSON — handle both raw and escaped forms
+        # Remove surrounding quotes if present
+        firebase_json = firebase_json.strip().strip('"').strip("'")
+        
+        # Try to load JSON
         try:
             cred_info = json.loads(firebase_json)
-        except json.JSONDecodeError:
-            # Sometimes Railway wraps JSON in quotes
-            firebase_json = firebase_json.strip('"')
-            cred_info = json.loads(firebase_json)
+        except json.JSONDecodeError as e:
+            print(f"❌ JSON decode error: {e}")
+            return False
 
-        # Normalize the private key
+        # Fix the private key - handle multiple escape scenarios
         if "private_key" in cred_info:
             key = cred_info["private_key"]
-            if "\\n" in key:
-                # Fix escaped newlines
-                key = key.replace("\\n", "\n")
-            elif not key.startswith("-----BEGIN PRIVATE KEY-----"):
-                # Fix if it's missing proper header
-                key = "-----BEGIN PRIVATE KEY-----\n" + key + "\n-----END PRIVATE KEY-----"
+            
+            # Replace all variations of escaped newlines
+            key = key.replace("\\\\n", "\n")  # Double-escaped
+            key = key.replace("\\n", "\n")    # Single-escaped
+            
+            # Ensure proper PEM format
+            if not key.startswith("-----BEGIN PRIVATE KEY-----"):
+                key = "-----BEGIN PRIVATE KEY-----\n" + key
+            if not key.endswith("-----END PRIVATE KEY-----\n"):
+                if not key.endswith("\n"):
+                    key += "\n"
+                key += "-----END PRIVATE KEY-----\n"
+            
+            # Remove any duplicate headers/footers
+            key = key.replace("-----BEGIN PRIVATE KEY-----\n-----BEGIN PRIVATE KEY-----\n", 
+                            "-----BEGIN PRIVATE KEY-----\n")
+            key = key.replace("-----END PRIVATE KEY-----\n-----END PRIVATE KEY-----\n", 
+                            "-----END PRIVATE KEY-----\n")
+            
             cred_info["private_key"] = key
+            
+            # Debug: Print first/last few chars to verify format
+            print(f"🔑 Private key starts with: {key[:30]}")
+            print(f"🔑 Private key ends with: {key[-30:]}")
 
         cred = credentials.Certificate(cred_info)
         firebase_admin.initialize_app(cred)
@@ -74,6 +93,8 @@ def initialize_firebase():
 
     except Exception as e:
         print(f"❌ Firebase initialization failed: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 
@@ -294,6 +315,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
 
 
