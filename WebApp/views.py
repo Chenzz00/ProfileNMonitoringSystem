@@ -5836,9 +5836,15 @@ def reset_password(request, user_id):
             messages.error(request, 'Password must be at least 8 characters long.')
             return render(request, 'HTML/reset_password.html', {'user': user})
         
-        # Additional password validation (optional)
+        # Selective password validation (WITHOUT CommonPasswordValidator)
         try:
-            validate_password(password1, user)
+            validators = [
+                MinimumLengthValidator(min_length=8),
+                NumericPasswordValidator(),
+                UserAttributeSimilarityValidator(),
+            ]
+            for validator in validators:
+                validator.validate(password1, user)
         except ValidationError as e:
             for error in e.messages:
                 messages.error(request, error)
@@ -5847,6 +5853,9 @@ def reset_password(request, user_id):
         # Set new password
         user.set_password(password1)
         user.save()
+        
+        # Optional: Delete the used OTP to prevent reuse
+        recent_otp.delete()
         
         messages.success(request, 'Password reset successfully. You can now login with your new password.')
         return redirect('login')  # Replace with your login URL name
@@ -9799,6 +9808,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
