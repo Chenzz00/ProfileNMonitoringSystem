@@ -59,6 +59,10 @@ def initialize_firebase():
             print("🔧 Loading Firebase from FIREBASE_KEY_BASE64 environment variable...")
 
             decoded_json = base64.b64decode(firebase_key_b64).decode("utf-8")
+            
+            # 🔥 FIX: Remove Windows line endings (CRLF) that corrupt the private key
+            decoded_json = decoded_json.replace('\r\n', '\n').replace('\r', '\n')
+            
             cred_info = json.loads(decoded_json)
 
             # 🧩 FIX PRIVATE KEY FORMATTING
@@ -66,7 +70,7 @@ def initialize_firebase():
             if "\\n" in key:
                 key = key.replace("\\n", "\n")  # convert literal \n to newline
             elif " " in key and "BEGIN PRIVATE KEY" in key:
-                key = key.replace(" ", "\n")  # just in case it’s space-joined
+                key = key.replace(" ", "\n")  # just in case it's space-joined
             cred_info["private_key"] = key.strip()
 
             cred = credentials.Certificate(cred_info)
@@ -204,9 +208,6 @@ ASGI_APPLICATION = "PPMA.asgi.application"
 # =======================
 # Database (PostgreSQL on Railway)
 # =======================
-# =======================
-# Database (PostgreSQL on Railway)
-# =======================
 DATABASES = {
     'default': dj_database_url.config(
         default=os.environ.get('DATABASE_URL')
@@ -298,21 +299,3 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
