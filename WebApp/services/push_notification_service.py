@@ -1,61 +1,78 @@
-# WebApp/services.py - PushNotificationService with new project
+# WebApp/services.py - FCM service fully env-based (no local file)
+import os
+import json
+import logging
+from datetime import datetime, timedelta
+
 import requests
 import google.auth.transport.requests
 from google.oauth2 import service_account
-from django.conf import settings
-import logging
-import json
-import os
-from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
 class PushNotificationService:
-    """Firebase Cloud Messaging service for sending push notifications"""
+    """
+    Firebase Cloud Messaging service.
+    Fully environment-based (FIREBASE_KEY_JSON), supports token caching.
+    """
 
-    SERVICE_ACCOUNT_FILE = getattr(settings, 'FIREBASE_KEY_PATH', None)
-    PROJECT_ID = "ppma-pushnotif"  # Updated to your new service account
+    PROJECT_ID = os.environ.get("FIREBASE_PROJECT_ID", "ppms-project")
 
-    # Cached token and expiry
+    # Cached access token + expiry
     _cached_token = None
     _token_expiry = None
 
     @classmethod
-    def get_access_token(cls):
-        """Generate or reuse OAuth2 token using service account"""
+    def _load_credentials(cls):
+        """
+        Load Firebase credentials from environment variable.
+        Returns: google.oauth2.service_account.Credentials
+        """
+        firebase_key_json = os.environ.get("FIREBASE_KEY_JSON")
+        if not firebase_key_json:
+            logger.error("FIREBASE_KEY_JSON environment variable not set.")
+            return None
+
         try:
-            # Return cached token if still valid
-            if cls._cached_token and cls._token_expiry and cls._token_expiry > datetime.utcnow():
-                return cls._cached_token
-
-            if not cls.SERVICE_ACCOUNT_FILE or not os.path.exists(cls.SERVICE_ACCOUNT_FILE):
-                logger.error(f"Service account file missing: {cls.SERVICE_ACCOUNT_FILE}")
-                return None
-
-            SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"]
-            credentials = service_account.Credentials.from_service_account_file(
-                cls.SERVICE_ACCOUNT_FILE, scopes=SCOPES
+            cred_info = json.loads(firebase_key_json)
+            # Convert escaped newlines in private_key to real newlines
+            if "private_key" in cred_info:
+                cred_info["private_key"] = cred_info["private_key"].replace("\\n", "\n").strip()
+            return service_account.Credentials.from_service_account_info(
+                cred_info, scopes=["https://www.googleapis.com/auth/firebase.messaging"]
             )
+        except Exception as e:
+            logger.error(f"Failed to load Firebase credentials: {e}")
+            return None
+
+    @classmethod
+    def get_access_token(cls):
+        """
+        Return cached FCM access token if valid, else generate a new one.
+        """
+        if cls._cached_token and cls._token_expiry and cls._token_expiry > datetime.utcnow():
+            return cls._cached_token
+
+        credentials = cls._load_credentials()
+        if not credentials:
+            return None
+
+        try:
             request = google.auth.transport.requests.Request()
             credentials.refresh(request)
-
-            # Cache token and set expiry 1 min before actual expiry
             cls._cached_token = credentials.token
             cls._token_expiry = credentials.expiry - timedelta(seconds=60)
             logger.info("🔑 New FCM access token generated and cached")
             return cls._cached_token
-
         except Exception as e:
-            logger.error(f"Failed to get FCM access token: {e}")
+            logger.error(f"Failed to refresh FCM token: {e}")
             return None
 
     @classmethod
     def send_push_notification(cls, token: str, title: str, body: str, data: dict = None):
         """Send push notification via FCM HTTP v1 API"""
-        if not token:
-            return {"success": False, "error": "Missing FCM device token"}
-        if not title or not body:
-            return {"success": False, "error": "Missing title or body"}
+        if not token or not title or not body:
+            return {"success": False, "error": "Missing required parameters"}
 
         access_token = cls.get_access_token()
         if not access_token:
@@ -88,8 +105,6 @@ class PushNotificationService:
 
         try:
             logger.info(f"Sending FCM notification to token: {token[:20]}...")
-            logger.debug(f"Payload: {json.dumps(payload, indent=2)}")
-
             response = requests.post(url, headers=headers, json=payload, timeout=30)
             result = response.json()
             if response.status_code == 200:
@@ -98,7 +113,6 @@ class PushNotificationService:
             else:
                 logger.error(f"FCM notification failed ({response.status_code}): {result}")
                 return {"success": False, "error": result, "status_code": response.status_code}
-
         except Exception as e:
             logger.error(f"Exception sending FCM notification: {e}")
             return {"success": False, "error": str(e)}
@@ -106,8 +120,5 @@ class PushNotificationService:
     @classmethod
     def is_configured(cls):
         """Check if the FCM service is properly configured"""
-        if not cls.SERVICE_ACCOUNT_FILE or not os.path.exists(cls.SERVICE_ACCOUNT_FILE):
-            return False, "Service account file missing"
-
         token = cls.get_access_token()
         return (True, "FCM configured successfully") if token else (False, "Failed to generate access token")
