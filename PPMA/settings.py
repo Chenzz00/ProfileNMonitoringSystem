@@ -40,11 +40,11 @@ def initialize_firebase():
     """Initialize Firebase for both local and Railway environments."""
     if firebase_admin._apps:
         return True
-
+    
     try:
         import base64, json, os
         from firebase_admin import credentials
-
+        
         # Local file first
         if FIREBASE_KEY_PATH.exists():
             print(f"🔧 Loading Firebase from file: {FIREBASE_KEY_PATH}")
@@ -52,40 +52,35 @@ def initialize_firebase():
             firebase_admin.initialize_app(cred)
             print("✅ Firebase initialized successfully (from file).")
             return True
-
+        
         # Railway Base64 environment variable
         firebase_key_b64 = os.environ.get("FIREBASE_KEY_BASE64")
         if firebase_key_b64:
             print("🔧 Loading Firebase from FIREBASE_KEY_BASE64 environment variable...")
-
+            
+            # Remove any whitespace or newlines that might have been added
+            firebase_key_b64 = firebase_key_b64.strip()
+            
+            # Decode base64 to JSON string
             decoded_json = base64.b64decode(firebase_key_b64).decode("utf-8")
             
-            # 🔥 FIX: Remove Windows line endings (CRLF) that corrupt the private key
-            decoded_json = decoded_json.replace('\r\n', '\n').replace('\r', '\n')
-            
+            # Parse JSON
             cred_info = json.loads(decoded_json)
-
-            # 🧩 FIX PRIVATE KEY FORMATTING
-            key = cred_info.get("private_key", "")
-            if "\\n" in key:
-                key = key.replace("\\n", "\n")  # convert literal \n to newline
-            elif " " in key and "BEGIN PRIVATE KEY" in key:
-                key = key.replace(" ", "\n")  # just in case it's space-joined
-            cred_info["private_key"] = key.strip()
-
+            
+            # Initialize Firebase
             cred = credentials.Certificate(cred_info)
             firebase_admin.initialize_app(cred)
             print("✅ Firebase initialized successfully (from Base64 env var).")
             return True
-
+        
         print("⚠️ No Firebase credentials found.")
         return False
-
+        
     except Exception as e:
         print(f"❌ Firebase initialization failed: {e}")
-        import traceback; traceback.print_exc()
+        import traceback
+        traceback.print_exc()
         return False
-
 
 FIREBASE_INITIALIZED = initialize_firebase()
 # =======================
@@ -299,3 +294,4 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
