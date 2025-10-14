@@ -34,6 +34,9 @@ cloudinary.config(
 # =======================
 # Firebase configuration
 # =======================
+
+FIREBASE_KEY_PATH = None
+
 def initialize_firebase():
     """Initialize Firebase using environment variable (Railway)."""
     if firebase_admin._apps:
@@ -283,6 +286,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
 
 
