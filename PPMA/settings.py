@@ -38,38 +38,31 @@ cloudinary.config(
 FIREBASE_KEY_PATH = BASE_DIR / "PPMA" / "firebase-key.json"
 
 def initialize_firebase():
-    """Initialize Firebase using environment variable (Railway)."""
+    """Initialize Firebase using FIREBASE_KEY_JSON from Railway."""
     if firebase_admin._apps:
         return True  # Already initialized
 
-    try:
-        firebase_json = os.environ.get("FIREBASE_KEY_JSON")
-        if not firebase_json:
-            print("⚠️ FIREBASE_KEY_JSON not found in environment variables.")
-            return False
-
-        try:
-            cred_info = json.loads(firebase_json)
-        except json.JSONDecodeError:
-            # Handle escaped quotes or bad formatting
-            firebase_json = firebase_json.replace('\\"', '"')
-            cred_info = json.loads(firebase_json)
-
-        # Fix escaped newlines
-        if "private_key" in cred_info and "\\n" in cred_info["private_key"]:
-            cred_info["private_key"] = cred_info["private_key"].replace("\\n", "\n")
-
-        cred = credentials.Certificate(cred_info)
-        firebase_admin.initialize_app(cred)
-        print("✅ Firebase initialized successfully from Railway environment variable")
-        return True
-
-    except Exception as e:
-        print(f"❌ Firebase initialization failed: {e}")
+    firebase_json = os.environ.get("FIREBASE_KEY_JSON")
+    if not firebase_json:
+        print("⚠️ FIREBASE_KEY_JSON not found in environment variables.")
         return False
 
+    try:
+        cred_info = json.loads(firebase_json)
+    except json.JSONDecodeError:
+        # Handle if env var is double-escaped
+        firebase_json = firebase_json.replace('\\"', '"')
+        cred_info = json.loads(firebase_json)
 
-# Initialize Firebase once
+    # Ensure proper newline formatting for private key
+    if "private_key" in cred_info and "\\n" in cred_info["private_key"]:
+        cred_info["private_key"] = cred_info["private_key"].replace("\\n", "\n")
+
+    cred = credentials.Certificate(cred_info)
+    firebase_admin.initialize_app(cred)
+    print("✅ Firebase initialized successfully!")
+    return True
+
 FIREBASE_INITIALIZED = initialize_firebase()
 
 # =======================
@@ -286,6 +279,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
 
 
