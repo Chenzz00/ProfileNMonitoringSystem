@@ -1,4 +1,4 @@
-# WebApp/services.py - Fixed PushNotificationService
+# WebApp/services.py - PushNotificationService with new project
 import requests
 import google.auth.transport.requests
 from google.oauth2 import service_account
@@ -14,7 +14,7 @@ class PushNotificationService:
     """Firebase Cloud Messaging service for sending push notifications"""
 
     SERVICE_ACCOUNT_FILE = getattr(settings, 'FIREBASE_KEY_PATH', None)
-    PROJECT_ID = "push-notification-ppma"  # Updated to match your service account
+    PROJECT_ID = "ppma-pushnotif"  # Updated to your new service account
 
     # Cached token and expiry
     _cached_token = None
