@@ -34,53 +34,45 @@ cloudinary.config(
 # =======================
 # Firebase configuration
 # =======================
-FIREBASE_KEY_PATH = BASE_DIR / "PPMA" / "firebase-key.json"
-
 def initialize_firebase():
-    """Initialize Firebase for both local and Railway environments."""
+    """Initialize Firebase from Railway environment variable only."""
     if firebase_admin._apps:
         return True  # already initialized
 
     try:
-        # 1) Local file (development)
-        if FIREBASE_KEY_PATH.exists():
-            print(f"🔧 Loading Firebase credentials from file: {FIREBASE_KEY_PATH}")
-            cred = credentials.Certificate(str(FIREBASE_KEY_PATH))
-            firebase_admin.initialize_app(cred)
-            print("✅ Firebase initialized successfully (from file).")
-            return True
-
-        # 2) Environment variable (Railway)
+        # Load from FIREBASE_KEY_JSON environment variable (Railway)
         firebase_key_json = os.environ.get("FIREBASE_KEY_JSON")
-        if firebase_key_json:
-            print("🔧 Loading Firebase credentials from FIREBASE_KEY_JSON environment variable...")
-            try:
-                cred_info = json.loads(firebase_key_json)
-            except json.JSONDecodeError:
-                print("❌ Invalid JSON in FIREBASE_KEY_JSON.")
-                return False
+        if not firebase_key_json:
+            print("⚠️ FIREBASE_KEY_JSON environment variable not set.")
+            return False
 
-            # --- CRITICAL: convert escaped newlines to real newlines ---
-            if "private_key" in cred_info and isinstance(cred_info["private_key"], str):
-                # Replace literal backslash+n with real newline
-                cred_info["private_key"] = cred_info["private_key"].replace("\\n", "\n").strip()
+        print("🔧 Loading Firebase credentials from FIREBASE_KEY_JSON environment variable...")
+        try:
+            cred_info = json.loads(firebase_key_json)
+        except json.JSONDecodeError as e:
+            print(f"❌ Invalid JSON in FIREBASE_KEY_JSON: {e}")
+            return False
 
-            # Initialize
-            cred = credentials.Certificate(cred_info)
-            firebase_admin.initialize_app(cred)
-            print("✅ Firebase initialized successfully (from environment variable).")
-            return True
+        # --- CRITICAL: convert escaped newlines to real newlines ---
+        if "private_key" in cred_info and isinstance(cred_info["private_key"], str):
+            # Replace literal backslash+n with real newline
+            cred_info["private_key"] = cred_info["private_key"].replace("\\n", "\n").strip()
 
-        print("⚠️ No Firebase credentials found.")
-        return False
+        # Initialize
+        cred = credentials.Certificate(cred_info)
+        firebase_admin.initialize_app(cred)
+        print("✅ Firebase initialized successfully from environment variable.")
+        return True
 
     except Exception as e:
         print(f"❌ Firebase initialization failed: {e}")
-        import traceback; traceback.print_exc()
+        import traceback
+        traceback.print_exc()
         return False
 
 # Initialize at import
 FIREBASE_INITIALIZED = initialize_firebase()
+
 # =======================
 # Security
 # =======================
@@ -292,9 +284,3 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-
-
-
-
-
-
