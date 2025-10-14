@@ -35,7 +35,7 @@ cloudinary.config(
 # Firebase configuration
 # =======================
 
-FIREBASE_KEY_PATH = None
+FIREBASE_KEY_PATH = BASE_DIR / "PPMA" / "firebase-key.json"
 
 def initialize_firebase():
     """Initialize Firebase using environment variable (Railway)."""
@@ -286,6 +286,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
 
 
