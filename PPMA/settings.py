@@ -56,10 +56,12 @@ def initialize_firebase():
             print("🔧 Loading Firebase credentials from FIREBASE_KEY_JSON environment variable...")
             try:
                 cred_info = json.loads(firebase_key_json)
+                # 🔽 FIX HERE: Convert escaped newlines to real newlines
+                cred_info["private_key"] = cred_info["private_key"].replace("\\n", "\n")
             except json.JSONDecodeError:
                 print("❌ Invalid JSON in FIREBASE_KEY_JSON.")
                 return False
-
+        
             cred = credentials.Certificate(cred_info)
             firebase_admin.initialize_app(cred)
             print("✅ Firebase initialized successfully (from environment variable).")
@@ -288,6 +290,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
 
 
