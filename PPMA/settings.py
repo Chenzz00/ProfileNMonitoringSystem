@@ -40,7 +40,6 @@ def initialize_firebase():
     """Initialize Firebase for both local and Railway environments."""
     if firebase_admin._apps:
         return True
-    
     try:
         import base64, json, os
         from firebase_admin import credentials
@@ -58,13 +57,13 @@ def initialize_firebase():
         if firebase_key_b64:
             print("🔧 Loading Firebase from FIREBASE_KEY_BASE64 environment variable...")
             
-            # Remove any whitespace or newlines that might have been added
+            # ✅ ONLY remove accidental whitespace from the env var itself
             firebase_key_b64 = firebase_key_b64.strip()
             
             # Decode base64 to JSON string
             decoded_json = base64.b64decode(firebase_key_b64).decode("utf-8")
             
-            # Parse JSON
+            # ✅ NO MANIPULATION - Just parse the JSON directly
             cred_info = json.loads(decoded_json)
             
             # Initialize Firebase
@@ -294,4 +293,5 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
 
