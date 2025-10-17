@@ -842,45 +842,57 @@ function createCustomLegend(labels, colors, values, container) {
 
     // ✅ Barangay Nutritional Status Bar Chart
     const barangayChartEl = document.getElementById('barangayChart');
-    if (barangayChartEl) {
-      const barangayDataElement = document.getElementById('barangay-chart-data');
-      
-      if (barangayDataElement) {
-        const barangayData = JSON.parse(barangayDataElement.textContent || '{}');
-        
-        // Check if we have data
-        if (barangayData.barangays && barangayData.barangays.length > 0) {
-          new Chart(barangayChartEl.getContext('2d'), {
-            type: 'bar',
-            data: {
-              labels: barangayData.barangays || [],
-              datasets: [{
-                label: 'Severely Wasted',
-                data: barangayData.severely_wasted || [],
-                backgroundColor: '#f44336'
-              }, {
-                label: 'Wasted',
-                data: barangayData.wasted || [],
-                backgroundColor: '#ff9800'
-              }, {
-                label: 'Normal',
-                data: barangayData.normal || [],
-                backgroundColor: '#4caf50'
-              }, {
-                label: 'Risk of Overweight',
-                data: barangayData.risk_overweight || [],
-                backgroundColor: '#2196f3'
-              },{
-               
-                label: 'Overweight',
-                data: barangayData.overweight || [],
-                backgroundColor: '#9c27b0'
-              }, {
-                label: 'Obese',
-                data: barangayData.obese || [],
-                backgroundColor: '#795548'
-              }]
-            },
+        if (barangayChartEl) {
+            const barangayDataElement = document.getElementById('barangay-chart-data');
+            if (barangayDataElement) {
+                const barangayData = JSON.parse(barangayDataElement.textContent || '{}');
+                
+                // Check if we have data
+                if (barangayData.barangays && barangayData.barangays.length > 0) {
+                    // Sort barangays alphabetically and reorder all data arrays
+                    const sortedIndices = barangayData.barangays
+                        .map((name, index) => ({ name, index }))
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .map(item => item.index);
+                    
+                    const sortedBarangays = sortedIndices.map(i => barangayData.barangays[i]);
+                    const sortedSeverelyWasted = sortedIndices.map(i => barangayData.severely_wasted[i] || 0);
+                    const sortedWasted = sortedIndices.map(i => barangayData.wasted[i] || 0);
+                    const sortedNormal = sortedIndices.map(i => barangayData.normal[i] || 0);
+                    const sortedRiskOverweight = sortedIndices.map(i => barangayData.risk_overweight[i] || 0);
+                    const sortedOverweight = sortedIndices.map(i => barangayData.overweight[i] || 0);
+                    const sortedObese = sortedIndices.map(i => barangayData.obese[i] || 0);
+                    
+                    new Chart(barangayChartEl.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: sortedBarangays,
+                            datasets: [{
+                                label: 'Severely Wasted',
+                                data: sortedSeverelyWasted,
+                                backgroundColor: '#f44336'
+                            }, {
+                                label: 'Wasted',
+                                data: sortedWasted,
+                                backgroundColor: '#ff9800'
+                            }, {
+                                label: 'Normal',
+                                data: sortedNormal,
+                                backgroundColor: '#4caf50'
+                            }, {
+                                label: 'Risk of Overweight',
+                                data: sortedRiskOverweight,
+                                backgroundColor: '#2196f3'
+                            },{
+                                label: 'Overweight',
+                                data: sortedOverweight,
+                                backgroundColor: '#9c27b0'
+                            }, {
+                                label: 'Obese',
+                                data: sortedObese,
+                                backgroundColor: '#795548'
+                            }]
+                        },
             options: {
               responsive: true,
               maintainAspectRatio: false,
@@ -1052,6 +1064,7 @@ if (generateReportBtn) {
 
 </body>
 </html>
+
 
 
 
