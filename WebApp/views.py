@@ -8628,7 +8628,10 @@ from django.db.models import Count, Q
 
 @admin_required
 def registered_barangays(request):
+    import re
+
     query = request.GET.get("search", "").strip()
+
     barangays = Barangay.objects.annotate(
         preschooler_count=Count("preschooler", distinct=True),
         parent_count=Count("parent", distinct=True),
@@ -8638,20 +8641,24 @@ def registered_barangays(request):
             distinct=True
         ),
     )
-    
+
     if query:
         barangays = barangays.filter(
             Q(name__icontains=query) |
             Q(phone_number__icontains=query) |
             Q(hall_address__icontains=query)
         )
-    
-    # ✅ Sort in Python for case-insensitive ordering
-    barangays_list = sorted(list(barangays), key=lambda x: x.name.upper())
-    
+
+    # ✅ Natural sort for barangay names like "Anabu 2-A" … "Anabu 2-F"
+    def natural_sort_key(x):
+        return [int(text) if text.isdigit() else text.upper() for text in re.split(r'(\d+)', x.name)]
+
+    barangays_list = sorted(list(barangays), key=natural_sort_key)
+
     paginator = Paginator(barangays_list, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
+
     return render(request, "HTML/barangay_list.html", {"barangays": page_obj})
     
 @admin_required 
@@ -9856,6 +9863,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
