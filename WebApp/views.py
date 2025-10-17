@@ -3406,12 +3406,6 @@ def preschooler_detail(request, preschooler_id):
     # === Get preschooler (non-archived only) ===
     preschooler = get_object_or_404(Preschooler, preschooler_id=preschooler_id, is_archived=False)
 
-    # Handle empty middle name and suffix - set to empty string instead of None
-    if not preschooler.middle_name:
-        preschooler.middle_name = ''
-    if not preschooler.suffix:
-        preschooler.suffix = ''
-
     # Archive check for individual preschooler
     if preschooler.age_in_months and preschooler.age_in_months >= 60:
         preschooler.is_archived = True
@@ -9828,6 +9822,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
