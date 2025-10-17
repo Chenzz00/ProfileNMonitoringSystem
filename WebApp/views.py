@@ -1287,24 +1287,25 @@ def index(request):
 
 
 
-@admin_required
+Here's the corrected code with case-insensitive alphabetical sorting:
+python@admin_required
 def addbarangay(request):
     if request.method == 'POST':
         name = request.POST.get('barangay-name', '').strip()
         phone_number = request.POST.get('phone-number', '').strip()
         hall_address = request.POST.get('hall-address', '').strip()
 
-        
-
         # ✅ Check for empty barangay name
         if not name:
             messages.error(request, "Barangay name is required.")
-            return render(request, 'HTML/addbarangay.html')
+            barangays = Barangay.objects.all().order_by(Lower('name'))
+            return render(request, 'HTML/addbarangay.html', {'barangays': barangays})
 
         # ✅ Check if barangay name already exists
         if Barangay.objects.filter(name__iexact=name).exists():
             messages.error(request, f"A barangay named '{name}' already exists.")
-            return render(request, 'HTML/addbarangay.html')
+            barangays = Barangay.objects.all().order_by(Lower('name'))
+            return render(request, 'HTML/addbarangay.html', {'barangays': barangays})
 
         # ✅ Try saving the barangay
         try:
@@ -1316,10 +1317,13 @@ def addbarangay(request):
             messages.success(request, f"Barangay {name} was added successfully!")
             return redirect('addbarangay')
         except Exception as e:
-            
             messages.error(request, "Something went wrong while saving. Please try again.")
+            barangays = Barangay.objects.all().order_by(Lower('name'))
+            return render(request, 'HTML/addbarangay.html', {'barangays': barangays})
     
-    return render(request, 'HTML/addbarangay.html')
+    # ✅ GET request - fetch and sort barangays
+    barangays = Barangay.objects.all().order_by(Lower('name'))
+    return render(request, 'HTML/addbarangay.html', {'barangays': barangays})
 
 
 
@@ -9850,6 +9854,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
