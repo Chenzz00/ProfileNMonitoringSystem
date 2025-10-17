@@ -1287,8 +1287,7 @@ def index(request):
 
 
 
-Here's the corrected code with case-insensitive alphabetical sorting:
-python@admin_required
+@admin_required
 def addbarangay(request):
     if request.method == 'POST':
         name = request.POST.get('barangay-name', '').strip()
@@ -1321,7 +1320,7 @@ def addbarangay(request):
             barangays = Barangay.objects.all().order_by(Lower('name'))
             return render(request, 'HTML/addbarangay.html', {'barangays': barangays})
     
-    # ✅ GET request - fetch and sort barangays
+    # GET request - fetch and sort barangays
     barangays = Barangay.objects.all().order_by(Lower('name'))
     return render(request, 'HTML/addbarangay.html', {'barangays': barangays})
 
@@ -9854,6 +9853,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
