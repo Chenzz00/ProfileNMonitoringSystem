@@ -941,7 +941,28 @@ textarea[readonly].archived-input {
     flex-direction: column;
     gap: 8px;
   }
-}  
+}
+
+
+    .vaccination-status-complete {
+  background-color: #d4edda;  /* Light green */
+  color: #28a745;             /* Dark green text */
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-block;
+}
+
+.vaccination-status-incomplete {
+  background-color: #fff3cd;  /* Light yellow */
+  color: #856404;             /* Brown/yellow text */
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-block;
+}
   </style>
 </head>
 
@@ -1011,6 +1032,15 @@ textarea[readonly].archived-input {
         <div class="info-item">
           <span class="info-label">Parent:</span>
           <span class="info-value">{{ preschooler.parent_id.full_name|default:'' }}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="info-label">Vaccination Status:</span>
+          <span class="info-value">
+            <span class="vaccination-status-badge vaccination-status-{{ vaccination_completion_status|lower }}">
+              {{ vaccination_completion_status }}
+            </span>
+          </span>
         </div>
       </div>
 
@@ -3309,6 +3339,7 @@ function goBack() {
 
 </body>
 </html>
+
 
 
 
