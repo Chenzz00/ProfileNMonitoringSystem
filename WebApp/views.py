@@ -8632,7 +8632,7 @@ def registered_barangays(request):
             filter=Q(account__user_role__in=["BHW", "Barangay Nutritional Scholar"]),
             distinct=True
         ),
-    ).order_by("name")
+    ).order_by(Lower("name"))  # ✅ Sort case-insensitively by name
 
     if query:
         barangays = barangays.filter(
@@ -9849,6 +9849,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
