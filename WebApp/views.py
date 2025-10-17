@@ -1287,6 +1287,8 @@ def index(request):
 
 
 
+import re
+
 @admin_required
 def addbarangay(request):
     if request.method == 'POST':
@@ -1297,13 +1299,13 @@ def addbarangay(request):
         # ✅ Check for empty barangay name
         if not name:
             messages.error(request, "Barangay name is required.")
-            barangays = Barangay.objects.all().order_by(Lower('name'))
+            barangays = sorted(Barangay.objects.all(), key=lambda x: x.name.upper())
             return render(request, 'HTML/addbarangay.html', {'barangays': barangays})
 
         # ✅ Check if barangay name already exists
         if Barangay.objects.filter(name__iexact=name).exists():
             messages.error(request, f"A barangay named '{name}' already exists.")
-            barangays = Barangay.objects.all().order_by(Lower('name'))
+            barangays = sorted(Barangay.objects.all(), key=lambda x: x.name.upper())
             return render(request, 'HTML/addbarangay.html', {'barangays': barangays})
 
         # ✅ Try saving the barangay
@@ -1317,11 +1319,11 @@ def addbarangay(request):
             return redirect('addbarangay')
         except Exception as e:
             messages.error(request, "Something went wrong while saving. Please try again.")
-            barangays = Barangay.objects.all().order_by(Lower('name'))
+            barangays = sorted(Barangay.objects.all(), key=lambda x: x.name.upper())
             return render(request, 'HTML/addbarangay.html', {'barangays': barangays})
     
-    # GET request - fetch and sort barangays
-    barangays = Barangay.objects.all().order_by(Lower('name'))
+    # GET request - fetch and sort barangays (case-insensitive)
+    barangays = sorted(Barangay.objects.all(), key=lambda x: x.name.upper())
     return render(request, 'HTML/addbarangay.html', {'barangays': barangays})
 
 
@@ -9853,6 +9855,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
