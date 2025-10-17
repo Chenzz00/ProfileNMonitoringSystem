@@ -339,7 +339,7 @@
       <label for="barangay_id" class="form-label">Barangay</label>
       <select id="barangay_id" name="barangay_id" class="form-select" required>
         <option value="" disabled selected>Select your barangay</option>
-        {% for barangay in barangays %}
+        {% for barangay in barangays|dictsort:"name" %}
           <option value="{{ barangay.id }}">{{ barangay.name|upper }}</option>
         {% endfor %}
       </select>
@@ -739,6 +739,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
