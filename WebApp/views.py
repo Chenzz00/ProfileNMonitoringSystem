@@ -8629,28 +8629,29 @@ from django.db.models import Count, Q
 @admin_required
 def registered_barangays(request):
     query = request.GET.get("search", "").strip()
-
     barangays = Barangay.objects.annotate(
         preschooler_count=Count("preschooler", distinct=True),
-        parent_count=Count("parent", distinct=True),  # count Parent objects linked via barangay FK
+        parent_count=Count("parent", distinct=True),
         bhw_bns_count=Count(
             "account",
             filter=Q(account__user_role__in=["BHW", "Barangay Nutritional Scholar"]),
             distinct=True
         ),
-    ).order_by(Lower("name"))  # ✅ Sort case-insensitively by name
-
+    )
+    
     if query:
         barangays = barangays.filter(
             Q(name__icontains=query) |
             Q(phone_number__icontains=query) |
             Q(hall_address__icontains=query)
         )
-
-    paginator = Paginator(barangays, 10)
+    
+    # ✅ Sort in Python for case-insensitive ordering
+    barangays_list = sorted(list(barangays), key=lambda x: x.name.upper())
+    
+    paginator = Paginator(barangays_list, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
-
     return render(request, "HTML/barangay_list.html", {"barangays": page_obj})
     
 @admin_required 
@@ -9855,6 +9856,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
