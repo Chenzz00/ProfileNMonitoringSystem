@@ -3508,15 +3508,29 @@ def preschooler_detail(request, preschooler_id):
     ]
 
     vaccine_statuses = []
+    total_vaccines = len(standard_vaccines)
+    completed_vaccines = 0
+    
     for vaccine in standard_vaccines:
         status = get_enhanced_vaccine_status(preschooler, vaccine['name'], vaccine['total_doses'])
         eligibility = get_vaccine_eligibility(preschooler, vaccine['name'])
         status['eligibility_info'] = eligibility
+        
+        # Check if this vaccine is fully completed
+        if status.get('completed_doses', 0) >= vaccine['total_doses']:
+            completed_vaccines += 1
+        
         vaccine_statuses.append({
             'name': vaccine['name'],
             'total_doses': vaccine['total_doses'],
             **status
         })
+
+    # Calculate vaccination completion status
+    if completed_vaccines == total_vaccines:
+        vaccination_completion_status = "Complete"
+    else:
+        vaccination_completion_status = "Incomplete"
 
     # === Nutrition Services ===
     standard_nutrition_services = [
@@ -3585,12 +3599,13 @@ def preschooler_detail(request, preschooler_id):
             'height': record.height,
             'weight': record.weight,
             'bmi_value': record.bmi_value,
-            'nutritional_status': nutrition_status,  # ✅ Uses the loop's computed value
+            'nutritional_status': nutrition_status,
             'temperature': temperature.temperature_value if temperature else None,
-            'weight_for_age_status': wfa,  # ✅ Uses the loop's computed value
-            'height_for_age_status': hfa,  # ✅ Uses the loop's computed value
-            'weight_for_height_status': wfh,  # ✅ Uses the loop's computed value
+            'weight_for_age_status': wfa,
+            'height_for_age_status': hfa,
+            'weight_for_height_status': wfh,
         })
+        
     # === Nutrition Records ===
     try:
         nutrition_services = preschooler.nutrition_services.all().order_by('-completion_date')
@@ -3610,6 +3625,7 @@ def preschooler_detail(request, preschooler_id):
         'nutrition_services': nutrition_services,
         'nutrition_statuses': nutrition_statuses,
         'vaccine_statuses': vaccine_statuses,
+        'vaccination_completion_status': vaccination_completion_status,
         'age_years': age_years,
         'age_months': age_months,
         'age_days': age_days,
@@ -9869,6 +9885,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
