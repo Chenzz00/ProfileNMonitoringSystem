@@ -339,12 +339,13 @@
           <label for="barangay_id" class="form-label">Barangay</label>
           <select id="barangay_id" name="barangay_id" class="form-select" required>
             <option value="" disabled selected>Select your barangay</option>
-            {% for barangay in barangays|dictsort:"name.lower" %}
+            {% for barangay in barangays %}
               <option value="{{ barangay.id }}">{{ barangay.name }}</option>
             {% endfor %}
           </select>
         </div>
       </div>
+
 
       <div class="mb-3 form-check">
         <input type="checkbox" id="agree" name="agree" class="form-check-input" required>
@@ -738,6 +739,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
