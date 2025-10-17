@@ -336,15 +336,15 @@
 
   <div class="row">
     <div class="col-md-12 mb-3">
-        <label for="barangay_id" class="form-label">Barangay</label>
-        <select id="barangay_id" name="barangay_id" class="form-select" required>
-            <option value="" disabled selected>Select your barangay</option>
-            {% for barangay in barangays %}
-                <option value="{{ barangay.id }}">{{ barangay.name }}</option>
-            {% endfor %}
-        </select>
+      <label for="barangay_id" class="form-label">Barangay</label>
+      <select id="barangay_id" name="barangay_id" class="form-select" required>
+        <option value="" disabled selected>Select your barangay</option>
+        {% for barangay in barangays %}
+          <option value="{{ barangay.id }}">{{ barangay.name|upper }}</option>
+        {% endfor %}
+      </select>
     </div>
-</div>
+  </div>
 
 
       <div class="mb-3 form-check">
@@ -739,6 +739,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
