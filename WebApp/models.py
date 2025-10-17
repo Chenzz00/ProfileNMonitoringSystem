@@ -298,8 +298,12 @@ class Barangay(models.Model):
     hall_address = models.CharField(max_length=100, null=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
 
+    class Meta:
+        # Always sort alphabetically by name (case-insensitive)
+        ordering = ['name']
+
     def save(self, *args, **kwargs):
-        # Automatically store name in uppercase (for uniformity)
+        # Automatically convert to uppercase before saving
         if self.name:
             self.name = self.name.upper().strip()
         super().save(*args, **kwargs)
@@ -994,6 +998,7 @@ class FCMToken(models.Model):
 
     def __str__(self):
         return f"{self.account.email} - {self.token}"
+
 
 
 
