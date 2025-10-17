@@ -4255,6 +4255,8 @@ def preschoolers(request):
     user_email = request.session.get('email')
     raw_role = (request.session.get('user_role') or '').strip().lower()
 
+    
+
     # Get current account
     account = get_object_or_404(Account, email=user_email)
 
@@ -4274,11 +4276,14 @@ def preschoolers(request):
         )
         barangay_name = account.barangay.name if account.barangay else "No Barangay"
       
+
     preschoolers_qs = preschoolers_qs.select_related('parent_id', 'barangay') \
         .prefetch_related(
             Prefetch('bmi_set', queryset=BMI.objects.order_by('-date_recorded'), to_attr='bmi_records'),
             Prefetch('temperature_set', queryset=Temperature.objects.order_by('-date_recorded'), to_attr='temp_records')
         )
+
+    
 
     # Pagination
     paginator = Paginator(preschoolers_qs, 10)
@@ -4287,12 +4292,6 @@ def preschoolers(request):
 
     # Process nutritional status, delivery place color coding, and age in months
     for p in page_obj.object_list:
-        # Handle empty middle name and suffix - set to empty string instead of None
-        if not p.middle_name:
-            p.middle_name = ''
-        if not p.suffix:
-            p.suffix = ''
-            
         # Get latest BMI
         latest_bmi = None
         if hasattr(p, 'bmi_records') and p.bmi_records:
@@ -4317,6 +4316,7 @@ def preschoolers(request):
 
         # Delivery place color coding
         delivery_place = getattr(p, 'place_of_delivery', None)
+        
 
         if delivery_place == 'Home':
             p.delivery_class = 'delivery-home'
@@ -4328,6 +4328,8 @@ def preschoolers(request):
             p.delivery_class = 'delivery-others'
         else:
             p.delivery_class = 'delivery-na'
+
+       
 
     # Determine user role for template
     if raw_role in ['bhw', 'bns', 'midwife', 'nurse']:
@@ -4343,6 +4345,8 @@ def preschoolers(request):
         'original_role': raw_role,
         'barangay_name': barangay_name,
     }
+
+    
 
     return render(request, 'HTML/preschoolers.html', context)
 
@@ -9828,6 +9832,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
