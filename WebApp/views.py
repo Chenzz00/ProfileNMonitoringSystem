@@ -86,7 +86,7 @@ from django.contrib.auth.password_validation import (
     UserAttributeSimilarityValidator
 )
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from .decorators import admin_required
 OFFLINE_THRESHOLD = timedelta(minutes=5)
 
@@ -1085,7 +1085,7 @@ def email_endorsement(request):
 
 
 def generate_immunization_report(request):
-    """Generate PDF report for immunization schedules and vaccination records without vaccine stock tracking"""
+    """Generate PDF report for immunization schedules and vaccination records (fixed total of 15 required vaccines)."""
     user = request.user
     try:
         account = Account.objects.select_related('barangay').get(email=user.email)
@@ -1097,7 +1097,7 @@ def generate_immunization_report(request):
         'bhw', 'health worker', 'bns', 'nutrition', 'nutritional', 'scholar', 'midwife', 'admin'
     ])
     if not is_authorized:
-        messages.error(request, "Your role ({account.user_role}) is not authorized to generate immunization reports.")
+        messages.error(request, f"Your role ({account.user_role}) is not authorized to generate immunization reports.")
         return redirect('dashboard')
 
     barangay = account.barangay
@@ -1122,16 +1122,17 @@ def generate_immunization_report(request):
 
     today = date.today()
 
+    # ✅ Updated summary categories
     vaccination_summary = {
         'Fully Vaccinated': 0,
-        'Partially Vaccinated': 0,
+        'Incomplete Vaccine': 0,
         'Not Vaccinated': 0,
         'Overdue': 0,
     }
 
     preschoolers_data = []
 
-    # Unique vaccines
+    # Unique vaccines (still used for report listing)
     scheduled_vaccines = VaccinationSchedule.objects.all().values_list(
         'vaccine_name', flat=True
     ).distinct().order_by('vaccine_name')
@@ -1139,44 +1140,69 @@ def generate_immunization_report(request):
         'BCG', 'Hepatitis B', 'DPT', 'OPV', 'MMR', 'Pneumococcal', 'Rotavirus'
     ]
 
+    REQUIRED_VACCINE_COUNT = 15  # ✅ fixed total number of vaccines
+
     for p in preschoolers:
         schedules = [s for s in p.vaccination_schedules.all() if s.status == 'completed']
         if month_filter:
-            schedules = [s for s in schedules if s.scheduled_date and
-                         s.scheduled_date.year == month_filter.year and
-                         s.scheduled_date.month == month_filter.month]
+            schedules = [
+                s for s in schedules
+                if s.scheduled_date and
+                   s.scheduled_date.year == month_filter.year and
+                   s.scheduled_date.month == month_filter.month
+            ]
 
+        # Skip if no vaccination records at all
         if not schedules:
+            vaccination_summary['Not Vaccinated'] += 1
             continue
 
-        age_years = today.year - p.birth_date.year - ((today.month, today.day) < (p.birth_date.month, p.birth_date.day))
+        # Calculate age
+        age_years = today.year - p.birth_date.year - (
+            (today.month, today.day) < (p.birth_date.month, p.birth_date.day)
+        )
         age_months = (today.year - p.birth_date.year) * 12 + today.month - p.birth_date.month
 
-        total_scheduled = len(schedules)
-        total_completed = total_scheduled  # all are completed
+        # ✅ Vaccination logic based on 15 required vaccines
+        total_completed = len(schedules)
+        total_required = REQUIRED_VACCINE_COUNT
 
-        vaccination_status = "Fully Vaccinated" if total_completed == total_scheduled else "Partially Vaccinated"
-        vaccination_summary[vaccination_status] += 1
+        if total_completed >= total_required:
+            vaccination_status = "Fully Vaccinated"
+            vaccination_summary['Fully Vaccinated'] += 1
+        else:
+            vaccination_status = "Incomplete Vaccine"
+            vaccination_summary['Incomplete Vaccine'] += 1
 
+        # Parent info
         parent_name = p.parent_id.full_name if p.parent_id else "N/A"
         address = getattr(p.parent_id, 'address', 'N/A') if p.parent_id else getattr(p, 'address', 'N/A') or "N/A"
 
-        last_completed = max([s.completion_date or s.administered_date for s in schedules if s.completion_date or s.administered_date], default=None)
+        # Latest vaccination date
+        last_completed = max(
+            [s.completion_date or s.administered_date for s in schedules if s.completion_date or s.administered_date],
+            default=None
+        )
         last_vaccination_date = last_completed.strftime('%m/%d/%Y') if last_completed else "N/A"
 
-        completed_text = "; ".join(["{s.vaccine_name} ({(s.completion_date or s.administered_date or s.scheduled_date).strftime('%m/%d/%Y')})" for s in schedules])
+        # ✅ Safe f-string for vaccine completion list
+        completed_text = "; ".join([
+            f"{s.vaccine_name} ({(v_date.strftime('%m/%d/%Y') if (v_date := (s.completion_date or s.administered_date or s.scheduled_date)) else 'N/A')})"
+            for s in schedules
+        ])
+
 
         preschoolers_data.append({
-            'name': "{p.first_name} {p.last_name}",
-            'age': "{age_years} years, {age_months % 12} months",
+            'name': f"{p.first_name} {p.last_name}",
+            'age': f"{age_years} years, {age_months % 12} months",
             'sex': p.sex,
             'vaccination_status': vaccination_status,
-            'vaccines_received': "{total_completed}/{total_scheduled}",
+            'vaccines_received': f"{min(total_completed, total_required)}/{total_required}",
             'last_vaccination': last_vaccination_date,
             'vaccination_schedule': completed_text,
             'parent_name': parent_name,
             'address': address,
-            'overdue_count': 0,  # no overdue tracking
+            'overdue_count': 0,  # no overdue tracking yet
         })
 
     context = {
@@ -1193,8 +1219,9 @@ def generate_immunization_report(request):
     pdf = html.write_pdf()
 
     response = HttpResponse(pdf, content_type='application/pdf')
-    response['Content-Disposition'] = 'inline; filename="Immunization-Report.pd"'
+    response['Content-Disposition'] = 'inline; filename="Immunization-Report.pdf"'
     return response
+
 
 
 
@@ -9822,6 +9849,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
