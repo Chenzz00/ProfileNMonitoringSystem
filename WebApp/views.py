@@ -8629,6 +8629,8 @@ from django.db.models import Count, Q
 @admin_required
 def registered_barangays(request):
     import re
+    from django.db.models import Count, Q
+    from django.core.paginator import Paginator
 
     query = request.GET.get("search", "").strip()
 
@@ -8638,20 +8640,24 @@ def registered_barangays(request):
         bhw_bns_count=Count(
             "account",
             filter=Q(account__user_role__in=["BHW", "Barangay Nutritional Scholar"]),
-            distinct=True
+            distinct=True,
         ),
     )
 
     if query:
         barangays = barangays.filter(
-            Q(name__icontains=query) |
-            Q(phone_number__icontains=query) |
-            Q(hall_address__icontains=query)
+            Q(name__icontains=query)
+            | Q(phone_number__icontains=query)
+            | Q(hall_address__icontains=query)
         )
 
-    # ✅ Natural sort for barangay names like "Anabu 2-A" … "Anabu 2-F"
+    # ✅ Natural sorting (handles "2-A", "2-B", "2-C", ... correctly)
     def natural_sort_key(x):
-        return [int(text) if text.isdigit() else text.upper() for text in re.split(r'(\d+)', x.name)]
+        # Split into digits and letters so numbers sort numerically
+        return [
+            int(part) if part.isdigit() else part.upper()
+            for part in re.split(r"(\d+)", x.name)
+        ]
 
     barangays_list = sorted(list(barangays), key=natural_sort_key)
 
@@ -9863,6 +9869,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
