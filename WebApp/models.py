@@ -294,12 +294,18 @@ class Nurse(models.Model):
         return self.email    
 
 class Barangay(models.Model):
-    name=models.CharField(max_length=100,null=True)
-    hall_address=models.CharField(max_length=100,null=True)
-    phone_number=models.CharField(max_length=15, blank=True, null=True)
+    name = models.CharField(max_length=100, null=True)
+    hall_address = models.CharField(max_length=100, null=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        # Automatically store name in uppercase (for uniformity)
+        if self.name:
+            self.name = self.name.upper().strip()
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.name
+        return self.name or ""
     
 
     @property
@@ -988,5 +994,6 @@ class FCMToken(models.Model):
 
     def __str__(self):
         return f"{self.account.email} - {self.token}"
+
 
 
