@@ -43,6 +43,7 @@ from django.contrib.auth.hashers import check_password
 from django.views.decorators.http import require_POST
 from .models import Preschooler, BMI, Temperature, Barangay, BHW, BNS
 from django.utils import timezone
+from django.db.models.functions import Lower
 from django.utils.timesince import timesince
 from datetime import timedelta
 from django.db import IntegrityError
@@ -9849,6 +9850,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
