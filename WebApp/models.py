@@ -250,7 +250,6 @@ class Announcement(models.Model):
                 print(f"Error deleting from Cloudinary: {e}")
         super().delete(*args, **kwargs)
 
-
 class BNS(models.Model):
     bns_id = models.AutoField(primary_key=True)
     full_name = models.CharField(max_length=100)
@@ -989,8 +988,5 @@ class FCMToken(models.Model):
 
     def __str__(self):
         return f"{self.account.email} - {self.token}"
-
-
-
 
 
