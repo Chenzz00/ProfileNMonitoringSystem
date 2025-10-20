@@ -2752,6 +2752,8 @@ def update_nutrition_status(request, schedule_id):
         return JsonResponse({
             'success': False,
             'message': f'Error updating status: {str(e)}'
+        })
+
 
 @login_required
 def reschedule_nutrition_service(request, schedule_id):
@@ -9883,6 +9885,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
