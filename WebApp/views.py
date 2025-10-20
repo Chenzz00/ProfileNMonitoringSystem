@@ -2752,7 +2752,6 @@ def update_nutrition_status(request, schedule_id):
         return JsonResponse({
             'success': False,
             'message': f'Error updating status: {str(e)}'
-        })
 
 @login_required
 def reschedule_nutrition_service(request, schedule_id):
@@ -3011,7 +3010,6 @@ def add_nutrition_service(request, preschooler_id):
         messages.error(request, f"Error: {str(e)}")
 
     return redirect(request.META.get("HTTP_REFERER", "/"))
-
 @require_POST #may binago ako dito
 def confirm_schedule(request, schedule_id):
     if not request.user.is_authenticated:
@@ -3637,7 +3635,7 @@ def preschooler_detail(request, preschooler_id):
     }
 
     return render(request, 'HTML/preschooler_data.html', context)
-
+    
 def get_nutrition_eligibility(preschooler, service_type):
     """
     Enhanced nutrition eligibility that properly handles completed services
@@ -9885,6 +9883,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
