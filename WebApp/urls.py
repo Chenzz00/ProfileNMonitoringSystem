@@ -77,6 +77,11 @@ urlpatterns = [
     path('generate-immunization-report/', views.generate_immunization_report, name='generate_immunization_report'),
     path('add_vaccine/<int:preschooler_id>/', views.add_vaccine, name='add_vaccine'),
     path('add_nutrition_service/<int:preschooler_id>/', views.add_nutrition_service, name='add_nutrition_service'),
+    path(
+        'add_completed_nutrition_service/<int:preschooler_id>/',
+        views.add_nutrition_service,
+        name='add_completed_nutrition_service'
+    ),
     
     path('schedule_nutrition_service/<int:preschooler_id>/', views.schedule_nutrition_service, name='schedule_nutrition_service'),
     path('update_nutrition_status/<int:schedule_id>/', views.update_nutrition_status, name='update_nutrition_status'),
@@ -143,6 +148,7 @@ urlpatterns = [
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
 
 
