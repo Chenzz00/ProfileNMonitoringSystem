@@ -3641,12 +3641,12 @@ def preschooler_detail(request, preschooler_id):
 def get_nutrition_eligibility(preschooler, service_type):
     """
     Enhanced nutrition eligibility that properly handles completed services
-    and calculates next availability based on 6-month intervals
-    """
+    and calculates next availability based on 6-month intervals.
+    """ 
     today = timezone.now().date()
     birth_date = preschooler.birth_date
-    
-    # Calculate total age in months
+
+    # --- Age calculation in months ---
     age_years = today.year - birth_date.year
     age_months = today.month - birth_date.month
     age_days = today.day - birth_date.day
@@ -3664,168 +3664,149 @@ def get_nutrition_eligibility(preschooler, service_type):
         age_months += 12
 
     total_age_months = age_years * 12 + age_months
-    
-    # Nutrition services eligibility rules - both start at 6 months
+
+    # --- Nutrition service rules ---
     nutrition_schedule = {
         'Vitamin A': {
             'min_age_months': 6,
             'interval_months': 6,
             'max_age_months': 59,
-            'eligible_ages': [6, 12, 18, 24, 30, 36, 42, 48, 54]
+            'eligible_ages': [6, 12, 18, 24, 30, 36, 42, 48, 54],
         },
         'Deworming': {
             'min_age_months': 6,
             'interval_months': 6,
             'max_age_months': 59,
-            'eligible_ages': [6, 12, 18, 24, 30, 36, 42, 48, 54]
-        }
+            'eligible_ages': [6, 12, 18, 24, 30, 36, 42, 48, 54],
+        },
     }
-    
+
     if service_type not in nutrition_schedule:
         return {
             'can_schedule': False,
             'reason': 'Unknown service type',
             'next_eligible_age': None,
-            'description': 'Service not recognized'
+            'description': 'Service not recognized',
         }
-    
+
     service_info = nutrition_schedule[service_type]
-    
-    # Check if child is too young
+
+    # --- Too young ---
     if total_age_months < service_info['min_age_months']:
         return {
             'can_schedule': False,
             'reason': f'Too young. {service_type} starts at {service_info["min_age_months"]} months.',
             'next_eligible_age': service_info['min_age_months'],
-            'description': f'Available at {service_info["min_age_months"]} months'
+            'description': f'Available at {service_info["min_age_months"]} months',
         }
-    
-    # Check if child is too old
+
+    # --- Too old ---
     if total_age_months > service_info['max_age_months']:
         return {
             'can_schedule': False,
             'reason': f'Child has exceeded age limit for {service_type}.',
             'next_eligible_age': None,
-            'description': 'No longer age-appropriate'
+            'description': 'No longer age-appropriate',
         }
-    
-    # Get completed services from database
+
+    # --- Completed services ---
     try:
         completed_services = preschooler.nutrition_services.filter(
-            service_type=service_type,
-            status='completed'
+            service_type=service_type, status='completed'
         ).order_by('completion_date')
     except AttributeError:
-        try:
-            from .models import NutritionSchedule
-            completed_services = NutritionSchedule.objects.filter(
-                preschooler=preschooler,
-                service_type=service_type,
-                status='completed'
-            ).order_by('service_date')
-        except:
-            completed_services = []
-    
-    # Check for pending schedules first
+        from .models import NutritionService
+        completed_services = NutritionService.objects.filter(
+            preschooler=preschooler, service_type=service_type, status='completed'
+        ).order_by('service_date')
+
+    # --- Pending schedules ---
     try:
         pending_schedules = preschooler.nutrition_schedules.filter(
-            service_type=service_type,
-            status__in=['scheduled', 'rescheduled']
+            service_type=service_type, status__in=['scheduled', 'rescheduled']
         ).exists()
     except AttributeError:
-        try:
-            from .models import NutritionSchedule
-            pending_schedules = NutritionSchedule.objects.filter(
-                preschooler=preschooler,
-                service_type=service_type,
-                status__in=['scheduled', 'rescheduled']
-            ).exists()
-        except:
-            pending_schedules = False
-    
+        from .models import NutritionService
+        pending_schedules = NutritionService.objects.filter(
+            preschooler=preschooler, service_type=service_type,
+            status__in=['scheduled', 'rescheduled']
+        ).exists()
+
     if pending_schedules:
         return {
             'can_schedule': False,
             'reason': f'{service_type} already scheduled.',
             'next_eligible_age': None,
-            'description': 'Service already scheduled'
+            'description': 'Service already scheduled',
         }
-    
-    # Enhanced logic for determining eligibility after completed services
+
+    # --- If previously completed ---
     if completed_services.exists():
         last_service = completed_services.last()
-        try:
-            last_service_date = last_service.completion_date
-        except AttributeError:
-            last_service_date = last_service.service_date
-        
-        # Calculate months since last service
+        last_service_date = getattr(last_service, 'completion_date', None) or getattr(last_service, 'service_date', None)
+
+        # ✅ FIX: Ensure both are date objects
+        if hasattr(last_service_date, 'date'):
+            last_service_date = last_service_date.date()
+
         months_since_last = (today - last_service_date).days // 30
-        print("DEBUG: {service_type} - Last service: {last_service_date}, Months since: {months_since_last}")
-        
-        # Must wait at least 6 months
+        print(f"DEBUG: {service_type} - Last service: {last_service_date}, Months since: {months_since_last}")
+
         if months_since_last < 6:
             months_to_wait = 6 - months_since_last
-            # Calculate the next eligible date based on last service + 6 months
-            next_eligible_date = last_service_date + timedelta(days=180)  # Approximately 6 months
-            next_eligible_age_months = ((next_eligible_date.year - birth_date.year) * 12 + 
-                                     (next_eligible_date.month - birth_date.month))
-            
+            next_eligible_date = last_service_date + timedelta(days=180)
+            next_eligible_age_months = (
+                (next_eligible_date.year - birth_date.year) * 12 +
+                (next_eligible_date.month - birth_date.month)
+            )
+
             return {
                 'can_schedule': False,
                 'reason': f'Too soon since last {service_type}. Wait {months_to_wait} more months.',
                 'next_eligible_age': next_eligible_age_months,
-                'description': f'Next dose available in {months_to_wait} months'
+                'description': f'Next dose available in {months_to_wait} months',
             }
-        else:
-            # It's been 6+ months since last service, can schedule now
-            return {
-                'can_schedule': True,
-                'reason': f'Child is eligible for {service_type} (6+ months since last dose)',
-                'next_eligible_age': None,
-                'description': f'Ready for next dose (every 6 months)',
-                'current_age_months': total_age_months,
-                'last_service_months_ago': months_since_last
-            }
-    else:
-        # No completed services yet - check if at eligible age
-        eligible_ages = service_info['eligible_ages']
-        
-        # Find the closest eligible age
-        current_eligible = False
-        next_eligible_age = None
-        
-        for age in eligible_ages:
-            if total_age_months >= age:
-                current_eligible = True
-                # Find next eligible age for future reference
-                for future_age in eligible_ages:
-                    if future_age > total_age_months:
-                        next_eligible_age = future_age
-                        break
-                break
-        
-        if current_eligible:
+
+        return {
+            'can_schedule': True,
+            'reason': f'Child is eligible for {service_type} (6+ months since last dose)',
+            'next_eligible_age': None,
+            'description': f'Ready for next dose (every 6 months)',
+            'current_age_months': total_age_months,
+            'last_service_months_ago': months_since_last,
+        }
+
+    # --- If no completed services yet ---
+    eligible_ages = service_info['eligible_ages']
+    next_eligible_age = None
+
+    for age in eligible_ages:
+        if total_age_months >= age:
+            # Eligible for first or current dose
+            for future_age in eligible_ages:
+                if future_age > total_age_months:
+                    next_eligible_age = future_age
+                    break
             return {
                 'can_schedule': True,
                 'reason': f'Child is eligible for first {service_type} dose',
                 'next_eligible_age': next_eligible_age,
                 'description': f'First dose (starts at 6 months)',
-                'current_age_months': total_age_months
+                'current_age_months': total_age_months,
             }
-        else:
-            # Not old enough for first dose
-            for age in eligible_ages:
-                if age > total_age_months:
-                    next_eligible_age = age
-                    break
-            
-            return {
-                'can_schedule': False,
-                'reason': f'Not at eligible age for {service_type}.',
-                'next_eligible_age': next_eligible_age,
-                'description': f'First dose available at {next_eligible_age} months'
-            }
+
+    # --- Not yet eligible ---
+    for age in eligible_ages:
+        if age > total_age_months:
+            next_eligible_age = age
+            break
+
+    return {
+        'can_schedule': False,
+        'reason': f'Not at eligible age for {service_type}.',
+        'next_eligible_age': next_eligible_age,
+        'description': f'First dose available at {next_eligible_age} months',
+    }
 
 def get_enhanced_nutrition_status(preschooler, service_type, total_doses):
     """
@@ -3841,8 +3822,8 @@ def get_enhanced_nutrition_status(preschooler, service_type, total_doses):
         latest_service = completed_services.order_by('-completion_date').first() if completed_services.exists() else None
     except AttributeError:
         try:
-            from .models import NutritionSchedule
-            completed_services = NutritionSchedule.objects.filter(
+            from .models import NutritionService
+            completed_services = NutritionService.objects.filter(
                 preschooler=preschooler,
                 service_type=service_type,
                 status='completed'
@@ -3861,8 +3842,8 @@ def get_enhanced_nutrition_status(preschooler, service_type, total_doses):
         ).first()
     except AttributeError:
         try:
-            from .models import NutritionSchedule
-            pending_schedule = NutritionSchedule.objects.filter(
+            from .models import NutritionService
+            pending_schedule = NutritionService.objects.filter(
                 preschooler=preschooler,
                 service_type=service_type,
                 status__in=['scheduled', 'rescheduled']
@@ -3910,7 +3891,6 @@ def get_enhanced_nutrition_status(preschooler, service_type, total_doses):
     print("  - Age description: {eligibility['description']}")
     
     return enhanced_status
-    
 
 def add_nutrition_service(request, preschooler_id):
     """Add completed nutrition service (Vitamin A or Deworming) for a preschooler"""
@@ -9885,6 +9865,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
