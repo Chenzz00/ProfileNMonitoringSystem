@@ -2889,7 +2889,7 @@ def add_nutrition_service(request, preschooler_id):
     logger.info(f"[DEBUG] Entered add_nutrition_service view for preschooler {preschooler_id}")
 
     try:
-        from .models import Preschooler, NutritionHistory, Account
+        from .models import Preschooler, NutritionService, Account
         preschooler = get_object_or_404(Preschooler, pk=preschooler_id)
         logger.info(f"[DEBUG] Found preschooler: {preschooler.first_name} {preschooler.last_name}")
     except Exception as e:
@@ -2914,7 +2914,7 @@ def add_nutrition_service(request, preschooler_id):
 
     try:
         # Count existing completed services
-        existing_count = NutritionHistory.objects.filter(
+        existing_count = NutritionService.objects.filter(
             preschooler=preschooler,
             service_type=service_type,
             status='completed'
@@ -2923,7 +2923,7 @@ def add_nutrition_service(request, preschooler_id):
         dose_number = existing_count + 1
 
         # Save nutrition history
-        nutrition_history = NutritionHistory.objects.create(
+        nutrition_history = NutritionService.objects.create(
             preschooler=preschooler,
             service_type=service_type,
             completion_date=completion_date,
@@ -2931,7 +2931,7 @@ def add_nutrition_service(request, preschooler_id):
             status='completed',
             dose_number=dose_number
         )
-        logger.info(f"[DEBUG] NutritionHistory saved: {nutrition_history.id}")
+        logger.info(f"[DEBUG] NutritionService saved: {nutrition_history.id}")
         
         messages.success(
             request,
@@ -3610,8 +3610,8 @@ def preschooler_detail(request, preschooler_id):
     try:
         nutrition_services = preschooler.nutrition_services.all().order_by('-completion_date')
     except:
-        from .models import NutritionHistory
-        nutrition_services = NutritionHistory.objects.filter(
+        from .models import NutritionService
+        nutrition_services = NutritionService.objects.filter(
             preschooler=preschooler
         ).order_by('-completion_date')
 
@@ -9885,6 +9885,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
