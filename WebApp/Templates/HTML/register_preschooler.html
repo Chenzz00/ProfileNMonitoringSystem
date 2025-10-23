@@ -1581,18 +1581,27 @@
         });
       }
 
+      function validateNameInput(inputElement) {
+        inputElement.addEventListener("input", function () {
+          // Allow A-Z, a-z, ñ, Ñ, and spaces
+          let value = this.value.replace(/[^A-Za-zñÑ\s]/g, "").replace(/\s+/g, " ").trimStart();
+          this.value = value;
+        });
+      }
+
       function validateTextInput(inputElement) {
         inputElement.addEventListener("input", function () {
-          // Updated to include numbers (0-9) in addition to letters, spaces, commas, periods, and hyphens
-          let value = this.value.replace(/[^A-Za-z0-9\s,.-]/g, "").replace(/\s+/g, " ").trimStart();
+          // Updated to include numbers (0-9), ñ, Ñ in addition to letters, spaces, commas, periods, and hyphens
+          let value = this.value.replace(/[^A-Za-z0-9ñÑ\s,.-]/g, "").replace(/\s+/g, " ").trimStart();
           this.value = value;
         });
       }
 
       validateNameInput(document.getElementById("child_first_name"));
+      validateNameInput(document.getElementById("child_middle_name"));
       validateNameInput(document.getElementById("child_last_name"));
+      validateNameInput(document.getElementById("child_suffix"));
       validateTextInput(document.getElementById("place_of_birth"));
-
       form.addEventListener("submit", async function (e) {
       e.preventDefault();
 
@@ -1727,4 +1736,5 @@
 
 </body>
 </html>
+
 
