@@ -641,12 +641,12 @@ document.addEventListener('DOMContentLoaded', function () {
     e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, '').replace(/^\s+|\s{2,}/g, ' ');
   }));
 
-  // Address field validation including subdivision
+  // Address field validation including ñ for street, city, province, and subdivision
   [street, city, province, subdivision].forEach(input => {
     input.addEventListener('input', e => {
       e.target.value = e.target.value
-        .replace(/[^a-zA-Z0-9\s.,#/-]/g, '') 
-        .replace(/^\s+|\s{2,}/g, ' ');       
+        .replace(/[^a-zA-Z0-9ñÑ\s.,#/-]/g, '')  
+        .replace(/^\s+|\s{2,}/g, ' ');          
     });
 
     // Capitalize "n/a" on blur
@@ -660,22 +660,21 @@ document.addEventListener('DOMContentLoaded', function () {
   // House/Block/Lot/Phase field validation - NUMBERS ONLY (and NA)
   [houseNumber, block, lot, phase].forEach(input => {
     input.addEventListener('input', e => {
-      // Allow only numbers and "NA" (case insensitive)
       let value = e.target.value.toUpperCase();
-      
-      // If user is typing "NA", allow it
+
+      // Allow typing "NA"
       if (value === 'N' || value === 'NA') {
         e.target.value = value;
       } else {
-        // Otherwise, only allow numbers
+        // Only allow numbers
         e.target.value = e.target.value.replace(/[^0-9]/g, '');
       }
     });
 
-    // Handle "na" conversion on blur
+    // Convert "na" or "n" to "NA" on blur
     input.addEventListener('blur', e => {
-      if (e.target.value.trim().toLowerCase() === 'n' || 
-          e.target.value.trim().toLowerCase() === 'na') {
+      const val = e.target.value.trim().toLowerCase();
+      if (val === 'n' || val === 'na') {
         e.target.value = 'NA';
       }
     });
@@ -739,6 +738,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
