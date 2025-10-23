@@ -2889,7 +2889,7 @@ def add_nutrition_service(request, preschooler_id):
     logger.info(f"[DEBUG] Entered add_nutrition_service view for preschooler {preschooler_id}")
 
     try:
-        from .models import Preschooler, NutritionService, Account
+        from .models import Preschooler, NutritionHistory, Account
         preschooler = get_object_or_404(Preschooler, pk=preschooler_id)
         logger.info(f"[DEBUG] Found preschooler: {preschooler.first_name} {preschooler.last_name}")
     except Exception as e:
@@ -2914,7 +2914,7 @@ def add_nutrition_service(request, preschooler_id):
 
     try:
         # Count existing completed services
-        existing_count = NutritionService.objects.filter(
+        existing_count = NutritionHistory.objects.filter(
             preschooler=preschooler,
             service_type=service_type,
             status='completed'
@@ -2923,7 +2923,7 @@ def add_nutrition_service(request, preschooler_id):
         dose_number = existing_count + 1
 
         # Save nutrition history
-        nutrition_history = NutritionService.objects.create(
+        nutrition_history = NutritionHistory.objects.create(
             preschooler=preschooler,
             service_type=service_type,
             completion_date=completion_date,
@@ -2931,7 +2931,7 @@ def add_nutrition_service(request, preschooler_id):
             status='completed',
             dose_number=dose_number
         )
-        logger.info(f"[DEBUG] NutritionService saved: {nutrition_history.id}")
+        logger.info(f"[DEBUG] NutritionHistory saved: {nutrition_history.id}")
         
         messages.success(
             request,
@@ -3012,6 +3012,7 @@ def add_nutrition_service(request, preschooler_id):
         messages.error(request, f"Error: {str(e)}")
 
     return redirect(request.META.get("HTTP_REFERER", "/"))
+
 @require_POST #may binago ako dito
 def confirm_schedule(request, schedule_id):
     if not request.user.is_authenticated:
@@ -3892,33 +3893,118 @@ def get_enhanced_nutrition_status(preschooler, service_type, total_doses):
     
     return enhanced_status
 
+@login_required
 def add_nutrition_service(request, preschooler_id):
     """Add completed nutrition service (Vitamin A or Deworming) for a preschooler"""
-    if request.method == 'POST':
+    
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('preschooler_detail', preschooler_id=preschooler_id)
+    
+    try:
+        preschooler = get_object_or_404(Preschooler, preschooler_id=preschooler_id)
+        
+        # Get form data
+        service_type = request.POST.get('service_type')
+        completion_date = request.POST.get('completion_date')
+        notes = request.POST.get('notes', '')
+        source = request.POST.get('source', 'add_nutrition_modal')
+        
+        # Validate required fields
+        if not service_type or not completion_date:
+            messages.error(request, 'Service type and completion date are required.')
+            return redirect('preschooler_detail', preschooler_id=preschooler_id)
+        
+        # Parse and validate the completion date
         try:
-            preschooler = get_object_or_404(Preschooler, preschooler_id=preschooler_id)
-            
-            service_type = request.POST.get('service_type')
-            completion_date = request.POST.get('completion_date')
-            notes = request.POST.get('notes', '')
-            
-            # Create nutrition service record as completed
-            nutrition_service = NutritionService.objects.create(
-                preschooler=preschooler,
-                service_type=service_type,
-                completion_date=completion_date,
-                status='completed',
-                notes=notes
-            )
-            
-            messages.success(request, "{service_type} recorded successfully.")
+            # Handle both date and datetime formats
+            if 'T' in completion_date:  # datetime-local format
+                completion_date_obj = datetime.strptime(completion_date, '%Y-%m-%dT%H:%M').date()
+            else:  # date format
+                completion_date_obj = datetime.strptime(completion_date, '%Y-%m-%d').date()
+        except ValueError:
+            messages.error(request, 'Invalid date format.')
             return redirect('preschooler_detail', preschooler_id=preschooler_id)
-            
+        
+        # Validate date is not in the future
+        if completion_date_obj > timezone.now().date():
+            messages.error(request, 'Completion date cannot be in the future.')
+            return redirect('preschooler_detail', preschooler_id=preschooler_id)
+        
+        # Validate date is not before birth
+        if completion_date_obj < preschooler.birth_date:
+            messages.error(request, 'Completion date cannot be before the child was born.')
+            return redirect('preschooler_detail', preschooler_id=preschooler_id)
+        
+        # Create nutrition service record as completed
+        nutrition_service = NutritionService.objects.create(
+            preschooler=preschooler,
+            service_type=service_type,
+            completion_date=completion_date_obj,
+            status='completed',
+            notes=notes if notes else f'Completed {service_type} service'
+        )
+        
+        # Send notifications to parents
+        try:
+            parent = preschooler.parent_id
+            if parent and parent.user:
+                # Create in-app notification
+                Notification.objects.create(
+                    user=parent.user,
+                    title=f"✅ {service_type} Service Completed",
+                    message=f"{service_type} service has been completed for {preschooler.first_name} on {completion_date_obj.strftime('%B %d, %Y')}.",
+                    notification_type='nutrition_completed',
+                    is_read=False
+                )
+                
+                # Send email notification if parent has email
+                if parent.user.email:
+                    service_emoji = "💊" if service_type == "Vitamin A" else "🪱"
+                    send_mail(
+                        subject=f"{service_emoji} {service_type} Service Completed - {preschooler.first_name}",
+                        message=f"""
+Dear Parent,
+
+Good news! {service_type} service has been successfully completed for {preschooler.first_name} {preschooler.last_name}.
+
+Service Details:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Service Type: {service_type}
+- Completion Date: {completion_date_obj.strftime('%B %d, %Y')}
+- Child: {preschooler.first_name} {preschooler.last_name}
+- Notes: {notes if notes else 'None'}
+
+This service is an important part of your child's health and nutrition program.
+
+Thank you for your cooperation in maintaining your child's health.
+
+Best regards,
+Preschooler Portal Management System
+                        """,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[parent.user.email],
+                        fail_silently=True,
+                    )
+                
+                print(f"✅ Notifications sent to parent for completed {service_type} service")
         except Exception as e:
-            messages.error(request, "Error recording nutrition service: {str(e)}")
-            return redirect('preschooler_detail', preschooler_id=preschooler_id)
+            print(f"⚠️ Could not send notification: {e}")
+        
+        messages.success(
+            request,
+            f'{service_type} service has been recorded as completed for {preschooler.first_name}. Parents have been notified.'
+        )
+        
+    except Exception as e:
+        print(f"Error adding nutrition service: {e}")
+        messages.error(request, f'An error occurred: {str(e)}')
     
     return redirect('preschooler_detail', preschooler_id=preschooler_id)
+
+
+
+add_completed_nutrition_service = add_nutrition_service
 
 
 
@@ -9865,6 +9951,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
