@@ -1183,8 +1183,97 @@
       {% endif %}
     </script>
 
+
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  const textIds = [
+    'firstName', 'middleName', 'lastName', 'suffix',
+    'street', 'subdivision', 'city', 'province'
+  ];
+
+ 
+  const numericOrNAIds = ['houseNumber', 'block', 'lot', 'phase'];
+
+
+  function resetInput(id) {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    
+    const clone = el.cloneNode(true);
+   
+    if (clone.hasAttribute('pattern')) clone.removeAttribute('pattern');
+    el.parentNode.replaceChild(clone, el);
+    return clone;
+  }
+
+ 
+  const allowedTextRegex = /[^a-zA-ZñÑáéíóúÁÉÍÓÚ\s\.'\-.,#\/]/g;
+
+
+  textIds.forEach(id => {
+    const input = resetInput(id);
+    if (!input) return;
+
+    input.addEventListener('input', function (e) {
+      // remove disallowed characters
+      const cleaned = e.target.value.replace(allowedTextRegex, '');
+      // prevent leading/trailing multiple spaces
+      e.target.value = cleaned.replace(/^\s+/, '').replace(/\s{2,}/g, ' ');
+    });
+
+    input.addEventListener('blur', function (e) {
+      // Trim and collapse spaces on blur
+      e.target.value = e.target.value.trim().replace(/\s{2,}/g, ' ');
+      // Capitalize N/A if entered
+      if (e.target.value.trim().toLowerCase() === 'n/a') e.target.value = 'N/A';
+    });
+  });
+
+  // Attach handlers for numeric-or-NA fields
+  numericOrNAIds.forEach(id => {
+    const input = resetInput(id);
+    if (!input) return;
+
+    // Remove pattern attribute if exists
+    if (input.hasAttribute('pattern')) input.removeAttribute('pattern');
+
+    input.addEventListener('input', function (e) {
+      let v = e.target.value.toUpperCase();
+      if (v === 'N' || v === 'NA') {
+        e.target.value = v;
+        return;
+      }
+      // allow only digits
+      e.target.value = v.replace(/[^0-9]/g, '');
+    });
+
+    input.addEventListener('blur', function (e) {
+      const v = e.target.value.trim().toLowerCase();
+      if (v === 'n' || v === 'na') e.target.value = 'NA';
+    });
+  });
+
+ 
+  const contact = resetInput('contact_number');
+  if (contact) {
+    contact.addEventListener('input', function (e) {
+      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 11);
+    });
+  }
+
+
+  const birthdate = document.getElementById('birthdate');
+  if (birthdate) birthdate.max = new Date().toISOString().split('T')[0];
+
+  
+});
+</script>
+
+
   </body>
   </html>
+
 
 
 
