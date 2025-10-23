@@ -637,9 +637,13 @@ document.addEventListener('DOMContentLoaded', function () {
   const suffix = document.getElementById('suffix');
 
   // Input validation
-  [firstName, middleName, lastName, suffix].forEach(input => input.addEventListener('input', e => {
-    e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, '').replace(/^\s+|\s{2,}/g, ' ');
-  }));
+  [firstName, middleName, lastName, suffix].forEach(input => 
+  input.addEventListener('input', e => {
+    e.target.value = e.target.value
+      .replace(/[^a-zA-ZñÑ\s]/g, '')   
+      .replace(/^\s+|\s{2,}/g, ' ');
+  })
+);
 
   // Address field validation including ñ for street, city, province, and subdivision
   [street, city, province, subdivision].forEach(input => {
@@ -738,6 +742,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
