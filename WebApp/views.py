@@ -5577,16 +5577,19 @@ def registered_preschoolers(request):
             
         # --- Add color coding for place of delivery ---
         delivery_place = getattr(p, 'place_of_delivery', None)
+        
+
         if delivery_place == 'Home':
             p.delivery_class = 'delivery-home'
-        elif delivery_place == 'Lying-in':
+        elif delivery_place == 'Private/Lying-in':
             p.delivery_class = 'delivery-lying-in'
-        elif delivery_place == 'Hospital':
+        elif delivery_place == 'Public Hospital':
             p.delivery_class = 'delivery-hospital'
         elif delivery_place == 'Others':
             p.delivery_class = 'delivery-others'
         else:
             p.delivery_class = 'delivery-na'
+
     
     paginator = Paginator(preschoolers_qs, 10)  # 10 preschoolers per page
     page_number = request.GET.get('page')
@@ -9951,6 +9954,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
