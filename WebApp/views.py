@@ -5576,7 +5576,7 @@ def registered_preschoolers(request):
             p.nutritional_status = "N/A"
             
         # --- Add color coding for place of delivery ---
-       delivery_place = getattr(p, 'place_of_delivery', None)
+        delivery_place = getattr(p, 'place_of_delivery', None)
         if delivery_place == 'Home':
             p.delivery_class = 'delivery-home'
         elif delivery_place == 'Lying-in':
@@ -9951,6 +9951,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
