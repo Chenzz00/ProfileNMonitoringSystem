@@ -3429,6 +3429,38 @@ def classify_weight_for_height(height, weight, table):
     else:
         return "Normal"
     
+def archived_preschoolers(request):
+    """Display list of archived preschoolers with search and pagination."""
+    
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    search_query = request.GET.get('q', '').strip()
+
+    # Get all archived preschoolers
+    archived = Preschooler.objects.filter(is_archived=True)
+
+    # Filter by name if search query provided
+    if search_query:
+        archived = archived.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+
+    # Order by most recently registered first
+    archived = archived.order_by('-date_registered')
+
+    # Pagination (10 rows per page)
+    paginator = Paginator(archived, 10)
+    page_number = request.GET.get('page')
+    archived_page = paginator.get_page(page_number)
+
+    return render(request, 'HTML/archived.html', {
+        'archived_preschoolers': archived_page,
+        'search_query': search_query
+    })
+
+
 def preschooler_detail(request, preschooler_id):
     """Detailed preschooler profile with BMI, temperature, vaccines, and nutrition."""
 
@@ -3438,16 +3470,22 @@ def preschooler_detail(request, preschooler_id):
         print(f"AUTO-ARCHIVED: {auto_archived_count} preschoolers during detail view")
 
     # === Get preschooler (non-archived only) ===
-    preschooler = get_object_or_404(Preschooler, preschooler_id=preschooler_id, is_archived=False)
+    preschooler = get_object_or_404(Preschooler, preschooler_id=preschooler_id)
 
-    # Archive check for individual preschooler
+    # === Check if archived ===
+    is_archived = preschooler.is_archived
+
+    # Auto-archive if age >= 60 months
     if preschooler.age_in_months and preschooler.age_in_months >= 60:
         preschooler.is_archived = True
         preschooler.save()
+        is_archived = True
         messages.warning(
             request,
             f"{preschooler.first_name} {preschooler.last_name} has been automatically archived as they have exceeded 60 months."
         )
+        if request.GET.get('from') == 'archived':
+            return redirect('archived_preschoolers')
         return redirect('preschoolers')
 
     # === Calculate Age ===
@@ -3611,14 +3649,15 @@ def preschooler_detail(request, preschooler_id):
     try:
         nutrition_services = preschooler.nutrition_services.all().order_by('-completion_date')
     except:
-        from .models import NutritionService
-        nutrition_services = NutritionService.objects.filter(
+        from .models import NutritionHistory
+        nutrition_services = NutritionHistory.objects.filter(
             preschooler=preschooler
         ).order_by('-completion_date')
 
     # === Context ===
     context = {
         'preschooler': preschooler,
+        'is_archived': is_archived,  
         'bmi': bmi,
         'bmi_with_temps': bmi_with_temps,
         'immunization_history': immunization_history,
@@ -9954,6 +9993,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
