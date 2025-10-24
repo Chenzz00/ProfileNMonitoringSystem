@@ -1302,6 +1302,23 @@
     display: none !important;
   }
 }
+
+
+#customMenu {
+  position: fixed !important;
+  display: none;
+  z-index: 1000;
+  min-width: 200px;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  animation: menuSlideIn 0.2s ease-out;
+}
+
+#customMenu.show {
+  display: block !important;
+}
   </style>
 </head>
 <body>
@@ -2377,6 +2394,66 @@
   }
 
   console.log('=== SCRIPT DEBUG END ===');
+</script>
+
+<script>
+  // FIXED: Context Menu Position Handler
+function initializeContextMenu() {
+  const customMenu = document.getElementById('customMenu');
+  const rows = document.querySelectorAll('.preschooler-row');
+
+  rows.forEach(row => {
+    row.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Get row position relative to viewport
+      const rect = this.getBoundingClientRect();
+      
+      // Position menu right below the clicked row
+      let top = rect.bottom + 5; // 5px below the row
+      let left = rect.left;
+
+      // Adjust if menu goes off-screen (right side)
+      const menuWidth = 220; // approximate width of custom menu
+      if (left + menuWidth > window.innerWidth) {
+        left = window.innerWidth - menuWidth - 10;
+      }
+
+      // Adjust if menu goes off-screen (bottom)
+      const menuHeight = 180; // approximate height of custom menu
+      if (top + menuHeight > window.innerHeight) {
+        top = rect.top - menuHeight - 5; // Show above instead
+      }
+
+      // Apply positioning
+      customMenu.style.position = 'fixed';
+      customMenu.style.top = top + 'px';
+      customMenu.style.left = left + 'px';
+      customMenu.style.display = 'block';
+      customMenu.style.zIndex = '1000';
+
+      console.log('Menu positioned at:', { top, left, rowTop: rect.top, rowBottom: rect.bottom });
+    });
+  });
+
+  // Close menu when clicking elsewhere
+  document.addEventListener('click', function(e) {
+    if (!customMenu.contains(e.target) && !e.target.closest('.preschooler-row')) {
+      customMenu.style.display = 'none';
+    }
+  });
+
+  // Close menu on scroll
+  window.addEventListener('scroll', function() {
+    customMenu.style.display = 'none';
+  }, true);
+}
+
+// Call this after DOM loads
+document.addEventListener('DOMContentLoaded', function() {
+  initializeContextMenu();
+});
 </script>
 
   <!-- Mobile Bottom Sheet Menu -->
