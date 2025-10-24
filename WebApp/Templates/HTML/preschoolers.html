@@ -2456,6 +2456,27 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const table = document.querySelector(".table");
+  const tbody = table.querySelector("tbody");
+  const rows = Array.from(tbody.querySelectorAll("tr")).filter(
+    row => row.querySelectorAll("td").length > 0
+  );
+
+  // Sort by first column (Name)
+  rows.sort((a, b) => {
+    const nameA = a.querySelectorAll("td")[0].innerText.trim();
+    const nameB = b.querySelectorAll("td")[0].innerText.trim();
+    return nameA.localeCompare(nameB);
+  });
+
+  tbody.innerHTML = "";
+  rows.forEach(row => tbody.appendChild(row));
+});
+</script>
+
   <!-- Mobile Bottom Sheet Menu -->
 <div class="mobile-menu-overlay" id="mobileMenuOverlay">
   <div class="mobile-menu-sheet" id="mobileMenuSheet">
@@ -2488,6 +2509,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 </body>
 </html>
+
 
 
 
