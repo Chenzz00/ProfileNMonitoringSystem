@@ -501,8 +501,8 @@ class Preschooler(models.Model):
 
     PLACE_OF_DELIVERY_CHOICES = [
         ('Home', 'Home'),
-        ('Lying-in', 'Lying-in'),
-        ('Hospital', 'Hospital'),
+        ('Private/Lying-in', 'Private/Lying-in'),
+        ('Public Hospital', 'Public Hospital'),
         ('Others', 'Others'),
     ]
     place_of_delivery = models.CharField(max_length=20, choices=PLACE_OF_DELIVERY_CHOICES, blank=True, null=True)
@@ -998,6 +998,7 @@ class FCMToken(models.Model):
 
     def __str__(self):
         return f"{self.account.email} - {self.token}"
+
 
 
 
