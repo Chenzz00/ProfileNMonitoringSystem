@@ -940,6 +940,26 @@ if (generateReportBtn) {
 
 </script>
 
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const table = document.querySelector(".table-container table");
+  const tbody = table.querySelector("tbody");
+  const rows = Array.from(tbody.querySelectorAll("tr")).filter(
+    row => row.querySelectorAll("td").length > 0
+  );
+
+  // Sort by first column (Name)
+  rows.sort((a, b) => {
+    const nameA = a.querySelectorAll("td")[0].innerText.trim().toLowerCase();
+    const nameB = b.querySelectorAll("td")[0].innerText.trim().toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+
+  tbody.innerHTML = "";
+  rows.forEach(row => tbody.appendChild(row));
+});
+</script>
+  
 </body>
 </html>
 
