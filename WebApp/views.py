@@ -5573,28 +5573,26 @@ def registered_bns(request):
     })
 
 
-@admin_required 
+@admin_required
 def registered_preschoolers(request):
-    preschoolers_qs = Preschooler.objects.filter(is_archived=False) \
-        .select_related('parent_id', 'barangay') \
+    preschoolers_qs = (
+        Preschooler.objects.filter(is_archived=False)
+        .select_related('parent_id', 'barangay')
         .prefetch_related(
             Prefetch('bmi_set', queryset=BMI.objects.order_by('-date_recorded'), to_attr='bmi_records'),
             Prefetch('temperature_set', queryset=Temperature.objects.order_by('-date_recorded'), to_attr='temp_records')
         )
+        .order_by('first_name', 'last_name')  # ✅ Sort alphabetically here
+    )
+
     today = date.today()
-    
-    # Process nutritional status and delivery place color coding
+
+    # --- Compute nutritional status ---
     for p in preschoolers_qs:
-        # Handle empty middle name and suffix - set to empty string instead of None
-        if not p.middle_name:
-            p.middle_name = ''
-        if not p.suffix:
-            p.suffix = ''
-        
         latest_bmi = p.bmi_records[0] if hasattr(p, 'bmi_records') and p.bmi_records else None
+
         if latest_bmi:
             try:
-                # --- Compute age in months ---
                 birth_date = p.birth_date
                 age_years = today.year - birth_date.year
                 age_months = today.month - birth_date.month
@@ -5604,7 +5602,7 @@ def registered_preschoolers(request):
                     age_years -= 1
                     age_months += 12
                 total_age_months = age_years * 12 + age_months
-                # --- Compute BMI and classify using WHO ---
+
                 bmi_value = calculate_bmi(latest_bmi.weight, latest_bmi.height)
                 z = bmi_zscore(p.sex, total_age_months, bmi_value)
                 p.nutritional_status = classify_bmi_for_age(z)
@@ -5613,11 +5611,8 @@ def registered_preschoolers(request):
                 p.nutritional_status = "N/A"
         else:
             p.nutritional_status = "N/A"
-            
-        # --- Add color coding for place of delivery ---
-        delivery_place = getattr(p, 'place_of_delivery', None)
-        
 
+        delivery_place = getattr(p, 'place_of_delivery', None)
         if delivery_place == 'Home':
             p.delivery_class = 'delivery-home'
         elif delivery_place == 'Private/Lying-in':
@@ -5629,16 +5624,18 @@ def registered_preschoolers(request):
         else:
             p.delivery_class = 'delivery-na'
 
-    
-    paginator = Paginator(preschoolers_qs, 10)  # 10 preschoolers per page
+    # ✅ Pagination after sorting
+    paginator = Paginator(preschoolers_qs, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
     barangays = Barangay.objects.all()
-    
+
     return render(request, 'HTML/registered_preschoolers.html', {
         'preschoolers': page_obj,
         'barangays': barangays,
     })
+
 
 def reportTemplate(request):
     if not request.user.is_authenticated:
@@ -9993,6 +9990,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
