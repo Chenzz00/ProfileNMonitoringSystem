@@ -609,77 +609,76 @@
         }
 
         function checkForESP32Data() {
-            if (!selectedDeviceId) {
-                console.log('CHECK: No device selected');
-                return Promise.resolve();
+    fetch('/api/esp32/get-data/')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+            return response.json();
+        })
+        .then(data => {
+            console.log('ESP32 data response:', data);
+            const statusIndicator = document.getElementById('status-indicator');
             
-            console.log(`CHECK: Checking for ESP32 data from device ${selectedDeviceId}`);
-            
-            return fetch(`/api/esp32/get-data/?device_id=${selectedDeviceId}`)
-                .then(response => response.json())
-                .then(data => {
-                    console.log(`CHECK: ESP32 data response from ${selectedDeviceId}:`, data);
-                    const statusIndicator = document.getElementById('status-indicator');
-                    
-                    if (data.status === 'success' && data.data) {
-                        const weightInput = document.getElementById('weight');
-                        const heightInput = document.getElementById('height');
-                        const tempInput = document.getElementById('temperature');
-                        
-                        if (data.data.weight && !weightInput.value) {
-                            weightInput.value = data.data.weight;
-                            weightInput.classList.add('esp32-data');
-                            document.getElementById('weight-source').style.display = 'block';
-                        }
-                        if (data.data.height && !heightInput.value) {
-                            heightInput.value = data.data.height;
-                            heightInput.classList.add('esp32-data');
-                            document.getElementById('height-source').style.display = 'block';
-                        }
-                        if (data.data.temperature && !tempInput.value) {
-                            const roundedTemp = parseFloat(data.data.temperature).toFixed(2);
-                            tempInput.value = roundedTemp;
-                            tempInput.classList.add('esp32-data');
-                            document.getElementById('temp-source').style.display = 'block';
-                        }
-                        
-                        if (data.is_complete) {
-                            statusIndicator.className = 'status-indicator status-complete';
-                            statusIndicator.innerHTML = `
-                                ✓ Complete data received from ${data.device_name}!
-                                <small>(${new Date(data.data.last_update).toLocaleTimeString()})</small>
-                            `;
-                            hasReceivedCompleteData = true;
-                            
-                            if (autoRefreshInterval) {
-                                clearInterval(autoRefreshInterval);
-                            }
-                            
-                        } else {
-                            statusIndicator.className = 'status-indicator status-partial';
-                            let receivedData = [];
-                            if (data.has_bmi_data) receivedData.push('BMI');
-                            if (data.has_temperature_data) receivedData.push('Temperature');
-                            
-                            statusIndicator.innerHTML = `
-                                ⏳ Partial data from ${data.device_name}: ${receivedData.join(', ')}<br>
-                                <small>Still waiting for: ${data.waiting_for.join(', ')}</small>
-                            `;
-                        }
-                        
-                    } else if (data.status === 'no_data') {
-                        statusIndicator.className = 'status-indicator status-waiting';
-                        statusIndicator.textContent = `⏳ Waiting for data from ${data.device_name || selectedDeviceId}... Make sure the device is connected and sending data.`;
-                    }
-                })
-                .catch(error => {
-                    console.error(`CHECK: Error checking for ESP32 data from ${selectedDeviceId}:`, error);
-                    const statusIndicator = document.getElementById('status-indicator');
-                    statusIndicator.className = 'status-indicator status-error';
-                    statusIndicator.textContent = '❌ Error connecting to server. Check your internet connection.';
+            if (data.status === 'success' && data.data) {
+                // Update form inputs with ESP32 data
+                const weightInput = document.getElementById('weight');
+                const heightInput = document.getElementById('height');
+                const tempInput = document.getElementById('temperature');
+                
+                // Set values only if they're empty
+                if (!weightInput.value) {
+                    weightInput.value = data.data.weight;
+                    weightInput.classList.add('esp32-data');
+                    document.getElementById('weight-source').style.display = 'block';
+                }
+                
+                if (!heightInput.value) {
+                    heightInput.value = data.data.height;
+                    heightInput.classList.add('esp32-data');
+                    document.getElementById('height-source').style.display = 'block';
+                }
+                
+                if (!tempInput.value) {
+                    tempInput.value = data.data.temperature;
+                    tempInput.classList.add('esp32-data');
+                    document.getElementById('temp-source').style.display = 'block';
+                }
+                
+                // Update status
+                statusIndicator.className = 'status-indicator status-received';
+                statusIndicator.innerHTML = `
+                    ✅ ESP32 data received! 
+                    <small>(${new Date(data.data.timestamp).toLocaleTimeString()})</small>
+                `;
+                
+                // Stop auto-refresh since we got data
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    hasReceivedCompleteData = true;
+                }
+                
+                // Show success notification
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ESP32 Data Received!',
+                    text: `Weight: ${data.data.weight}kg, Height: ${data.data.height}cm, Temperature: ${data.data.temperature}°C`,
+                    timer: 3000,
+                    showConfirmButton: false
                 });
-        }
+                
+            } else if (data.status === 'no_data') {
+                statusIndicator.className = 'status-indicator status-waiting';
+                statusIndicator.textContent = 'Waiting for ESP32 data... Make sure your device is connected and sending data.';
+            }
+        })
+        .catch(error => {
+            console.error('Error checking for ESP32 data:', error);
+            const statusIndicator = document.getElementById('status-indicator');
+            statusIndicator.className = 'status-indicator status-error';
+            statusIndicator.textContent = 'Error connecting to server. Check your internet connection.';
+        });
+}
 
         function clearESP32DataForDevice(deviceId) {
             console.log(`CLEAR: Clearing ESP32 data for device ${deviceId}`);
@@ -760,14 +759,17 @@
         });
 
         function startAutoRefresh() {
-            if (autoRefreshInterval) {
-                clearInterval(autoRefreshInterval);
-            }
-            if (!hasReceivedCompleteData && selectedDeviceId) {
-                console.log(`AUTO-REFRESH: Starting auto-refresh for ${selectedDeviceId}...`);
-                autoRefreshInterval = setInterval(checkForESP32Data, 3000);
-            }
-        }
+    if (!hasReceivedCompleteData) {
+        autoRefreshInterval = setInterval(checkForESP32Data, 3000);
+    }
+}
+
+        // Start checking when page loadse.preventDefault();
+    console.log('Page loaded, starting ESP32 data check...');
+    checkForESP32Data(); // Check immediately
+    startAutoRefresh(); // Then start auto-refresh
+});
+
 
         window.addEventListener('load', function() {
             console.log('PAGE LOAD: Starting dynamic device discovery...');
@@ -791,6 +793,7 @@
             const weight = document.getElementById('weight').value;
             const height = document.getElementById('height').value;
             const temp = document.getElementById('temperature').value;
+            const submitBtn = document.getElementById('submit-btn');
             
             if (!weight || !height || !temp) {
                 Swal.fire({
@@ -871,10 +874,31 @@
             });
         });
 
+
+        function getCSRFToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
         console.log('Dynamic Multi-Device BMI Form script loaded');
+
+
+        
     </script>
 </body>
 </html>
+
 
 
 
