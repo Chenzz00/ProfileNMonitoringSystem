@@ -1,891 +1,353 @@
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        {% load static %}
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Input BMI - Multi Device</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input BMI</title>
 
-        <!-- SweetAlert2 -->
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-            
-            body {
-                font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                color: #333;
-                min-height: 100vh;
-                margin: 0;
-                overflow-x: hidden;
-                font-size: 14px;
-                font-weight: 400;
-                background: #f8f9fa;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                padding: 20px;
-            }
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-            .background-image {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: -1;
-                background-image: url('{% static "media/loginbg.png" %}');
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-                background-attachment: fixed;
-            }
-            
-            .form-container {
-                background: white;
-                padding: 25px;
-                border-radius: 20px;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                width: 100%;
-                max-width: 620px;
-                animation: slideIn 0.5s ease-out;
-            }
-            
-            @keyframes slideIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(-30px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            
-            h2 {
-                color: #2d3748;
-                text-align: center;
-                margin-bottom: 20px;
-                font-size: 22px;
-                font-weight: 600;
-                position: relative;
-                padding-bottom: 10px;
-            }
-            
-            h2::after {
-                content: '';
-                position: absolute;
-                bottom: 0;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 80px;
-                height: 4px;
-                background: linear-gradient(90deg, #667eea, #764ba2);
-                border-radius: 2px;
-            }
-            
-            .device-selection {
-                background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
-                border: none;
-                border-radius: 15px;
-                padding: 18px;
-                margin-bottom: 18px;
-                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
-            }
-            
-            .device-selection h3 {
-                margin: 0 0 12px 0;
-                color: #5a67d8;
-                font-size: 15px;
-                font-weight: 600;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-            
-            .device-selection h3::before {
-                content: '📡';
-                font-size: 18px;
-            }
-            
-            .device-buttons {
-                display: flex;
-                gap: 10px;
-                flex-wrap: wrap;
-                min-height: 50px;
-                align-items: center;
-            }
-            
-            .device-btn {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 10px;
-                cursor: pointer;
-                font-size: 14px;
-                font-weight: 500;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                transition: all 0.3s ease;
-                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-            }
-            
-            .device-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-            }
-            
-            .device-btn.selected {
-                background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-                box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
-                transform: scale(1.05);
-            }
-            
-            .device-status {
-                width: 10px;
-                height: 10px;
-                border-radius: 50%;
-                display: inline-block;
-                animation: pulse 2s infinite;
-            }
-            
-            @keyframes pulse {
-                0%, 100% {
-                    opacity: 1;
-                }
-                50% {
-                    opacity: 0.5;
-                }
-            }
-            
-            .status-online {
-                background: #68d391;
-                box-shadow: 0 0 10px rgba(104, 211, 145, 0.8);
-            }
-            
-            .loading-devices {
-                color: #5a67d8;
-                font-style: italic;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                font-size: 15px;
-            }
-            
-            .no-devices {
-                color: #e53e3e;
-                font-weight: 600;
-                padding: 15px;
-                background: rgba(254, 215, 215, 0.5);
-                border-radius: 8px;
-                text-align: center;
-            }
-            
-            .device-info {
-                background: white;
-                border-left: 4px solid #667eea;
-                border-radius: 10px;
-                padding: 10px;
-                margin-top: 12px;
-                font-size: 12px;
-                display: none;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            }
-            
-            .device-info.show {
-                display: block;
-                animation: fadeIn 0.3s ease-in;
-            }
-            
-            @keyframes fadeIn {
-                from {
-                    opacity: 0;
-                }
-                to {
-                    opacity: 1;
-                }
-            }
-            
-            .device-info strong {
-                color: #5a67d8;
-            }
-            
-            .form-group {
-                margin-bottom: 15px;
-                position: relative;
-            }
-            
-            label {
-                display: block;
-                margin-bottom: 5px;
-                font-weight: 600;
-                color: #4a5568;
-                font-size: 13px;
-            }
-            
-            input[type="number"] {
-                width: 100%;
-                padding: 10px;
-                border: 2px solid #e2e8f0;
-                border-radius: 10px;
-                font-size: 14px;
-                transition: all 0.3s ease;
-                background: #f7fafc;
-            }
-            
-            input[type="number"]:focus {
-                border-color: #667eea;
-                outline: none;
-                background: white;
-                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-            }
-            
-            input[type="number"]:disabled {
-                background: #edf2f7;
-                cursor: not-allowed;
-                opacity: 0.6;
-            }
-            
-            input[type="number"].esp32-data {
-                border-color: #48bb78;
-                background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
-                animation: highlight 0.5s ease-in;
-            }
-            
-            @keyframes highlight {
-                0% {
-                    transform: scale(1);
-                }
-                50% {
-                    transform: scale(1.02);
-                }
-                100% {
-                    transform: scale(1);
-                }
-            }
-            
-            .data-source {
-                position: absolute;
-                right: 15px;
-                top: 50%;
-                transform: translateY(-50%);
-                font-size: 12px;
-                color: #48bb78;
-                font-weight: 700;
-                background: white;
-                padding: 4px 10px;
-                border-radius: 20px;
-                box-shadow: 0 2px 5px rgba(72, 187, 120, 0.2);
-            }
-            
-            .button-group {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-                margin-top: 15px;
-            }
-            
-            button {
-                flex: 1;
-                min-width: 130px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 10px 18px;
-                border: none;
-                border-radius: 10px;
-                font-size: 13px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-            }
-            
-            button:hover:not(:disabled) {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-            }
-            
-            button:active:not(:disabled) {
-                transform: translateY(0);
-            }
-            
-            button:disabled {
-                background: #cbd5e0;
-                cursor: not-allowed;
-                box-shadow: none;
-                opacity: 0.6;
-            }
-            
-            .back-btn {
-                background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
-                box-shadow: 0 4px 15px rgba(113, 128, 150, 0.3);
-            }
-            
-            .back-btn:hover:not(:disabled) {
-                box-shadow: 0 6px 20px rgba(113, 128, 150, 0.4);
-            }
-            
-            .refresh-btn {
-                background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-                box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
-            }
-            
-            .refresh-btn:hover:not(:disabled) {
-                box-shadow: 0 6px 20px rgba(66, 153, 225, 0.4);
-            }
-            
-            .clear-btn {
-                background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
-                box-shadow: 0 4px 15px rgba(252, 129, 129, 0.3);
-            }
-            
-            .clear-btn:hover:not(:disabled) {
-                box-shadow: 0 6px 20px rgba(252, 129, 129, 0.4);
-            }
-            
-            .status-indicator {
-                text-align: center;
-                margin-bottom: 15px;
-                padding: 10px;
-                border-radius: 12px;
-                font-weight: 600;
-                font-size: 13px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-                animation: fadeIn 0.3s ease-in;
-            }
-            
-            .status-waiting {
-                background: linear-gradient(135deg, #fef5e7 0%, #fdeaa8 100%);
-                color: #744210;
-                border-left: 4px solid #f6ad55;
-            }
-            
-            .status-partial {
-                background: linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%);
-                color: #003a8c;
-                border-left: 4px solid #4299e1;
-            }
-            
-            .status-complete {
-                background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
-                color: #22543d;
-                border-left: 4px solid #48bb78;
-            }
-            
-            .status-error {
-                background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
-                color: #742a2a;
-                border-left: 4px solid #fc8181;
-            }
-            
-            .status-cleared {
-                background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
-                color: #234e52;
-                border-left: 4px solid #4fd1c5;
-            }
-            
-            .no-device-selected {
-                background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
-                color: #742a2a;
-                border-left: 4px solid #fc8181;
-            }
-            
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-            
-            .spinner {
-                width: 20px;
-                height: 20px;
-                border: 3px solid #667eea;
-                border-top: 3px solid transparent;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-            }
-            
-            /* Responsive Design */
-            @media (max-width: 768px) {
-                .form-container {
-                    padding: 25px;
-                }
-                
-                h2 {
-                    font-size: 24px;
-                }
-                
-                button {
-                    min-width: 100%;
-                }
-                
-                .device-btn {
-                    flex: 1 1 100%;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="background-image"></div>
-        
-        <div class="form-container">
-            <h2>Input BMI for {{ preschooler.first_name }} {{ preschooler.last_name }}</h2>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+            top: -40px;
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input[type="number"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        input[type="number"].esp32-data {
+            border-color: #28a745;
+            background-color: #f8fff9;
+        }
+        .data-source {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #28a745;
+            font-weight: bold;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .back-btn {
+            background: #6c757d;
+        }
+        .back-btn:hover {
+            background: #545b62;
+        }
+        .refresh-btn {
+            background: #17a2b8;
+        }
+        .refresh-btn:hover {
+            background: #138496;
+        }
+        .status-indicator {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status-waiting {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .status-received {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f1aeb5;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Input BMI for {{ preschooler.first_name }} {{ preschooler.last_name }}</h2>
 
-            <!-- Dynamic Device Selection Section -->
-            <div class="device-selection">
-                <h3>Select ESP32 Device</h3>
-                <div class="device-buttons" id="device-buttons">
-                    <div class="loading-devices">
-                        <span>Loading available devices...</span>
-                        <div class="spinner"></div>
-                    </div>
-                </div>
-                
-                <div class="device-info" id="device-info">
-                    <strong>Selected Device:</strong> <span id="selected-device-name">None</span><br>
-                    <strong>Status:</strong> <span id="selected-device-status">-</span><br>
-                    <strong>Last Seen:</strong> <span id="selected-device-last-seen">-</span><br>
-                    <strong>Measurements Today:</strong> <span id="selected-device-measurements">-</span>
-                </div>
-            </div>
-
-            <!-- Status Indicator -->
-            <div id="status-indicator" class="status-indicator no-device-selected">
-                Please select an ESP32 device above
-            </div>
-            
-            <form id="bmi-form" method="POST" action="/submit_bmi">
-                {% csrf_token %}
-                <input type="hidden" name="preschooler_id" value="12345">
-                <input type="hidden" name="device_id" id="selected-device-id" value="">
-
-                <div class="form-group">
-                    <label for="weight">⚖️ Weight (kg):</label>
-                    <input type="number" step="0.01" name="weight" id="weight" required min="0" max="200" disabled>
-                    <span id="weight-source" class="data-source" style="display: none;">ESP32</span>
-                </div>
-
-                <div class="form-group">
-                    <label for="height">📏 Height (cm):</label>
-                    <input type="number" step="0.01" name="height" id="height" required min="0" max="300"disabled >
-                    <span id="height-source" class="data-source" style="display: none;">ESP32</span>
-                </div>
-
-                <div class="form-group">
-                    <label for="temperature">🌡️ Temperature (°C):</label>
-                    <input type="number" step="0.1" name="temperature" id="temperature" required min="30" max="45" disabled>
-                    <span id="temp-source" class="data-source" style="display: none;">ESP32</span>
-                </div>
-
-                <div class="button-group">
-                    <button type="button" id="refresh-data" class="refresh-btn" disabled>🔄 Check for Data</button>
-                    <button type="button" id="clear-esp32-data" class="clear-btn" disabled>🗑️ Clear Data</button>
-                    <button type="submit" disabled>✓ Submit BMI & Temperature</button>
-                    <button type="button" class="back-btn" onclick="location.href='/preschoolers'">← Back</button>
-                </div>
-            </form>
+        <!-- Status Indicator -->
+        <div id="status-indicator" class="status-indicator status-waiting">
+            Waiting for ESP32 data... Click "Check for ESP32 Data" to refresh
         </div>
 
-        <script>
-            let autoRefreshInterval;
-            let hasReceivedCompleteData = false;
-            let selectedDeviceId = null;
-            let availableDevices = [];
+        {% if not preschooler.preschooler_id %}
+            <div style="color:red; font-weight:bold; margin-bottom:15px;">
+                ERROR: Preschooler ID is missing! Check your view.
+            </div>
+        {% endif %}
+        
+        <form id="bmi-form" method="POST" action="{% url 'submit_bmi' %}">
+            {% csrf_token %}
+            <input type="hidden" name="preschooler_id" value="{{ preschooler.preschooler_id }}">
 
-            function loadAvailableDevices() {
-                console.log('LOAD DEVICES: Fetching available ESP32 devices...');
-                
-                const deviceButtons = document.getElementById('device-buttons');
-                deviceButtons.innerHTML = `
-                    <div class="loading-devices">
-                        <span>Loading available devices...</span>
-                        <div class="spinner"></div>
-                    </div>
-                `;
+            <div class="form-group">
+                <label for="weight">Weight (kg):</label>
+                <input type="number" step="0.01" name="weight" id="weight" required min="0">
+                <span id="weight-source" class="data-source" style="display: none;">ESP32</span>
+            </div>
 
-                fetch('/api/esp32/device-status/')
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('LOAD DEVICES: Received device data:', data);
-                        
-                        if (data.status === 'success' && data.devices && data.devices.length > 0) {
-                            availableDevices = data.devices;
-                            displayDeviceButtons(data.devices);
-                        } else {
-                            deviceButtons.innerHTML = `
-                                <div class="no-devices">
-                                    ⚠️ No ESP32 devices found. Make sure your devices are connected and sending data.
-                                </div>
-                            `;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('LOAD DEVICES: Error loading devices:', error);
-                        deviceButtons.innerHTML = `
-                            <div class="no-devices">
-                                ❌ Error loading devices. Check your connection and try again.
-                            </div>
-                        `;
-                    });
-            }
+            <div class="form-group">
+                <label for="height">Height (cm):</label>
+                <input type="number" step="0.01" name="height" id="height" required min="0">
+                <span id="height-source" class="data-source" style="display: none;">ESP32</span>
+            </div>
 
-            function displayDeviceButtons(devices) {
-                console.log('DISPLAY DEVICES: Creating buttons for devices:', devices);
-                
-                const deviceButtons = document.getElementById('device-buttons');
-                deviceButtons.innerHTML = '';
+            <div class="form-group">
+                <label for="temperature">Temperature (°C):</label>
+                <input type="number" step="0.1" name="temperature" id="temperature" required min="0">
+                <span id="temp-source" class="data-source" style="display: none;">ESP32</span>
+            </div>
 
-                const onlineDevices = devices.filter(device => device.is_online);
-                
-                if (onlineDevices.length === 0) {
-                    deviceButtons.innerHTML = `
-                        <div class="no-devices">
-                            ⚠️ No online ESP32 devices found. Make sure your devices are powered on and connected.
-                        </div>
-                    `;
-                    return;
-                }
+            <button type="button" id="refresh-data" class="refresh-btn">Check for ESP32 Data</button>
+            <button type="submit" id="submit-btn">Submit BMI & Temperature</button>
+            <button type="button" class="back-btn" onclick="location.href='/preschoolers'">Back</button> 
+        </form>
+    </div>
 
-                onlineDevices.forEach(device => {
-                    const button = document.createElement('div');
-                    button.className = 'device-btn';
-                    button.dataset.deviceId = device.device_id;
-                    button.innerHTML = `
-                        <span class="device-status status-online"></span>
-                        ${device.device_name || device.device_id}
-                    `;
-                    
-                    button.addEventListener('click', function() {
-                        selectDevice(device);
-                    });
-                    
-                    deviceButtons.appendChild(button);
-                });
+    <script>
+        // Auto-check for ESP32 data every 5 seconds
+        let autoRefreshInterval;
+        let hasReceivedData = false;
 
-                console.log(`DISPLAY DEVICES: Created ${onlineDevices.length} online device buttons`);
-            }
-
-            function selectDevice(device) {
-                console.log('DEVICE SELECT: Selecting device:', device);
-                
-                selectedDeviceId = device.device_id;
-                document.getElementById('selected-device-id').value = device.device_id;
-                
-                const deviceButtons = document.querySelectorAll('.device-btn');
-                deviceButtons.forEach(button => {
-                    if (button.dataset.deviceId === device.device_id) {
-                        button.classList.add('selected');
-                    } else {
-                        button.classList.remove('selected');
-                    }
-                });
-                
-                const deviceInfo = document.getElementById('device-info');
-                document.getElementById('selected-device-name').textContent = device.device_name || device.device_id;
-                document.getElementById('selected-device-status').textContent = device.is_online ? 'Online' : 'Offline';
-                document.getElementById('selected-device-last-seen').textContent = 
-                    device.last_seen ? new Date(device.last_seen).toLocaleString() : 'Never';
-                document.getElementById('selected-device-measurements').textContent = device.measurements_today || 0;
-                
-                deviceInfo.classList.add('show');
-                
-                const inputs = document.querySelectorAll('#weight, #height, #temperature');
-                const buttons = document.querySelectorAll('#refresh-data, #clear-esp32-data, button[type="submit"]');
-                
-                inputs.forEach(input => input.disabled = false);
-                buttons.forEach(button => button.disabled = false);
-                
-                const statusIndicator = document.getElementById('status-indicator');
-                statusIndicator.className = 'status-indicator status-cleared';
-                statusIndicator.textContent = `✓ Device ${device.device_name || device.device_id} selected. Clearing any previous data...`;
-                
-                clearESP32DataForDevice(device.device_id).then(() => {
-                    checkForESP32Data();
-                    startAutoRefresh();
-                });
-            }
-
-            function checkForESP32Data() {
-                if (!selectedDeviceId) {
-                    console.log('CHECK: No device selected');
-                    return Promise.resolve();
-                }
-                
-                console.log(`CHECK: Checking for ESP32 data from device ${selectedDeviceId}`);
-                
-                return fetch(`/api/esp32/get-data/?device_id=${selectedDeviceId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log(`CHECK: ESP32 data response from ${selectedDeviceId}:`, data);
-                        const statusIndicator = document.getElementById('status-indicator');
-                        
-                        if (data.status === 'success' && data.data) {
-                            const weightInput = document.getElementById('weight');
-                            const heightInput = document.getElementById('height');
-                            const tempInput = document.getElementById('temperature');
-                            
-                            if (data.data.weight && !weightInput.value) {
-                                weightInput.value = data.data.weight;
-                                weightInput.classList.add('esp32-data');
-                                document.getElementById('weight-source').style.display = 'block';
-                            }
-                            if (data.data.height && !heightInput.value) {
-                                heightInput.value = data.data.height;
-                                heightInput.classList.add('esp32-data');
-                                document.getElementById('height-source').style.display = 'block';
-                            }
-                            if (data.data.temperature && !tempInput.value) {
-                                const roundedTemp = parseFloat(data.data.temperature).toFixed(2);
-                                tempInput.value = roundedTemp;
-                                tempInput.classList.add('esp32-data');
-                                document.getElementById('temp-source').style.display = 'block';
-                            }
-                            
-                            if (data.is_complete) {
-                                statusIndicator.className = 'status-indicator status-complete';
-                                statusIndicator.innerHTML = `
-                                    ✓ Complete data received from ${data.device_name}!
-                                    <small>(${new Date(data.data.last_update).toLocaleTimeString()})</small>
-                                `;
-                                hasReceivedCompleteData = true;
-                                
-                                if (autoRefreshInterval) {
-                                    clearInterval(autoRefreshInterval);
-                                }
-                                
-                            } else {
-                                statusIndicator.className = 'status-indicator status-partial';
-                                let receivedData = [];
-                                if (data.has_bmi_data) receivedData.push('BMI');
-                                if (data.has_temperature_data) receivedData.push('Temperature');
-                                
-                                statusIndicator.innerHTML = `
-                                    ⏳ Partial data from ${data.device_name}: ${receivedData.join(', ')}<br>
-                                    <small>Still waiting for: ${data.waiting_for.join(', ')}</small>
-                                `;
-                            }
-                            
-                        } else if (data.status === 'no_data') {
-                            statusIndicator.className = 'status-indicator status-waiting';
-                            statusIndicator.textContent = `⏳ Waiting for data from ${data.device_name || selectedDeviceId}... Make sure the device is connected and sending data.`;
-                        }
-                    })
-                    .catch(error => {
-                        console.error(`CHECK: Error checking for ESP32 data from ${selectedDeviceId}:`, error);
-                        const statusIndicator = document.getElementById('status-indicator');
-                        statusIndicator.className = 'status-indicator status-error';
-                        statusIndicator.textContent = '❌ Error connecting to server. Check your internet connection.';
-                    });
-            }
-
-            function clearESP32DataForDevice(deviceId) {
-                console.log(`CLEAR: Clearing ESP32 data for device ${deviceId}`);
-                
-                return fetch('/api/esp32/clear-data/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCSRFToken()
-                    },
-                    body: JSON.stringify({
-                        'device_id': deviceId
-                    })
-                })
+        function checkForESP32Data() {
+            fetch('/api/esp32/get-data/')
                 .then(response => response.json())
                 .then(data => {
-                    console.log(`CLEAR: Server response for ${deviceId}:`, data);
-                    
-                    clearFormInputs();
-                    
                     const statusIndicator = document.getElementById('status-indicator');
-                    statusIndicator.className = 'status-indicator status-cleared';
-                    statusIndicator.textContent = `✓ ESP32 data cleared for ${deviceId}. Ready for new measurements.`;
                     
-                    hasReceivedCompleteData = false;
-                    
-                    console.log(`CLEAR: ESP32 data cleared successfully for ${deviceId}`);
+                    if (data.status === 'success' && data.data) {
+                        // Update form inputs with ESP32 data
+                        const weightInput = document.getElementById('weight');
+                        const heightInput = document.getElementById('height');
+                        const tempInput = document.getElementById('temperature');
+                        
+                        // Set values
+                        weightInput.value = data.data.weight;
+                        heightInput.value = data.data.height;
+                        tempInput.value = data.data.temperature;
+                        
+                        // Style inputs to show they came from ESP32
+                        weightInput.classList.add('esp32-data');
+                        heightInput.classList.add('esp32-data');
+                        tempInput.classList.add('esp32-data');
+                        
+                        // Show data source indicators
+                        document.getElementById('weight-source').style.display = 'block';
+                        document.getElementById('height-source').style.display = 'block';
+                        document.getElementById('temp-source').style.display = 'block';
+                        
+                        // Update status
+                        statusIndicator.className = 'status-indicator status-received';
+                        statusIndicator.innerHTML = `
+                            ✅ ESP32 data received! 
+                            <small>(${new Date(data.data.timestamp).toLocaleTimeString()})</small>
+                        `;
+                        
+                        // Stop auto-refresh since we got data
+                        if (autoRefreshInterval) {
+                            clearInterval(autoRefreshInterval);
+                            hasReceivedData = true;
+                        }
+                        
+                        // Show success notification
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'ESP32 Data Received!',
+                            text: `Weight: ${data.data.weight}kg, Height: ${data.data.height}cm, Temperature: ${data.data.temperature}°C`,
+                            timer: 3000,
+                            showConfirmButton: false
+                        });
+                        
+                    } else if (data.status === 'no_data') {
+                        statusIndicator.className = 'status-indicator status-waiting';
+                        statusIndicator.textContent = 'Waiting for ESP32 data... Make sure your device is connected and sending data.';
+                    }
                 })
                 .catch(error => {
-                    console.error(`CLEAR: Error clearing ESP32 data for ${deviceId}:`, error);
-                    clearFormInputs();
+                    console.error('Error checking for ESP32 data:', error);
+                    const statusIndicator = document.getElementById('status-indicator');
+                    statusIndicator.className = 'status-indicator status-error';
+                    statusIndicator.textContent = 'Error connecting to server. Check your internet connection.';
                 });
+        }
+
+        // Manual refresh button
+        document.getElementById('refresh-data').addEventListener('click', checkForESP32Data);
+
+        // Auto-refresh every 3 seconds until data is received
+        function startAutoRefresh() {
+            if (!hasReceivedData) {
+                autoRefreshInterval = setInterval(checkForESP32Data, 3000);
             }
+        }
 
-            function clearFormInputs() {
-                console.log('CLEAR FORM: Clearing form inputs...');
-                const weightInput = document.getElementById('weight');
-                const heightInput = document.getElementById('height');
-                const tempInput = document.getElementById('temperature');
-                
-                weightInput.value = '';
-                heightInput.value = '';
-                tempInput.value = '';
-                
-                weightInput.classList.remove('esp32-data');
-                heightInput.classList.remove('esp32-data');
-                tempInput.classList.remove('esp32-data');
-                
-                document.getElementById('weight-source').style.display = 'none';
-                document.getElementById('height-source').style.display = 'none';
-                document.getElementById('temp-source').style.display = 'none';
-            }
+        // Start checking when page loads
+        window.addEventListener('load', function() {
+            checkForESP32Data(); // Check immediately
+            startAutoRefresh(); // Then start auto-refresh
+        });
 
-            window.addEventListener('beforeunload', function(e) {
-                if (selectedDeviceId) {
-                    console.log(`BEFOREUNLOAD: Clearing ESP32 data for ${selectedDeviceId}...`);
-                    const data = JSON.stringify({ device_id: selectedDeviceId });
-                    const blob = new Blob([data], { type: 'application/json' });
-                    navigator.sendBeacon('/api/esp32/clear-data/', blob);
-                }
-            });
-
-            window.addEventListener('pagehide', function(e) {
-                if (selectedDeviceId) {
-                    console.log(`PAGEHIDE: Clearing ESP32 data for ${selectedDeviceId}...`);
-                    const data = JSON.stringify({ device_id: selectedDeviceId });
-                    const blob = new Blob([data], { type: 'application/json' });
-                    navigator.sendBeacon('/api/esp32/clear-data/', blob);
-                }
-            });
-
-            document.getElementById('refresh-data').addEventListener('click', checkForESP32Data);
-
-            document.getElementById('clear-esp32-data').addEventListener('click', function() {
-                if (selectedDeviceId) {
-                    clearESP32DataForDevice(selectedDeviceId);
-                }
-            });
-
-            function startAutoRefresh() {
-                if (autoRefreshInterval) {
-                    clearInterval(autoRefreshInterval);
-                }
-                if (!hasReceivedCompleteData && selectedDeviceId) {
-                    console.log(`AUTO-REFRESH: Starting auto-refresh for ${selectedDeviceId}...`);
-                    autoRefreshInterval = setInterval(checkForESP32Data, 3000);
-                }
-            }
-
-            window.addEventListener('load', function() {
-                console.log('PAGE LOAD: Starting dynamic device discovery...');
-                loadAvailableDevices();
-                
-                setInterval(loadAvailableDevices, 1000);
-            });
-
-            document.getElementById('bmi-form').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                if (!selectedDeviceId) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'No Device Selected',
-                        text: 'Please select an ESP32 device first.'
-                    });
-                    return;
-                }
-                
-                const weight = document.getElementById('weight').value;
-                const height = document.getElementById('height').value;
-                const temp = document.getElementById('temperature').value;
-                
-                if (!weight || !height || !temp) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Missing Data',
-                        text: 'Please fill in all required fields.'
-                    });
-                    return;
-                }
-                
-                const selectedDevice = availableDevices.find(d => d.device_id === selectedDeviceId);
-                const deviceName = selectedDevice ? selectedDevice.device_name : selectedDeviceId;
-                
+        // Form submission with confirmation and success handling
+        document.getElementById('bmi-form').addEventListener('submit', function(e) {
+            e.preventDefault(); // Always prevent default submission
+            
+            const weight = document.getElementById('weight').value;
+            const height = document.getElementById('height').value;
+            const temp = document.getElementById('temperature').value;
+            const submitBtn = document.getElementById('submit-btn');
+            
+            if (!weight || !height || !temp) {
                 Swal.fire({
-                    title: 'Confirm Submission',
-                    html: `
-                        <p>Are you sure you want to submit this data?</p>
-                        <div style="text-align: left; margin: 15px 0;">
-                            <strong>Device:</strong> ${deviceName}<br>
-                            <strong>Weight:</strong> ${weight} kg<br>
-                            <strong>Height:</strong> ${height} cm<br>
-                            <strong>Temperature:</strong> ${temp} °C
-                        </div>
-                    `,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#667eea',
-                    cancelButtonColor: '#718096',
-                    confirmButtonText: 'Yes, submit!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        Swal.fire({
-                            title: 'Submitting...',
-                            text: `Please wait while we submit your data from ${deviceName}.`,
-                            allowOutsideClick: false,
-                            showConfirmButton: false,
-                            willOpen: () => {
-                                Swal.showLoading();
-                            }
-                        });
-                        
-                        const form = document.getElementById('bmi-form');
-                        const formData = new FormData(form);
-                        
-                        fetch(form.action, {
-                            method: 'POST',
-                            body: formData,
-                            headers: { 'X-CSRFToken': getCSRFToken() }
-                        })
-                        .then(response => {
-                            if (response.ok) {
-                                clearESP32DataForDevice(selectedDeviceId).then(() => {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Success!',
-                                        text: `BMI data submitted successfully from ${deviceName}. Device data cleared for next preschooler.`,
-                                        confirmButtonText: 'OK',
-                                        confirmButtonColor: '#667eea'
-                                    }).then(() => {
-                                        window.location.href = '/preschoolers';
-                                    });
-                                });
-                            } else {
-                                throw new Error('Form submission failed');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Form submission error:', error);
+                    icon: 'error',
+                    title: 'Missing Data',
+                    text: 'Please fill in all required fields.'
+                });
+                return;
+            }
+            
+            // Show confirmation with the data being submitted
+            Swal.fire({
+                title: 'Confirm Submission',
+                html: `
+                    <p>Are you sure you want to submit this data?</p>
+                    <div style="text-align: left; margin: 15px 0;">
+                        <strong>Weight:</strong> ${weight} kg<br>
+                        <strong>Height:</strong> ${height} cm<br>
+                        <strong>Temperature:</strong> ${temp} °C
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#007bff',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, submit!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Disable submit button to prevent double submission
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Submitting...';
+                    
+                    // Prepare form data
+                    const formData = new FormData(this);
+                    
+                    // Submit via AJAX
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Show success notification with OK button
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                html: `
+                                    <p>${data.message}</p>
+                                    <div style="text-align: left; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                                        <strong>Recorded Data:</strong><br>
+                                        <strong>Weight:</strong> ${data.data.weight} kg<br>
+                                        <strong>Height:</strong> ${data.data.height} cm<br>
+                                        <strong>Temperature:</strong> ${data.data.temperature} °C<br>
+                                        <strong>BMI:</strong> ${data.data.bmi}
+                                    </div>
+                                `,
+                                confirmButtonColor: '#28a745',
+                                confirmButtonText: 'OK',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false
+                            }).then(() => {
+                                // Redirect to preschoolers page when OK is clicked
+                                window.location.href = '/preschoolers';
+                            });
+                        } else {
+                            // Show error message
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Submission Failed',
-                                text: 'There was an error submitting the form. Please try again.'
+                                title: 'Error',
+                                text: data.message || 'An error occurred while saving data.'
                             });
+                            
+                            // Re-enable submit button
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = 'Submit BMI & Temperature';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error',
+                            text: 'Unable to connect to server. Please check your internet connection.'
                         });
-                    }
-                });
+                        
+                        // Re-enable submit button
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Submit BMI & Temperature';
+                    });
+                }
             });
-
-            console.log('Dynamic Multi-Device BMI Form script loaded');
-        </script>
-
-
-<script>
-    function getCSRFToken() {
-    const name = 'csrftoken';
-    const cookies = document.cookie.split(';');
-    for (let cookie of cookies) {
-        cookie = cookie.trim();
-        if (cookie.startsWith(name + '=')) {
-            return decodeURIComponent(cookie.substring(name.length + 1));
-        }
-    }
-    return '';
-}
-</script>
-    </body>
-    </html>
+        });
+    </script>
+</body>
+</html>
