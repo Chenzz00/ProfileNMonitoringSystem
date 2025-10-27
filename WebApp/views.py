@@ -7755,56 +7755,68 @@ from .models import classify_bmi_for_age, calculate_bmi,bmi_zscore
 
 @csrf_exempt
 def submit_bmi(request):
-    if request.method != 'POST':
-        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=405)
-
     if not request.user.is_authenticated:
-        return JsonResponse({'status': 'error', 'message': 'User not authenticated.'}, status=401)
+        return redirect('login')
+    if request.method == 'POST':
+        preschooler_id = request.POST.get('preschooler_id')
+        weight = request.POST.get('weight')
+        height_cm = request.POST.get('height')
+        temperature = request.POST.get('temperature')
 
-    preschooler_id = request.POST.get('preschooler_id')
-    weight = request.POST.get('weight')
-    height_cm = request.POST.get('height')
-    temperature = request.POST.get('temperature')
+        preschooler = get_object_or_404(Preschooler, pk=preschooler_id)
 
-    preschooler = get_object_or_404(Preschooler, pk=preschooler_id)
+        if not weight or not height_cm or not temperature:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'All fields are required'
+            })
 
-    if not all([weight, height_cm, temperature]):
-        return JsonResponse({'status': 'error', 'message': 'All fields are required.'}, status=400)
+        try:
+            # calculate BMI
+            weight = float(weight)
+            height_m = float(height_cm) / 100
+            bmi_value = weight / (height_m ** 2)
 
-    try:
-        weight = float(weight)
-        height_m = float(height_cm) / 100
-        bmi_value = weight / (height_m ** 2)
-        today = date.today()
+            # save BMI
+            today = date.today()
+            BMI.objects.update_or_create(
+                preschooler_id=preschooler,
+                date_recorded=today,
+                defaults={'weight': weight, 'height': height_cm, 'bmi_value': bmi_value}
+            )
 
-        BMI.objects.update_or_create(
-            preschooler_id=preschooler,
-            date_recorded=today,
-            defaults={'weight': weight, 'height': height_cm, 'bmi_value': bmi_value}
-        )
+            # save Temperature
+            Temperature.objects.update_or_create(
+                preschooler_id=preschooler,
+                date_recorded=today,
+                defaults={'temperature_value': temperature}
+            )
 
-        Temperature.objects.update_or_create(
-            preschooler_id=preschooler,
-            date_recorded=today,
-            defaults={'temperature_value': temperature}
-        )
+            return JsonResponse({
+                'status': 'success',
+                'message': f'BMI & Temperature successfully recorded for {preschooler.first_name}!',
+                'data': {
+                    'preschooler_name': f'{preschooler.first_name} {preschooler.last_name}',
+                    'weight': weight,
+                    'height': height_cm,
+                    'temperature': temperature,
+                    'bmi': round(bmi_value, 2)
+                }
+            })
 
-        return JsonResponse({
-            'status': 'success',
-            'message': f'BMI & Temperature successfully recorded for {preschooler.first_name}!',
-            'data': {
-                'preschooler_name': f'{preschooler.first_name} {preschooler.last_name}',
-                'weight': weight,
-                'height': height_cm,
-                'temperature': temperature,
-                'bmi': round(bmi_value, 2)
-            }
-        }, status=200)
+        except ValueError:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid number format. Please enter valid numbers.'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'An error occurred: {str(e)}'
+            })
 
-    except ValueError:
-        return JsonResponse({'status': 'error', 'message': 'Invalid number format.'}, status=400)
-    except Exception as e:
-        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    # If GET → redirect to preschoolers
+    return redirect('preschoolers')
 
     
 
@@ -9977,6 +9989,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
