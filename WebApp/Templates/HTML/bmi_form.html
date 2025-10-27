@@ -464,26 +464,26 @@
 
             <div class="form-group">
                 <label for="weight">⚖️ Weight (kg):</label>
-                <input type="number" step="0.01" name="weight" id="weight" required min="0" max="200" disabled>
+                <input type="number" step="0.01" name="weight" id="weight" required min="0" max="200" >
                 <span id="weight-source" class="data-source" style="display: none;">ESP32</span>
             </div>
 
             <div class="form-group">
                 <label for="height">📏 Height (cm):</label>
-                <input type="number" step="0.01" name="height" id="height" required min="0" max="300" disabled>
+                <input type="number" step="0.01" name="height" id="height" required min="0" max="300" >
                 <span id="height-source" class="data-source" style="display: none;">ESP32</span>
             </div>
 
             <div class="form-group">
                 <label for="temperature">🌡️ Temperature (°C):</label>
-                <input type="number" step="0.1" name="temperature" id="temperature" required min="30" max="45" disabled>
+                <input type="number" step="0.1" name="temperature" id="temperature" required min="30" max="45" >
                 <span id="temp-source" class="data-source" style="display: none;">ESP32</span>
             </div>
 
             <div class="button-group">
                 <button type="button" id="refresh-data" class="refresh-btn" disabled>🔄 Check for Data</button>
                 <button type="button" id="clear-esp32-data" class="clear-btn" disabled>🗑️ Clear Data</button>
-                <button type="submit" disabled>✓ Submit BMI & Temperature</button>
+                <button type="submit" >✓ Submit BMI & Temperature</button>
                 <button type="button" class="back-btn" onclick="location.href='/preschoolers'">← Back</button>
             </div>
         </form>
@@ -875,6 +875,7 @@
     </script>
 </body>
 </html>
+
 
 
 
