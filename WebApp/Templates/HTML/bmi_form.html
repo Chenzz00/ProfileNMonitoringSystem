@@ -459,6 +459,7 @@
             </div>
             
             <form id="bmi-form" method="POST" action="/submit_bmi">
+                {% csrf_token %}
                 <input type="hidden" name="preschooler_id" value="12345">
                 <input type="hidden" name="device_id" id="selected-device-id" value="">
 
@@ -688,7 +689,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRFToken': 'dummy-csrf-token'
+                        'X-CSRFToken': getCSRFToken()
                     },
                     body: JSON.stringify({
                         'device_id': deviceId
@@ -838,9 +839,7 @@
                         fetch(form.action, {
                             method: 'POST',
                             body: formData,
-                            headers: {
-                                'X-CSRFToken': 'dummy-csrf-token'
-                            }
+                            headers: { 'X-CSRFToken': getCSRFToken() }
                         })
                         .then(response => {
                             if (response.ok) {
@@ -873,5 +872,20 @@
 
             console.log('Dynamic Multi-Device BMI Form script loaded');
         </script>
+
+
+<script>
+    function getCSRFToken() {
+    const name = 'csrftoken';
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+            return decodeURIComponent(cookie.substring(name.length + 1));
+        }
+    }
+    return '';
+}
+</script>
     </body>
     </html>
