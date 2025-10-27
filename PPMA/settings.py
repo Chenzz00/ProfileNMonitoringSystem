@@ -88,6 +88,8 @@ ALLOWED_HOSTS = [
     "myppma.com",
     "www.myppma.com",
     "ppma.myppma.com",
+    "ppmscluster4.online",
+    "www.ppmscluster4.online",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -95,6 +97,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://myppma.com",
     "https://www.myppma.com",
     "https://ppma.myppma.com",
+    
 ]
 
 # =======================
@@ -284,3 +287,4 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
