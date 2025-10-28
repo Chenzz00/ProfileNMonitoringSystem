@@ -646,199 +646,247 @@ function createCustomLegend(labels, colors, values, container) {
 
     // ✅ Enhanced Vaccination Trend Line Chart with Dynamic Filtering
     const vaccinationTrendEl = document.getElementById('vaccinationTrendChart');
-    if (vaccinationTrendEl) {
-      const vaccinationTrendData = JSON.parse(document.getElementById('vaccination-trend-data').textContent || '{}');
-      const monthPicker = document.getElementById('monthPicker');
-      const resetButton = document.getElementById('resetToCurrentMonth');
-      const chartDateRange = document.getElementById('chartDateRange');
-      
-      let vaccinationChart;
+if (vaccinationTrendEl) {
+  const monthPicker = document.getElementById('monthPicker');
+  const resetButton = document.getElementById('resetToCurrentMonth');
+  const chartDateRange = document.getElementById('chartDateRange');
+  
+  let vaccinationChart;
+  let vaccinationTrendData = JSON.parse(document.getElementById('vaccination-trend-data').textContent || '{}');
 
-      // Function to generate 11-month window data around a center month
-      function generateChartData(centerMonth) {
-        const allMonths = vaccinationTrendData.all_months || [];
-        const centerIndex = allMonths.findIndex(month => month.month === centerMonth);
-        
-        if (centerIndex === -1) {
-          // If center month not found, use current data
-          return {
-            labels: vaccinationTrendData.labels || [],
-            registered: vaccinationTrendData.registered || [],
-            vaccinated: vaccinationTrendData.vaccinated || []
-          };
-        }
-        
-        // Get 5 months before and after (11 total)
-        const startIndex = Math.max(0, centerIndex - 5);
-        const endIndex = Math.min(allMonths.length - 1, centerIndex + 5);
-        const windowData = allMonths.slice(startIndex, endIndex + 1);
-        
-        // Update date range display
-        if (windowData.length > 0) {
-          const firstMonth = windowData[0].label;
-          const lastMonth = windowData[windowData.length - 1].label;
-          chartDateRange.textContent = `Showing ${firstMonth} to ${lastMonth}`;
-        }
-        
-        return {
-          labels: windowData.map(month => month.label),
-          registered: windowData.map(month => month.registered),
-          vaccinated: windowData.map(month => month.vaccinated)
-        };
-      }
+  // Function to generate 11-month window data around a center month
+  function generateChartData(centerMonth) {
+    const allMonths = vaccinationTrendData.all_months || [];
+    
+    // Parse the center month to find the correct index
+    const centerIndex = allMonths.findIndex(month => month.month === centerMonth);
+    
+    if (centerIndex === -1) {
+      console.warn(`Center month ${centerMonth} not found in data`);
+      return {
+        labels: [],
+        registered: [],
+        vaccinated: []
+      };
+    }
+    
+    // Get 5 months before and after (11 total)
+    const startIndex = Math.max(0, centerIndex - 5);
+    const endIndex = Math.min(allMonths.length - 1, centerIndex + 5);
+    const windowData = allMonths.slice(startIndex, endIndex + 1);
+    
+    // Update date range display with actual data range
+    if (windowData.length > 0) {
+      const firstMonth = windowData[0].label;
+      const lastMonth = windowData[windowData.length - 1].label;
+      chartDateRange.textContent = `Showing ${firstMonth} to ${lastMonth}`;
+    }
+    
+    console.log(`Center: ${centerMonth}, Data range: ${windowData[0]?.label} to ${windowData[windowData.length - 1]?.label}`);
+    
+    return {
+      labels: windowData.map(month => month.label),
+      registered: windowData.map(month => month.registered),
+      vaccinated: windowData.map(month => month.vaccinated)
+    };
+  }
 
-      // Function to create/update the chart
-      function createOrUpdateChart(centerMonth) {
-        const chartData = generateChartData(centerMonth);
-        
-        const config = {
-          type: 'line',
-          data: {
-            labels: chartData.labels,
-            datasets: [{
-              label: 'Registered Preschoolers',
-              data: chartData.registered,
-              borderColor: '#3498db',
-              backgroundColor: 'rgba(52, 152, 219, 0.1)',
-              borderWidth: 3,
-              pointRadius: 5,
-              pointHoverRadius: 7,
-              pointBackgroundColor: '#3498db',
-              tension: 0.4,
-              fill: true
-            }, {
-              label: 'Vaccinations Given',
-              data: chartData.vaccinated,
-              borderColor: '#27ae60',
-              backgroundColor: 'rgba(39, 174, 96, 0.1)',
-              borderWidth: 3,
-              pointRadius: 5,
-              pointHoverRadius: 7,
-              pointBackgroundColor: '#27ae60',
-              tension: 0.4,
-              fill: true
-            }]
+  // Function to create/update the chart
+  function createOrUpdateChart(centerMonth) {
+    const chartData = generateChartData(centerMonth);
+    
+    if (chartData.labels.length === 0) {
+      console.error('No data available for the selected month');
+      return;
+    }
+    
+    const config = {
+      type: 'line',
+      data: {
+        labels: chartData.labels,
+        datasets: [{
+          label: 'Registered Preschoolers',
+          data: chartData.registered,
+          borderColor: '#3498db',
+          backgroundColor: 'rgba(52, 152, 219, 0.1)',
+          borderWidth: 3,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#3498db',
+          tension: 0.4,
+          fill: true
+        }, {
+          label: 'Vaccinations Given',
+          data: chartData.vaccinated,
+          borderColor: '#27ae60',
+          backgroundColor: 'rgba(39, 174, 96, 0.1)',
+          borderWidth: 3,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#27ae60',
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
+        animation: {
+          duration: 300,
+          easing: 'easeInOutQuart'
+        },
+        plugins: {
+          title: {
+            display: true,
+            text: 'Monthly Vaccination Trend',
+            font: { size: 16, weight: 'bold' },
+            padding: 20
           },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-              intersect: false,
-              mode: 'index'
+          legend: { 
+            display: true, 
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              padding: 50
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            titleFont: { size: 14 },
+            bodyFont: { size: 13 },
+            cornerRadius: 8,
+            displayColors: true
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { 
+              display: true, 
+              text: 'Count',
+              font: { size: 14, weight: 'bold' }
             },
-            animation: {
-              duration: 300,
-              easing: 'easeInOutQuart'
+            grid: {
+              color: 'rgba(0,0,0,0.1)'
+            }
+          },
+          x: {
+            title: { 
+              display: true, 
+              text: 'Months',
+              font: { size: 14, weight: 'bold' }
             },
-            plugins: {
-              title: {
-                display: true,
-                text: 'Monthly Vaccination Trend',
-                font: { size: 16, weight: 'bold' },
-                padding: 20
-              },
-              legend: { 
-                display: true, 
-                position: 'bottom',
-                labels: {
-                  usePointStyle: true,
-                  padding: 50
-                }
-              },
-              tooltip: {
-                backgroundColor: 'rgba(0,0,0,0.8)',
-                titleFont: { size: 14 },
-                bodyFont: { size: 13 },
-                cornerRadius: 8,
-                displayColors: true
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                title: { 
-                  display: true, 
-                  text: 'Count',
-                  font: { size: 14, weight: 'bold' }
-                },
-                grid: {
-                  color: 'rgba(0,0,0,0.1)'
-                }
-              },
-              x: {
-                title: { 
-                  display: true, 
-                  text: 'Months',
-                  font: { size: 14, weight: 'bold' }
-                },
-                grid: {
-                  color: 'rgba(0,0,0,0.1)'
-                }
-              }
+            grid: {
+              color: 'rgba(0,0,0,0.1)'
             }
           }
-        };
-
-        if (vaccinationChart) {
-          // Update existing chart
-          vaccinationChart.data = config.data;
-          vaccinationChart.update('active');
-        } else {
-          // Create new chart
-          vaccinationChart = new Chart(vaccinationTrendEl.getContext('2d'), config);
         }
       }
+    };
 
-      // Initialize chart with current data
-      createOrUpdateChart(vaccinationTrendData.center_month);
-
-      // Month picker event listener
-      if (monthPicker) {
-        monthPicker.addEventListener('change', function(e) {
-          const selectedMonth = e.target.value; // Format: YYYY-MM
-          if (selectedMonth) {
-            createOrUpdateChart(selectedMonth);
-            
-            // Update URL without page reload for browser history
-            const url = new URL(window.location);
-            url.searchParams.set('filter_month', selectedMonth);
-            window.history.pushState({}, '', url);
-          }
-        });
-      }
-
-      // Reset to current month button
-      if (resetButton) {
-        resetButton.addEventListener('click', function() {
-          const now = new Date();
-          const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-          monthPicker.value = currentMonth;
-          createOrUpdateChart(currentMonth);
-          
-          // Update URL
-          const url = new URL(window.location);
-          url.searchParams.delete('filter_month'); // Remove filter to show current month
-          window.history.pushState({}, '', url);
-          
-          chartDateRange.textContent = 'Showing current month ±5 months';
-        });
-      }
-
-      // Handle browser back/forward buttons
-      window.addEventListener('popstate', function(event) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const filterMonth = urlParams.get('filter_month');
-        if (filterMonth) {
-          monthPicker.value = filterMonth;
-          createOrUpdateChart(filterMonth);
-        } else {
-          const now = new Date();
-          const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-          monthPicker.value = currentMonth;
-          createOrUpdateChart(currentMonth);
-        }
-      });
+    if (vaccinationChart) {
+      // Update existing chart
+      vaccinationChart.data = config.data;
+      vaccinationChart.options = config.options;
+      vaccinationChart.update('active');
+    } else {
+      // Create new chart
+      vaccinationChart = new Chart(vaccinationTrendEl.getContext('2d'), config);
     }
+  }
+
+  // Function to fetch new data from backend
+  function fetchNewData(selectedMonth) {
+    console.log('Fetching data for month:', selectedMonth);
+    
+    // Show loading state
+    chartDateRange.textContent = 'Loading...';
+    
+    // Fetch from backend with the selected month
+    fetch(`/admin-dashboard/?filter_month=${selectedMonth}`, {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      if (!response.ok) throw new Error('Failed to fetch data');
+      return response.text();
+    })
+    .then(html => {
+      // Parse the JSON data from the response
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const scriptElement = doc.getElementById('vaccination-trend-data');
+      
+      if (scriptElement) {
+        const newData = JSON.parse(scriptElement.textContent);
+        vaccinationTrendData = newData;
+        console.log('Data fetched successfully');
+        
+        // Update chart with new data
+        createOrUpdateChart(newData.center_month);
+        
+        // Update URL
+        const url = new URL(window.location);
+        url.searchParams.set('filter_month', selectedMonth);
+        window.history.pushState({}, '', url);
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching data:', error);
+      chartDateRange.textContent = 'Error loading data. Please try again.';
+    });
+  }
+
+  // Initialize chart with current data
+  createOrUpdateChart(vaccinationTrendData.center_month);
+
+  // Month picker event listener - fetch new data and update instantly
+  if (monthPicker) {
+    monthPicker.addEventListener('change', function(e) {
+      const selectedMonth = e.target.value; // Format: YYYY-MM
+      console.log('Selected month:', selectedMonth);
+      
+      if (selectedMonth) {
+        // Fetch new data from backend
+        fetchNewData(selectedMonth);
+      }
+    });
+  }
+
+  // Reset to current month button
+  if (resetButton) {
+    resetButton.addEventListener('click', function() {
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      monthPicker.value = currentMonth;
+      
+      // Fetch current month data
+      fetchNewData(currentMonth);
+      
+      chartDateRange.textContent = 'Showing current month ±5 months';
+    });
+  }
+
+  // Handle browser back/forward buttons
+  window.addEventListener('popstate', function(event) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterMonth = urlParams.get('filter_month');
+    if (filterMonth) {
+      monthPicker.value = filterMonth;
+      fetchNewData(filterMonth);
+    } else {
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      monthPicker.value = currentMonth;
+      fetchNewData(currentMonth);
+    }
+  });
+}
 
     // ✅ Barangay Nutritional Status Bar Chart
     const barangayChartEl = document.getElementById('barangayChart');
@@ -1064,6 +1112,7 @@ if (generateReportBtn) {
 
 </body>
 </html>
+
 
 
 
