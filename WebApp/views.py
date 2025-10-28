@@ -1572,7 +1572,7 @@ def Admin(request):
     # Generate extended data for JavaScript (±12 months for smooth transitions)
     extended_months_data = []
     for i in range(-12, 13):  # -12 to +12 months
-        target_month = timezone.now().date().replace(day=1) + relativedelta(months=i)
+        target_month = center_date + relativedelta(months=i)  # ✅ Use center_date, not timezone.now()
         next_month = target_month + relativedelta(months=1)
         
         monthly_registered = Preschooler.objects.filter(
@@ -1629,8 +1629,9 @@ def Admin(request):
         },
         'vaccination_trend_data': vaccination_trend_data,
         'barangay_chart_data': barangay_chart_data,
-        'current_filter_month': center_date.strftime('%Y-%m')  
+        'current_filter_month': center_date.strftime('%Y-%m')  # For the date picker
     })
+
 
     
 
@@ -9989,6 +9990,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
