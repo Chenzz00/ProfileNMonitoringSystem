@@ -1057,18 +1057,50 @@ def email_endorsement(request):
             return redirect('email_endorsement')
 
         try:
+            # Prepare role badge class
+            role_map = {
+                'BHW': 'bhw',
+                'BNS': 'bns',
+                'Midwife': 'midwife',
+                'Nurse': 'nurse'
+            }
+            user_role = getattr(account, 'role', 'Account')
+            role_class = role_map.get(user_role, 'default')
+            
+            # Get current date
+            from datetime import datetime
+            current_date = datetime.now().strftime('%B %d, %Y')
+            
+            # Prepare context for HTML email
+            email_context = {
+                'full_name': recipient_parent.full_name,
+                'email': recipient_parent.email,
+                'sex': getattr(recipient_parent, 'sex', 'N/A'),
+                'role': user_role,
+                'role_class': role_class,
+                'role_name': user_role,
+                'barangay': user_barangay,
+                'current_date': current_date,
+                'message_body': message,
+                'sender_name': getattr(account, 'clean_full_name', account.email)
+            }
+            
+            # Generate HTML email
+            html_message = render_endorsement_email_html(email_context)
+            plain_message = render_endorsement_email_text(email_context)
+            
             send_mail(
                 subject=subject,
-                message=message,
+                message=plain_message,
                 from_email=from_email,
                 recipient_list=[to_email],
+                html_message=html_message,
                 fail_silently=False
             )
             messages.success(request, f"Endorsement email sent successfully to {to_email}.")
             return redirect('dashboard')
         except Exception as e:
             messages.error(request, f"Error sending email: {e}")
-            
             return redirect('email_endorsement')
 
     return render(request, 'HTML/email_endorsement.html', {
@@ -1082,6 +1114,172 @@ def email_endorsement(request):
     })
 
 
+def render_endorsement_email_html(context):
+    """Generate HTML endorsement email"""
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PPMS Endorsement</title>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+            
+            body {{
+                font-family: 'Inter', Arial, sans-serif;
+                background-color: #f9fafb;
+                padding: 40px 20px;
+                color: #334155;
+                line-height: 1.6;
+            }}
+            
+            .container {{
+                max-width: 560px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }}
+            
+            .header {{
+                padding: 24px 32px;
+                text-align: center;
+                color: #111827;
+                border-bottom: 4px solid #198754;
+            }}
+            .header h1 {{
+                font-size: 24px;
+                font-weight: 600;
+                margin: 0;
+                color: #111827;
+            }}
+            .header p {{
+                font-size: 16px;
+                margin: 4px 0 0 0;
+                color: #6b7280;
+            }}
+            
+            .content {{
+                padding: 32px;
+            }}
+            
+            .greeting {{
+                font-size: 18px;
+                margin-bottom: 16px;
+                color: #1e293b;
+                text-align: left;
+                margin: 0 0 16px 0;
+            }}
+            
+            .salutation {{
+                font-size: 16px;
+                margin-bottom: 16px;
+                color: #64748b;
+                text-align: left;
+                margin: 0 0 16px 0;
+            }}
+            
+            .message {{
+                font-size: 16px;
+                margin-bottom: 32px;
+                color: #64748b;
+                text-align: left;
+                white-space: pre-wrap;
+                margin: 0;
+                padding: 0;
+            }}
+            
+            .footer {{
+                background: #f1f5f9;
+                padding: 32px;
+                text-align: center;
+                border-top: 1px solid #e2e8f0;
+            }}
+            
+            .footer h3 {{
+                font-size: 18px;
+                font-weight: 600;
+                color: #1e293b;
+                margin-bottom: 8px;
+            }}
+            
+            .footer p {{
+                font-size: 14px;
+                color: #64748b;
+                margin-bottom: 4px;
+            }}
+            
+            .footer-divider {{
+                margin: 24px 0;
+                height: 1px;
+                background: #e2e8f0;
+            }}
+            
+            .footer-small {{
+                font-size: 12px;
+                color: #94a3b8;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>PPMS Cluster 4</h1>
+                <p>Imus City Healthcare Management</p>
+            </div>
+            
+            <div class="content">
+                <div class="greeting">
+                    Hello <strong>{context['full_name']}</strong>,
+                </div>
+                
+                <div class="salutation">
+                    
+                </div>
+                
+                <div class="message">
+{context['message_body'].strip()}
+                </div>
+            </div>
+            
+            <div class="footer">
+                <h3>PPMS Cluster 4</h3>
+                <p>Imus City Healthcare Management</p>
+                <div class="footer-divider"></div>
+                <p class="footer-small">
+                    This is an automated message. Please do not reply.<br>
+                    © 2025 PPMS Cluster 4. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html
+
+def render_endorsement_email_text(context):
+    """Generate plain text endorsement email"""
+    text = f"""
+PPMS Endorsement
+
+Hello {context['full_name']},
+
+{context['message_body'].strip()}
+
+FROM: {context['role'].upper()}
+Name: {context['sender_name']}
+Barangay: {context['barangay'].name}
+Date Sent: {context['current_date']}
+
+PPMS Cluster 4
+Imus City Healthcare Management
+
+This is an automated message. Please do not reply.
+© 2025 PPMS Cluster 4. All rights reserved.
+    """
+    return text.strip()
 
 
 
@@ -2308,26 +2506,27 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
             try:
                 subject = f"[PPMS] Vaccination Scheduled for {preschooler.first_name}"
                 
-                next_dose_line = f"Next Dose: {next_schedule}\n" if next_schedule else ""
-
-                message = (
-                    f"Dear {parent.full_name},\n\n"
-                    "A vaccination appointment has been scheduled for your child, "
-                    f"{preschooler.first_name} {preschooler.last_name}.\n\n"
-                    f"Vaccine: {vaccine_name}\n"
-                    f"Dose: {dose_number} of {required_doses}\n"
-                    f"Scheduled Date: {immunization_date}\n"
-                    f"{next_dose_line}"
-                    "\nPlease bring your child on the scheduled date.\n"
-                    "You can confirm completion on your dashboard.\n\n"
-                    "Thank you,\nPPMS System"
-                )
+                # Prepare context for HTML email
+                email_context = {
+                    'parent_name': parent.full_name,
+                    'child_name': f"{preschooler.first_name} {preschooler.last_name}",
+                    'vaccine_name': vaccine_name,
+                    'dose_number': dose_number,
+                    'required_doses': required_doses,
+                    'scheduled_date': immunization_date,
+                    'next_schedule': next_schedule
+                }
+                
+                # Generate HTML and plain text emails
+                html_message = render_vaccination_schedule_email_html(email_context)
+                plain_message = render_vaccination_schedule_email_text(email_context)
 
                 send_mail(
                     subject,
-                    message,
+                    plain_message,
                     settings.DEFAULT_FROM_EMAIL,
                     [parent.email],
+                    html_message=html_message,
                     fail_silently=False
                 )
                 logger.info(f"[ASYNC] Email sent to {parent.email}")
@@ -2369,6 +2568,221 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
     except Exception as e:
         logger.error(f"[ASYNC] Notification error for {parent.email}: {e}")
 
+
+def render_vaccination_schedule_email_html(context):
+    """Generate HTML vaccination schedule email"""
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PPMS Vaccination Schedule</title>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+            
+            body {{
+                font-family: 'Inter', Arial, sans-serif;
+                background-color: #f9fafb;
+                padding: 40px 20px;
+                color: #334155;
+                line-height: 1.6;
+            }}
+            
+            .container {{
+                max-width: 560px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }}
+            
+            .header {{
+                padding: 24px 32px;
+                text-align: center;
+                color: #111827;
+                border-bottom: 4px solid #198754;
+            }}
+            .header h1 {{
+                font-size: 24px;
+                font-weight: 600;
+                margin: 0;
+                color: #111827;
+            }}
+            .header p {{
+                font-size: 16px;
+                margin: 4px 0 0 0;
+                color: #6b7280;
+            }}
+            
+            .content {{
+                padding: 32px;
+            }}
+            
+            .greeting {{
+                font-size: 18px;
+                margin: 0 0 16px 0;
+                color: #1e293b;
+                text-align: left;
+            }}
+            
+            .salutation {{
+                font-size: 16px;
+                margin: 0 0 16px 0;
+                color: #64748b;
+                text-align: left;
+            }}
+            
+            .message {{
+                font-size: 16px;
+                margin: 0 0 24px 0;
+                color: #64748b;
+                text-align: left;
+                padding: 0;
+            }}
+            
+            .schedule-details {{
+                background-color: #f1f5f9;
+                padding: 16px;
+                border-radius: 8px;
+                margin-bottom: 24px;
+                border-left: 4px solid #198754;
+            }}
+            
+            .detail-row {{
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                font-size: 14px;
+                color: #334155;
+            }}
+            
+            .detail-label {{
+                font-weight: 600;
+                color: #1e293b;
+            }}
+            
+            .detail-value {{
+                color: #64748b;
+            }}
+            
+            .footer {{
+                background: #f1f5f9;
+                padding: 32px;
+                text-align: center;
+                border-top: 1px solid #e2e8f0;
+            }}
+            
+            .footer h3 {{
+                font-size: 18px;
+                font-weight: 600;
+                color: #1e293b;
+                margin-bottom: 8px;
+            }}
+            
+            .footer p {{
+                font-size: 14px;
+                color: #64748b;
+                margin-bottom: 4px;
+            }}
+            
+            .footer-divider {{
+                margin: 24px 0;
+                height: 1px;
+                background: #e2e8f0;
+            }}
+            
+            .footer-small {{
+                font-size: 12px;
+                color: #94a3b8;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>PPMS Cluster 4</h1>
+                <p>Imus City Healthcare Management</p>
+            </div>
+            
+            <div class="content">
+                <div class="greeting">
+                    Hello <strong>{context['parent_name']}</strong>,
+                </div>
+                
+                <div class="salutation">
+                    Dear Parent,
+                </div>
+                
+                <div class="message">
+                    A vaccination schedule has been created for your child <strong>{context['child_name']}</strong>.
+                </div>
+                
+                <div class="schedule-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Vaccine:</span>
+                        <span class="detail-value">{context['vaccine_name']}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Dose:</span>
+                        <span class="detail-value">{context['dose_number']} of {context['required_doses']}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Scheduled Date:</span>
+                        <span class="detail-value">{context['scheduled_date']}</span>
+                    </div>
+                    {'<div class="detail-row"><span class="detail-label">Next Schedule:</span><span class="detail-value">' + context['next_schedule'] + '</span></div>' if context.get('next_schedule') else ''}
+                </div>
+                
+                <div class="message">
+                    Please mark your calendar and proceed to your barangay health center on the scheduled date. If you have any concerns or need to reschedule, please contact us immediately.
+                </div>
+            </div>
+            
+            <div class="footer">
+                <h3>PPMS Cluster 4</h3>
+                <p>Imus City Healthcare Management</p>
+                <div class="footer-divider"></div>
+                <p class="footer-small">
+                    This is an automated message. Please do not reply.<br>
+                    © 2025 PPMS Cluster 4. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html
+
+
+def render_vaccination_schedule_email_text(context):
+    """Generate plain text vaccination schedule email"""
+    next_schedule_text = f"Next Schedule: {context['next_schedule']}\n" if context.get('next_schedule') else ""
+    
+    text = f"""
+PPMS Vaccination Schedule
+
+Hello {context['parent_name']},
+
+Dear Parent,
+
+A vaccination schedule has been created for your child {context['child_name']}.
+
+VACCINATION DETAILS:
+Vaccine: {context['vaccine_name']}
+Dose: {context['dose_number']} of {context['required_doses']}
+Scheduled Date: {context['scheduled_date']}
+{next_schedule_text}
+Please mark your calendar and proceed to your barangay health center on the scheduled date. If you have any concerns or need to reschedule, please contact us immediately.
+
+PPMS Cluster 4
+Imus City Healthcare Management
+
+This is an automated message. Please do not reply.
+© 2025 PPMS Cluster 4. All rights reserved.
+    """
+    return text.strip()
 
 
 @login_required
@@ -4228,24 +4642,29 @@ def send_reschedule_notifications_async(parent, account, preschooler, schedule, 
         if parent.email:
             try:
                 subject = f"[PPMS] Vaccination Rescheduled for {preschooler.first_name}"
-                message = (
-                    f"Dear {parent.full_name},\n\n"
-                    f"The vaccination appointment for your child {preschooler.first_name} {preschooler.last_name} "
-                    f"has been rescheduled.\n\n"
-                    f"Vaccine: {schedule.vaccine_name}\n"
-                    f"Original Date: {old_date.strftime('%B %d, %Y')}\n"
-                    f"New Date: {new_date.strftime('%B %d, %Y')}\n"
-                    f"Reason: {reschedule_reason}\n\n"
-                    f"Please mark your calendar with the new appointment date.\n"
-                    f"If you have any questions, please contact the health center.\n\n"
-                    f"Thank you for your understanding,\nPPMS System"
-                )
+                
+                # Prepare context for HTML email
+                email_context = {
+                    'parent_name': parent.full_name,
+                    'child_name': f"{preschooler.first_name} {preschooler.last_name}",
+                    'vaccine_name': schedule.vaccine_name,
+                    'dose_number': schedule.doses,
+                    'required_doses': schedule.required_doses,
+                    'old_date': old_date.strftime('%B %d, %Y'),
+                    'new_date': new_date.strftime('%B %d, %Y'),
+                    'reschedule_reason': reschedule_reason
+                }
+                
+                # Generate HTML and plain text emails
+                html_message = render_reschedule_vaccination_email_html(email_context)
+                plain_message = render_reschedule_vaccination_email_text(email_context)
 
                 send_mail(
                     subject,
-                    message,
+                    plain_message,
                     settings.DEFAULT_FROM_EMAIL,
                     [parent.email],
+                    html_message=html_message,
                     fail_silently=False
                 )
                 logger.info(f"[ASYNC] Reschedule email sent to {parent.email}")
@@ -4288,6 +4707,263 @@ def send_reschedule_notifications_async(parent, account, preschooler, schedule, 
     except Exception as e:
         logger.error(f"[ASYNC] Error in reschedule notification for {parent.email}: {e}")
 
+
+def render_reschedule_vaccination_email_html(context):
+    """Generate HTML vaccination reschedule email"""
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PPMS Vaccination Reschedule</title>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+            
+            body {{
+                font-family: 'Inter', Arial, sans-serif;
+                background-color: #f9fafb;
+                padding: 40px 20px;
+                color: #334155;
+                line-height: 1.6;
+            }}
+            
+            .container {{
+                max-width: 560px;
+                margin: 0 auto;
+                background: white;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }}
+            
+            .header {{
+                padding: 24px 32px;
+                text-align: center;
+                color: #111827;
+                border-bottom: 4px solid #198754;
+            }}
+            .header h1 {{
+                font-size: 24px;
+                font-weight: 600;
+                margin: 0;
+                color: #111827;
+            }}
+            .header p {{
+                font-size: 16px;
+                margin: 4px 0 0 0;
+                color: #6b7280;
+            }}
+            
+            .content {{
+                padding: 32px;
+            }}
+            
+            .greeting {{
+                font-size: 18px;
+                margin: 0 0 16px 0;
+                color: #1e293b;
+                text-align: left;
+            }}
+            
+            .salutation {{
+                font-size: 16px;
+                margin: 0 0 16px 0;
+                color: #64748b;
+                text-align: left;
+            }}
+            
+            .message {{
+                font-size: 16px;
+                margin: 0 0 24px 0;
+                color: #64748b;
+                text-align: left;
+                padding: 0;
+            }}
+            
+            .schedule-details {{
+                background-color: #f1f5f9;
+                padding: 16px;
+                border-radius: 8px;
+                margin-bottom: 24px;
+                border-left: 4px solid #198754;
+            }}
+            
+            .detail-row {{
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                font-size: 14px;
+                color: #334155;
+                border-bottom: 1px solid #e2e8f0;
+            }}
+            
+            .detail-row:last-child {{
+                border-bottom: none;
+            }}
+            
+            .detail-label {{
+                font-weight: 600;
+                color: #1e293b;
+            }}
+            
+            .detail-value {{
+                color: #64748b;
+                text-align: right;
+            }}
+            
+            .date-comparison {{
+                margin-top: 16px;
+                padding-top: 16px;
+                border-top: 1px solid #e2e8f0;
+            }}
+            
+            .old-date {{
+                color: #ef4444;
+                text-decoration: line-through;
+            }}
+            
+            .new-date {{
+                color: #198754;
+                font-weight: 600;
+            }}
+            
+            .reason-box {{
+                background-color: #fef3c7;
+                padding: 12px;
+                border-radius: 8px;
+                margin-bottom: 24px;
+                border-left: 4px solid #f59e0b;
+                font-size: 14px;
+                color: #92400e;
+            }}
+            
+            .footer {{
+                background: #f1f5f9;
+                padding: 32px;
+                text-align: center;
+                border-top: 1px solid #e2e8f0;
+            }}
+            
+            .footer h3 {{
+                font-size: 18px;
+                font-weight: 600;
+                color: #1e293b;
+                margin-bottom: 8px;
+            }}
+            
+            .footer p {{
+                font-size: 14px;
+                color: #64748b;
+                margin-bottom: 4px;
+            }}
+            
+            .footer-divider {{
+                margin: 24px 0;
+                height: 1px;
+                background: #e2e8f0;
+            }}
+            
+            .footer-small {{
+                font-size: 12px;
+                color: #94a3b8;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>PPMS Cluster 4</h1>
+                <p>Imus City Healthcare Management</p>
+            </div>
+            
+            <div class="content">
+                <div class="greeting">
+                    Hello <strong>{context['parent_name']}</strong>,
+                </div>
+                
+                <div class="salutation">
+                    Dear Parent,
+                </div>
+                
+                <div class="message">
+                    The vaccination schedule for your child <strong>{context['child_name']}</strong> has been rescheduled.
+                </div>
+                
+                <div class="schedule-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Vaccine:</span>
+                        <span class="detail-value">{context['vaccine_name']}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Dose:</span>
+                        <span class="detail-value">{context['dose_number']} of {context['required_doses']}</span>
+                    </div>
+                    <div class="date-comparison">
+                        <div style="margin-bottom: 8px;">
+                            <span class="detail-label">Previous Date:</span>
+                            <span class="old-date">{context['old_date']}</span>
+                        </div>
+                        <div>
+                            <span class="detail-label">New Date:</span>
+                            <span class="new-date">{context['new_date']}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                {'<div class="reason-box"><strong>Reason for Rescheduling:</strong><br>' + context['reschedule_reason'] + '</div>' if context.get('reschedule_reason') else ''}
+                
+                <div class="message">
+                    Please update your calendar with the new date and proceed to your barangay health center accordingly. If you have any questions or concerns, please contact us immediately.
+                </div>
+            </div>
+            
+            <div class="footer">
+                <h3>PPMS Cluster 4</h3>
+                <p>Imus City Healthcare Management</p>
+                <div class="footer-divider"></div>
+                <p class="footer-small">
+                    This is an automated message. Please do not reply.<br>
+                    © 2025 PPMS Cluster 4. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html
+
+
+def render_reschedule_vaccination_email_text(context):
+    """Generate plain text vaccination reschedule email"""
+    reason_text = f"Reason for Rescheduling: {context['reschedule_reason']}\n\n" if context.get('reschedule_reason') else ""
+    
+    text = f"""
+PPMS Vaccination Schedule Rescheduled
+
+Hello {context['parent_name']},
+
+Dear Parent,
+
+The vaccination schedule for your child {context['child_name']} has been rescheduled.
+
+VACCINATION DETAILS:
+Vaccine: {context['vaccine_name']}
+Dose: {context['dose_number']} of {context['required_doses']}
+
+SCHEDULE CHANGE:
+Previous Date: {context['old_date']}
+New Date: {context['new_date']}
+
+{reason_text}Please update your calendar with the new date and proceed to your barangay health center accordingly. If you have any questions or concerns, please contact us immediately.
+
+PPMS Cluster 4
+Imus City Healthcare Management
+
+This is an automated message. Please do not reply.
+© 2025 PPMS Cluster 4. All rights reserved.
+    """
+    return text.strip()
 
 
 @require_POST
@@ -9990,6 +10666,7 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
 
 
 
