@@ -707,17 +707,18 @@
                   <input type="text" class="form-control" id="subject" name="subject" value="Vaccination Endorsement" required>
                 </div>
 
-                <div class="mb-3">
-                  <label for="message" class="form-label">Message:</label>
-                  <textarea class="form-control" id="message" name="message" rows="8" placeholder="Write the endorsement details..." required>Dear Parent,
-
+               <div class="mb-3">
+  <label for="message" class="form-label">Message:</label>
+  <textarea class="form-control" id="message" name="message" rows="8" placeholder="Write the endorsement details..." required>
 This is to endorse your child to receive their required immunization at another barangay due to unavailability in your current health center.
 
 Kindly proceed to [Insert Barangay Name] at your earliest convenience.
 
 Thank you,
 {{ clean_full_name }}</textarea>
-                </div>
+</div>
+
+
 
                 <button type="submit" class="btn w-100">Send Email</button>
               </form>
