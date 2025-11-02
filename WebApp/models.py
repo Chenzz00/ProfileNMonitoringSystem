@@ -71,145 +71,98 @@ class Account(models.Model):
     must_change_password = models.BooleanField(default=False)
     fcm_token = models.TextField(blank=True, null=True)
 
+    # ✅ Helper: Clean any single field value
+    def clean_field_value(self, field_value):
+        """Clean a field, return None if it’s NA, blank, or placeholder."""
+        if not field_value:
+            return None
+        str_value = str(field_value).strip().lower()
+        invalid_values = {'na', 'n/a', 'none', 'null', '--', 'no address provided', ''}
+        if str_value in invalid_values:
+            return None
+        return str(field_value).strip()
+
+    # ✅ Auto-generate full name without "NA" values
     def save(self, *args, **kwargs):
-        # build full_name before saving
         parts = [
-            self.first_name or "",
-            self.middle_name or "",   
-            self.last_name or "",
-            self.suffix or ""         
+            self.clean_field_value(self.first_name),
+            self.clean_field_value(self.middle_name),
+            self.clean_field_value(self.last_name),
+            self.clean_field_value(self.suffix),
         ]
-        self.full_name = " ".join(p for p in parts if p).strip()
-    
+        # Filter out None or empty parts
+        self.full_name = " ".join([p for p in parts if p]).strip()
         super().save(*args, **kwargs)
 
+    # ✅ Automatically delete associated User when Account is deleted
     def delete(self, *args, **kwargs):
-        # Delete associated User when Account is deleted
         try:
             User.objects.filter(username=self.email).delete()
         except Exception as e:
             print(f"Error deleting associated User: {e}")
         super().delete(*args, **kwargs)
-    
-    # Helper method to clean any field value
-    def clean_field_value(self, field_value):
-        """Clean field value, return None if it's a placeholder like NA"""
-        if not field_value:
-            return None
-        
-        str_value = str(field_value).strip().lower()
-        invalid_values = {'na', 'n/a', 'none', 'null', '--', 'no address provided', ''}
-        
-        if str_value in invalid_values:
-            return None
-        
-        return str(field_value).strip()
-    
+
+    # === CLEAN PROPERTIES ===
     @property
     def clean_first_name(self):
-        """Return first name without NA values"""
         return self.clean_field_value(self.first_name)
-    
+
     @property
     def clean_middle_name(self):
-        """Return middle name without NA values"""
         return self.clean_field_value(self.middle_name)
-    
+
     @property
     def clean_last_name(self):
-        """Return last name without NA values"""
         return self.clean_field_value(self.last_name)
-    
+
     @property
     def clean_suffix(self):
-        """Return suffix without NA values"""
         return self.clean_field_value(self.suffix)
 
     @property
     def clean_full_name(self):
-        """Return full name without NA values"""
-        parts = []
-        if self.clean_first_name:
-            parts.append(self.clean_first_name)
-        if self.clean_middle_name:
-            parts.append(self.clean_middle_name)
-        if self.clean_last_name:
-            parts.append(self.clean_last_name)
-        if self.clean_suffix:
-            parts.append(self.clean_suffix)
-        
+        """Return clean full name (filters out NA, empty, or placeholder values)."""
+        parts = [
+            self.clean_first_name,
+            self.clean_middle_name,
+            self.clean_last_name,
+            self.clean_suffix
+        ]
+        parts = [p for p in parts if p]
         return " ".join(parts) if parts else None
-    
+
     @property
     def clean_contact_number(self):
-        """Return contact number without NA values"""
         return self.clean_field_value(self.contact_number)
-    
+
     @property
     def clean_address(self):
-        """Return address without NA values"""
         if not self.editable_address:
             return None
-            
-        # Clean the full address string
         cleaned_address = self.clean_field_value(self.editable_address)
         if not cleaned_address:
             return None
-            
-        # Also clean individual parts separated by commas
         parts = [part.strip() for part in cleaned_address.split(",")]
-        cleaned_parts = []
-        
-        for part in parts:
-            cleaned_part = self.clean_field_value(part)
-            if cleaned_part:
-                cleaned_parts.append(cleaned_part)
-        
+        cleaned_parts = [self.clean_field_value(p) for p in parts if self.clean_field_value(p)]
         return ", ".join(cleaned_parts) if cleaned_parts else None
-    
-    @property
-    def clean_house_number(self):
-        """Return house number without NA values"""
-        return self.clean_field_value(self.house_number)
-    
-    @property
-    def clean_block(self):
-        """Return block without NA values"""
-        return self.clean_field_value(self.block)
-    
-    @property
-    def clean_lot(self):
-        """Return lot without NA values"""
-        return self.clean_field_value(self.lot)
-    
-    @property
-    def clean_phase(self):
-        """Return phase without NA values"""
-        return self.clean_field_value(self.phase)
-    
-    @property
-    def clean_street(self):
-        """Return street without NA values"""
-        return self.clean_field_value(self.street)
-    
-    @property
-    def clean_subdivision(self):
-        """Return subdivision without NA values"""
-        return self.clean_field_value(self.subdivision)
-    
-    @property
-    def clean_city(self):
-        """Return city without NA values"""
-        return self.clean_field_value(self.city)
-    
-    @property
-    def clean_province(self):
-        """Return province without NA values"""
-        return self.clean_field_value(self.province)
 
-    def __str__(self):
-        return self.user.email
-    
+    @property
+    def clean_house_number(self): return self.clean_field_value(self.house_number)
+    @property
+    def clean_block(self): return self.clean_field_value(self.block)
+    @property
+    def clean_lot(self): return self.clean_field_value(self.lot)
+    @property
+    def clean_phase(self): return self.clean_field_value(self.phase)
+    @property
+    def clean_street(self): return self.clean_field_value(self.street)
+    @property
+    def clean_subdivision(self): return self.clean_field_value(self.subdivision)
+    @property
+    def clean_city(self): return self.clean_field_value(self.city)
+    @property
+    def clean_province(self): return self.clean_field_value(self.province)
+
     @property
     def computed_age(self):
         if self.birthdate:
@@ -218,6 +171,9 @@ class Account(models.Model):
                 (today.month, today.day) < (self.birthdate.month, self.birthdate.day)
             )
         return None
+
+    def __str__(self):
+        return self.email or "No Email"
 
 def announcement_image_upload_path(instance, filename):
     """Generate upload path for announcement images"""
@@ -998,6 +954,7 @@ class FCMToken(models.Model):
 
     def __str__(self):
         return f"{self.account.email} - {self.token}"
+
 
 
 
