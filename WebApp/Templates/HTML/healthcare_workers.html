@@ -16,7 +16,7 @@
     body {
       background: url('{% static "media/loginbg.png" %}') center/cover no-repeat fixed;
     }
-    
+
     .background-image {
       background-image: url('{% static "media/loginbg.png" %}');
     }
@@ -30,7 +30,7 @@
       gap: 15px;
       color: white;
     }
-    
+
     .profile-image {
       width: 50px;
       height: 50px;
@@ -38,46 +38,46 @@
       object-fit: cover;
       border: 2px solid rgba(255, 255, 255, 0.2);
     }
-    
+
     .profile-info h3 {
       margin: 0;
       font-size: 16px;
       font-weight: 600;
       color: white;
     }
-    
+
     .profile-info p {
       margin: 2px 0 0 0;
       font-size: 12px;
       color: rgba(255, 255, 255, 0.7);
     }
-    
+
     .logout-nav-item {
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       margin-top: auto;
     }
-    
+
     .logout-nav-item .nav-link {
       color: #ff6b6b;
     }
-    
+
     .logout-nav-item .nav-link:hover {
       background-color: rgba(255, 107, 107, 0.1);
       color: #ff6b6b;
     }
-    
+
     .nav-menu {
       display: flex;
       flex-direction: column;
       height: calc(100% - 140px);
       padding: 20px 0 0 0;
     }
-    
+
     .sidebar {
       display: flex;
       flex-direction: column;
     }
-    
+
     .sidebar-header {
       flex-shrink: 0;
     }
@@ -94,18 +94,294 @@
       max-width: 1200px;
     }
 
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
     .page-container h2 {
       font-size: 2em;
-      margin-bottom: 30px;
+      margin: 0;
       font-weight: 400;
       color: #333;
       text-transform: uppercase;
       letter-spacing: 2px;
       font-family: 'Poppins', sans-serif;
-      text-align: center;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
     }
 
-    /* Filter Section Styles - Force horizontal layout */
+    /* Create Admin Button */
+    .create-admin-btn {
+      background: #5bdab3;
+      color: #1e1e2f;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(91, 218, 179, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    .create-admin-btn:hover {
+      background: #1565c0;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(21, 101, 192, 0.4);
+    }
+
+    .create-admin-btn i {
+      font-size: 16px;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+      z-index: 9999;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Modal Container */
+    .modal-container {
+      background: white;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+      overflow: hidden;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Modal Header */
+    .modal-header {
+      background: linear-gradient(135deg, #5bdab3 0%, #1565c0 100%);
+      color: white;
+      padding: 24px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      font-size: 20px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0;
+    }
+
+    .modal-header i {
+      font-size: 22px;
+    }
+
+    .close-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: rotate(90deg);
+    }
+
+    /* Modal Body */
+    .modal-body {
+      padding: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group label i {
+      margin-right: 6px;
+      color: #5bdab3;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #5bdab3;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(91, 218, 179, 0.1);
+    }
+
+    .form-input::placeholder {
+      color: #999;
+    }
+
+    .name-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    /* Info Box */
+    .info-box {
+      background: linear-gradient(135deg, rgba(91, 218, 179, 0.1) 0%, rgba(21, 101, 192, 0.1) 100%);
+      border-left: 4px solid #5bdab3;
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .info-box i {
+      color: #5bdab3;
+      font-size: 18px;
+      margin-top: 2px;
+    }
+
+    .info-box p {
+      color: #555;
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 0;
+    }
+
+    /* Modal Footer */
+    .modal-footer {
+      padding: 20px 30px 30px;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .btn-cancel {
+      background: #e0e0e0;
+      color: #666;
+    }
+
+    .btn-cancel:hover {
+      background: #d0d0d0;
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #5bdab3 0%, #1565c0 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(91, 218, 179, 0.3);
+      min-width: 150px;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(21, 101, 192, 0.4);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Loading State */
+    .btn-submit.loading {
+      position: relative;
+      color: transparent;
+    }
+
+    .btn-submit.loading::after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 50%;
+      left: 50%;
+      margin-left: -8px;
+      margin-top: -8px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Filter Section Styles */
     .filter-section {
       margin-bottom: 25px !important;
       display: flex !important;
@@ -165,26 +441,6 @@
       line-height: 20px;
     }
 
-    .filter-select {
-      padding: 12px 40px 12px 16px;
-      border: 2px solid #5bdab3;
-      background: white;
-      color: #333;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-      font-size: 14px;
-      font-family: 'Poppins', sans-serif;
-      transition: all 0.3s ease;
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235bdab3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      background-size: 16px;
-    }
-
     .filter-select:hover,
     .filter-select:focus {
       border-color: #1565c0;
@@ -199,26 +455,6 @@
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
       -webkit-overflow-scrolling: touch;
-      scrollbar-width: thin;
-      scrollbar-color: #5bdab3 #f0f0f0;
-    }
-
-    .table-container::-webkit-scrollbar {
-      height: 8px;
-    }
-
-    .table-container::-webkit-scrollbar-track {
-      background: #f0f0f0;
-      border-radius: 4px;
-    }
-
-    .table-container::-webkit-scrollbar-thumb {
-      background: #5bdab3;
-      border-radius: 4px;
-    }
-
-    .table-container::-webkit-scrollbar-thumb:hover {
-      background: #1565c0;
     }
 
     table {
@@ -268,9 +504,9 @@
       background-color: rgba(91, 218, 179, 0.1);
     }
 
-    .btn {
-      background-color: #5bdab3;
-      color: #1e1e2f;
+    .remove-btn {
+      background-color: #ef5350;
+      color: white;
       padding: 8px 16px;
       text-decoration: none;
       border-radius: 8px;
@@ -279,20 +515,6 @@
       transition: all 0.3s ease;
       border: none;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
-      display: inline-block;
-    }
-
-    .btn:hover {
-      background-color: #1565c0;
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
-    }
-
-    .remove-btn {
-      background-color: #ef5350;
-      color: white;
       box-shadow: 0 2px 6px rgba(239, 83, 80, 0.3);
     }
 
@@ -300,18 +522,7 @@
       background-color: #d32f2f;
       color: white;
       box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
-    }
-
-    /* Debug button styles */
-    .debug-btn {
-      background: #ff4444;
-      color: white;
-      padding: 10px 20px;
-      margin: 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
+      transform: translateY(-2px);
     }
 
     /* Pagination */
@@ -324,102 +535,6 @@
       font-family: 'Poppins', sans-serif;
     }
 
-    .pagination-section span {
-      margin: 0 15px;
-      color: #666;
-    }
-
-    .pagination-section .btn {
-      margin: 0 5px;
-      padding: 12px 20px;
-      font-size: 14px;
-    }
-
-    /* Mobile adjustments */
-    @media (max-width: 768px) {
-      .page-container {
-        margin: 20px auto 0;
-        padding: 20px;
-      }
-
-      .page-container h2 {
-        font-size: 1.6em;
-        margin-bottom: 25px;
-      }
-
-      .filter-section {
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 20px;
-        max-width: 300px;
-        padding: 0;
-      }
-
-      .filter-wrapper {
-        width: 100%;
-        max-width: 280px;
-        flex: none;
-      }
-
-      .filter-select {
-        padding: 10px 35px 10px 14px;
-        font-size: 13px;
-        width: 100%;
-      }
-
-      table {
-        min-width: 800px;
-      }
-
-      table th,
-      table td {
-        padding: 10px 12px;
-        font-size: 13px;
-      }
-
-      .btn {
-        font-size: 11px;
-        padding: 6px 12px;
-      }
-    }
-
-    @media (max-width: 576px) {
-      .filter-section {
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 20px;
-        padding: 0 20px;
-      }
-      
-      .filter-wrapper {
-        width: 100%;
-        max-width: 300px;
-      }
-
-      .filter-select {
-        padding: 8px 30px 8px 12px;
-        font-size: 12px;
-      }
-
-      table {
-        min-width: 700px;
-      }
-
-      table th,
-      table td {
-        padding: 8px 10px;
-        font-size: 12px;
-      }
-
-      .btn {
-        font-size: 10px;
-        padding: 5px 10px;
-      }
-    }
-
     /* Role badge styles */
     .role-badge {
       padding: 4px 8px;
@@ -430,29 +545,136 @@
       letter-spacing: 0.5px;
       white-space: nowrap;
     }
-    
+
     .role-badge.bhw {
       background: rgba(76, 175, 80, 0.1);
       color: #4caf50;
       border: 1px solid rgba(76, 175, 80, 0.3);
     }
-    
+
     .role-badge.bns {
       background: rgba(33, 150, 243, 0.1);
       color: #2196f3;
       border: 1px solid rgba(33, 150, 243, 0.3);
     }
-    
+
     .role-badge.midwife {
       background: rgba(156, 39, 176, 0.1);
       color: #9c27b0;
       border: 1px solid rgba(156, 39, 176, 0.3);
     }
-    
+
     .role-badge.nurse {
       background: rgba(255, 152, 0, 0.1);
       color: #ff9800;
       border: 1px solid rgba(255, 152, 0, 0.3);
+    }
+
+    /* SweetAlert2 Custom Styling */
+    .swal2-popup {
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .swal2-title {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .swal2-html-container {
+      font-size: 15px;
+    }
+
+    /* Success credentials styling - matching register parent */
+    .success-credentials { 
+      background-color: #f8f9fa; 
+      border: 1px solid #e9ecef; 
+      border-radius: 8px; 
+      padding: 15px; 
+      margin: 10px 0; 
+      text-align: left; 
+    }
+
+    .success-credentials strong { 
+      color: #28a745; 
+    }
+
+    .custom-swal-popup { 
+      font-family: 'Poppins', sans-serif; 
+      border-radius: 12px; 
+      padding: 20px; 
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15); 
+    }
+
+    .custom-swal-title { 
+      font-weight: 600; 
+      font-size: 20px; 
+      color: #333; 
+      margin-bottom: 15px; 
+      text-align: center; 
+    }
+
+    .custom-swal-text { 
+      font-weight: 400; 
+      font-size: 14px; 
+      color: #666; 
+      line-height: 1.6; 
+      text-align: center; 
+    }
+
+    .custom-swal-button { 
+      font-weight: 500; 
+      font-size: 14px; 
+      padding: 12px 30px; 
+      border-radius: 8px; 
+      border: none; 
+      margin-top: 10px; 
+    }
+
+    .custom-swal-button:hover { 
+      transform: translateY(-1px); 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
+    }
+
+    .custom-swal-success .custom-swal-button { 
+      background-color: #28a745; 
+      color: white; 
+    }
+
+    .custom-swal-error .custom-swal-button { 
+      background-color: #dc3545; 
+      color: white; 
+    }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      .page-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+      }
+
+      .page-container h2 {
+        position: static;
+        transform: none;
+      }
+
+      .create-admin-btn {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
+      }
+
+      .name-row {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-footer {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -538,7 +760,6 @@
         </button>
       </div>
       
-      
       <div class="nav-item">
         <button class="nav-link" onclick="location.href='/admin-logs/'">
           <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
@@ -598,27 +819,31 @@
             {% if notifications %}
               {% for notif in notifications %}
                 {% if notif.type == 'account' %}
-                  <a href="/validate/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}" style="display: flex; flex-direction: column; gap: 2px;">
-                    <div style="display: flex; align-items: center;">
-                      <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
-                      <span class="notif-text">New {{ notif.user_role }} account named <strong>{{ notif.full_name }}</strong> requesting for validation.</span>
+                  <a href="/validate/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}">
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                      <div style="display: flex; align-items: center;">
+                        <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                        <span class="notif-text">New {{ notif.user_role }} account named <strong>{{ notif.full_name }}</strong> requesting for validation.</span>
+                      </div>
+                      <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
                     </div>
-                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
                   </a>
                 {% elif notif.type == 'preschooler' %}
-                  <a href="/registered-preschoolers/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}" style="display: flex; flex-direction: column; gap: 2px;">
-                    <div style="display: flex; align-items: center;">
-                      {% if notif.bhw_image %}
-                        <img src="{{ notif.bhw_image }}" alt="BHW Profile" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
-                      {% else %}
-                        <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
-                      {% endif %}
-                      <span class="notif-text">
-                        New preschooler is being registered.<br>
-                        Name: <strong>{{ notif.full_name }}</strong>
-                      </span>
+                  <a href="/registered-preschoolers/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}">
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                      <div style="display: flex; align-items: center;">
+                        {% if notif.bhw_image %}
+                          <img src="{{ notif.bhw_image }}" alt="BHW Profile" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                        {% else %}
+                          <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
+                        {% endif %}
+                        <span class="notif-text">
+                          New preschooler is being registered.<br>
+                          Name: <strong>{{ notif.full_name }}</strong>
+                        </span>
+                      </div>
+                      <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
                     </div>
-                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
                   </a>
                 {% endif %}
               {% endfor %}
@@ -633,7 +858,14 @@
     <!-- Content Wrapper -->
     <div class="content-wrapper">
       <div class="page-container">
-        <h2>Registered Workers</h2>
+        <!-- Page Header with Title and Create Admin Button -->
+        <div class="page-header">
+          <h2>Registered Workers</h2>
+          <button class="create-admin-btn" id="openModalBtn">
+            <i class="fas fa-user-plus"></i>
+            Create Admin
+          </button>
+        </div>
         
         <!-- Message Display Section -->
         {% if messages %}
@@ -686,7 +918,7 @@
           </script>
         {% endif %}
         
-        <!-- Filter Section - Updated with Role Filter -->
+        <!-- Filter Section -->
         <div class="filter-section">
           <div class="filter-wrapper">
             <label for="role-filter" class="filter-label">
@@ -714,7 +946,7 @@
           </div>
         </div>
 
-        <!-- Single Table Content - All Workers -->
+        <!-- Table Content -->
         <div class="table-container">
           <table class="table table-striped table-hover">
             <thead>
@@ -862,7 +1094,7 @@
                 </tr>
               {% endfor %}
 
-              <!-- Empty state when no workers found -->
+              <!-- Empty state -->
               <tr id="no-results-row" style="display:none;">
                 <td colspan="8" style="text-align:center; padding: 40px; color: #999;">
                   No workers found matching the selected filters.
@@ -876,6 +1108,88 @@
         <div class="pagination-section">
           <span id="pagination-info">Page 1 of 1</span>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Admin Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-container">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h3>
+          <i class="fas fa-user-shield"></i>
+          Create New Admin
+        </h3>
+        <button class="close-btn" id="closeModalBtn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <div class="info-box">
+          <i class="fas fa-info-circle"></i>
+          <p>
+            A default password will be automatically generated and sent to the admin's email address. 
+            The new admin will receive login credentials via email.
+          </p>
+        </div>
+
+        <form id="createAdminForm">
+          {% csrf_token %}
+          <div class="name-row">
+            <div class="form-group">
+              <label for="firstName">
+                <i class="fas fa-user"></i> First Name
+              </label>
+              <input 
+                type="text" 
+                id="firstName" 
+                name="first_name"
+                class="form-input" 
+                placeholder="Enter first name"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="lastName">
+                <i class="fas fa-user"></i> Last Name
+              </label>
+              <input 
+                type="text" 
+                id="lastName" 
+                name="last_name"
+                class="form-input" 
+                placeholder="Enter last name"
+                required
+              >
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">
+              <i class="fas fa-envelope"></i> Email Address
+            </label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email"
+              class="form-input" 
+              placeholder="admin@example.com"
+              required
+            >
+          </div>
+        </form>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button class="btn btn-cancel" id="cancelBtn">Cancel</button>
+        <button class="btn btn-submit" id="submitBtn">
+          <i class="fas fa-check"></i> Create Admin Account
+        </button>
       </div>
     </div>
   </div>
@@ -903,7 +1217,7 @@
         });
       }
 
-      // Notification red dot
+      // Notification handling
       const latestNotifTimestampStr = "{{ latest_notif_timestamp }}";
       const latestNotifTimestamp = latestNotifTimestampStr ? new Date(latestNotifTimestampStr) : null;
       let lastReadTimestampStr = localStorage.getItem('lastReadNotifTimestamp');
@@ -943,40 +1257,6 @@
         });
       }
 
-      // Notification item click handler
-      document.querySelectorAll('.notif-item').forEach(item => {
-        item.addEventListener('click', function (e) {
-          e.preventDefault();
-          const notifId = this.getAttribute('data-id');
-          const notifType = this.getAttribute('data-type');
-          const targetUrl = this.getAttribute('href');
-          const notifText = this.querySelector('.notif-text');
-
-          fetch('/mark-notif-read/', {
-            method: 'POST',
-            headers: {
-              'X-CSRFToken': '{{ csrf_token }}',
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: notifId, type: notifType }),
-          })
-          .then(res => res.json())
-          .then(data => {
-            if (data.status && notifText) notifText.style.fontWeight = 'normal';
-            window.location.href = targetUrl;
-          })
-          .catch(() => window.location.href = targetUrl);
-        });
-      });
-
-      // Set active nav item
-      const currentPath = window.location.pathname;
-      document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-        const onclick = link.getAttribute('onclick');
-        if (onclick && onclick.includes(currentPath)) link.classList.add('active');
-      });
-
       // Filter functionality
       const roleFilter = document.getElementById('role-filter');
       const barangayFilter = document.getElementById('barangay-filter');
@@ -985,8 +1265,6 @@
       function applyFilters() {
         const selectedRole = roleFilter.value.toLowerCase();
         const selectedBarangay = barangayFilter.value.toLowerCase();
-        
-        console.log('Applying filters:', { role: selectedRole, barangay: selectedBarangay });
         
         const tableRows = document.querySelectorAll('table tbody tr[data-role]');
         let visibleCount = 0;
@@ -997,12 +1275,10 @@
           
           let showRow = true;
           
-          // Apply role filter
           if (selectedRole !== 'all' && rowRole !== selectedRole) {
             showRow = false;
           }
           
-          // Apply barangay filter
           if (selectedBarangay !== 'all') {
             if (selectedBarangay === 'no barangay') {
               if (rowBarangay !== 'no barangay' && rowBarangay !== '' && rowBarangay !== null) {
@@ -1023,235 +1299,397 @@
           }
         });
         
-        // Show/hide no results message
         if (visibleCount === 0) {
           noResultsRow.style.display = '';
         } else {
           noResultsRow.style.display = 'none';
         }
-        
-        console.log(`Filter applied: ${visibleCount} rows visible`);
       }
 
-      // Add event listeners for filters
-      if (roleFilter) {
-        roleFilter.addEventListener('change', applyFilters);
-      }
-      
-      if (barangayFilter) {
-        barangayFilter.addEventListener('change', applyFilters);
-      }
-
-      // DEBUG FUNCTION - Remove in production
-      window.debugData = function() {
-        console.log('=== HEALTHCARE WORKERS DEBUG ===');
-        
-        const allRows = document.querySelectorAll('table tbody tr[data-role]');
-        console.log(`Total rows found: ${allRows.length}`);
-        
-        const roleCount = {};
-        const barangayCount = {};
-        
-        allRows.forEach((row, i) => {
-          const role = row.getAttribute('data-role');
-          const barangay = row.getAttribute('data-barangay');
-          const name = row.children[0]?.textContent?.trim() || 'N/A';
-          
-          roleCount[role] = (roleCount[role] || 0) + 1;
-          barangayCount[barangay] = (barangayCount[barangay] || 0) + 1;
-          
-          console.log(`Row ${i}: ${name} | Role: ${role} | Barangay: ${barangay}`);
-        });
-        
-        console.log('\nRole distribution:', roleCount);
-        console.log('Barangay distribution:', barangayCount);
-      };
+      if (roleFilter) roleFilter.addEventListener('change', applyFilters);
+      if (barangayFilter) barangayFilter.addEventListener('change', applyFilters);
 
       // Remove button handler
-    // Remove button handler with SweetAlert
-// Enhanced remove button handler with detailed debugging
-document.querySelectorAll('.remove-btn').forEach(button => {
-  button.addEventListener('click', function(e) {
-    e.preventDefault();
-    
-    const name = this.getAttribute('data-name');
-    const type = this.getAttribute('data-type');
-    const form = this.closest('form');
-    
-    console.log('Remove button clicked:', { name, type, formAction: form.action });
-    
-    Swal.fire({
-      title: 'Are you sure?',
-      html: `Do you want to remove <strong>${name}</strong> (${type}) from the system?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#95a5a6',
-      confirmButtonText: 'Yes, remove them',
-      cancelButtonText: 'Cancel'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        console.log('User confirmed removal');
-        
-        // Get CSRF token
-        const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
-        console.log('CSRF Token found:', csrfToken ? 'Yes' : 'No');
-        
-        // Send AJAX request
-        fetch(form.action, {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': csrfToken,
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest', // Important for AJAX detection
-          },
-          body: new URLSearchParams({
-            'csrfmiddlewaretoken': csrfToken
-          })
-        })
-        .then(response => {
-          console.log('Response status:', response.status);
-          console.log('Response headers:', response.headers);
+      document.querySelectorAll('.remove-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
           
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
+          const name = this.getAttribute('data-name');
+          const type = this.getAttribute('data-type');
+          const form = this.closest('form');
           
-          return response.json();
-        })
-        .then(data => {
-          console.log('Response data:', data);
-          
-          if (data.success) {
-            // Success - remove the row and show success message
-            const row = this.closest('tr');
-            row.style.transition = 'all 0.3s ease';
-            row.style.opacity = '0';
-            row.style.transform = 'translateX(-20px)';
-            
-            setTimeout(() => {
-              row.remove();
-              applyFilters(); // Reapply filters to update counts
-            }, 300);
-            
-            // Clean success message
-            Swal.fire({
-              icon: 'success',
-              title: 'Successfully Removed!',
-              html: `<strong>${data.name}</strong> (${data.type}) has been removed from the system and notified via email.`,
-              timer: 3000,
-              showConfirmButton: false,
-              background: '#f8f9fa',
-              color: '#2e7d32'
-            });
-          } else {
-            // Error from server
-            console.error('Server error:', data.error);
-            Swal.fire({
-              icon: 'error',
-              title: 'Error!',
-              text: data.error || 'Failed to remove the worker. Please try again.',
-              confirmButtonColor: '#d33'
-            });
-          }
-        })
-        .catch(error => {
-          console.error('Fetch error:', error);
           Swal.fire({
-            icon: 'error',
-            title: 'Network Error!',
-            text: `Failed to remove the worker: ${error.message}`,
-            confirmButtonColor: '#d33'
+            title: 'Are you sure?',
+            html: `Do you want to remove <strong>${name}</strong> (${type}) from the system?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#95a5a6',
+            confirmButtonText: 'Yes, remove them',
+            cancelButtonText: 'Cancel'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+              
+              fetch(form.action, {
+                method: 'POST',
+                headers: {
+                  'X-CSRFToken': csrfToken,
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: new URLSearchParams({
+                  'csrfmiddlewaretoken': csrfToken
+                })
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  const row = this.closest('tr');
+                  row.style.transition = 'all 0.3s ease';
+                  row.style.opacity = '0';
+                  row.style.transform = 'translateX(-20px)';
+                  
+                  setTimeout(() => {
+                    row.remove();
+                    applyFilters();
+                  }, 300);
+                  
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Successfully Removed!',
+                    html: `<strong>${data.name}</strong> (${data.type}) has been removed from the system and notified via email.`,
+                    timer: 3000,
+                    showConfirmButton: false,
+                    background: '#f8f9fa',
+                    color: '#2e7d32'
+                  });
+                } else {
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: data.error || 'Failed to remove the worker. Please try again.',
+                    confirmButtonColor: '#d33'
+                  });
+                }
+              })
+              .catch(error => {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Network Error!',
+                  text: `Failed to remove the worker: ${error.message}`,
+                  confirmButtonColor: '#d33'
+                });
+              });
+            }
           });
         });
-      }
-    });
-  });
-});
+      });
 
       // Initialize filters
-      setTimeout(() => {
-        console.log('=== INITIALIZING PAGE ===');
-        applyFilters();
-        console.log('Page initialization complete. Use debugData() function to check data.');
-      }, 500);
+      setTimeout(() => applyFilters(), 500);
+
+      // ===================
+      // CREATE ADMIN MODAL
+      // ===================
+      const openModalBtn = document.getElementById('openModalBtn');
+      const modalOverlay = document.getElementById('modalOverlay');
+      const closeModalBtn = document.getElementById('closeModalBtn');
+      const cancelBtn = document.getElementById('cancelBtn');
+      const submitBtn = document.getElementById('submitBtn');
+      const createAdminForm = document.getElementById('createAdminForm');
+      const firstNameInput = document.getElementById('firstName');
+      const lastNameInput = document.getElementById('lastName');
+      const emailInput = document.getElementById('email');
+
+      // Open Modal
+      openModalBtn.addEventListener('click', () => {
+        modalOverlay.classList.add('active');
+        firstNameInput.focus();
+      });
+
+      // Close Modal Function
+      function closeModal() {
+        modalOverlay.classList.remove('active');
+        modalOverlay.style.display = '';
+        modalOverlay.style.visibility = '';
+        modalOverlay.style.opacity = '';
+        createAdminForm.reset();
+      }
+
+      // Close Modal Events
+      closeModalBtn.addEventListener('click', closeModal);
+      cancelBtn.addEventListener('click', closeModal);
+
+      // Close on overlay click
+      modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+          closeModal();
+        }
+      });
+
+      // Close on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+          closeModal();
+        }
+      });
+
+      // Helper function to get CSRF token
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+
+// Form Submission - FIXED VERSION WITH EMAIL VALIDATION
+submitBtn.addEventListener('click', async (e) => {
+  e.preventDefault();
+  
+  console.log('Button clicked!'); // DEBUG LINE
+
+  // Validate form
+  if (!createAdminForm.checkValidity()) {
+    createAdminForm.reportValidity();
+    return;
+  }
+
+  // Get form values
+  const firstName = firstNameInput.value.trim();
+  const lastName = lastNameInput.value.trim();
+  const email = emailInput.value.trim();
+  
+  console.log('Form values:', firstName, lastName, email); // DEBUG LINE
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    // Show error in modal
+    showEmailErrorInModal('Please enter a valid email address.');
+    return;
+  }
+
+  // Show loading state
+  submitBtn.disabled = true;
+  submitBtn.classList.add('loading');
+  
+  console.log('Sending request...'); // DEBUG LINE
+
+  try {
+    const response = await fetch('/create-admin/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        first_name: firstName,
+        last_name: lastName,
+        email: email
+      })
     });
 
+    const data = await response.json();
+    
+    console.log('Response data:', data); // DEBUG LINE
 
-    function updateValidationBadge() {
-    fetch("{% url 'pending-validation-count' %}")
-        .then(response => response.json())
-        .then(data => {
-            const badge = document.getElementById("validation-badge");
-            if (data.pending_count > 0) {
-                badge.textContent = data.pending_count;
-                badge.style.display = "inline-block";
-            } else {
-                badge.style.display = "none";
-            }
-        })
-        .catch(error => console.error("Error fetching pending count:", error));
-}
+    // Reset button state first
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('loading');
 
-// Update every 5 seconds
-setInterval(updateValidationBadge, 5000);
+    if (data.success) {
+      // Close modal using the closeModal function
+      closeModal();
+      
+      console.log('Modal closed, showing success'); // DEBUG LINE
+      
+      // Show success message after modal is closed
+      const credentialsHtml = `
+        <div style="margin-bottom: 15px; text-align: center;">
+          Admin account for <strong>${firstName} ${lastName}</strong> has been successfully created!
+        </div>
+        <div class="success-credentials">
+          <div style="margin-bottom: 10px; font-weight: 500; color: #28a745;">Login Credentials:</div>
+          <div style="margin: 5px 0;"><strong>Email:</strong> ${email}</div>
+          <div style="margin: 5px 0;"><strong>Password:</strong> ${data.password}</div>
+          <div style="margin-top: 10px; font-size: 12px; color: #6c757d;">
+            ✓ Credentials have been sent to the admin's email address.<br>
+            Please save these credentials securely.
+          </div>
+        </div>
+      `;
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Registration Successful!',
+        html: credentialsHtml,
+        confirmButtonColor: '#28a745',
+        confirmButtonText: 'OK',
+        width: '450px',
+        allowOutsideClick: false,
+        customClass: { 
+          popup: 'custom-swal-popup custom-swal-success', 
+          title: 'custom-swal-title', 
+          htmlContainer: 'custom-swal-text', 
+          confirmButton: 'custom-swal-button' 
+        }
+      }).then(() => {
+        // Reload page after clicking OK
+        window.location.reload();
+      });
+    } else {
+      // Handle error response - show error in modal
+      showEmailErrorInModal(data.error || 'Failed to create admin account. Please try again.');
+    }
+  } catch (error) {
+    console.error('Error:', error); // DEBUG LINE
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('loading');
+    
+    // Show error in modal
+    showEmailErrorInModal(error.message || 'Failed to create admin account. Please try again.');
+  }
+});
 
-// Run immediately on load
-updateValidationBadge();
-  </script>
+// Helper function to show error notification inside modal
+function showEmailErrorInModal(errorMessage) {
+  // Check if error message already exists, remove it first
+  const existingError = modalOverlay.querySelector('.modal-error-notification');
+  if (existingError) {
+    existingError.remove();
+  }
 
-<script>
-  // Generate Report Button with SweetAlert Modal
-const generateReportBtn = document.getElementById("generateReportBtn");
-if (generateReportBtn) {
-  generateReportBtn.addEventListener("click", function (e) {
-    e.preventDefault();
-    Swal.fire({
-      title: 'Select Month for Report',
-      input: 'month',
-      showCancelButton: true,
-      confirmButtonColor: '#3498db',
-      cancelButtonColor: '#95a5a6',
-      confirmButtonText: 'Generate Report',
-      cancelButtonText: 'Cancel',
-      inputValidator: (value) => {
-        if (!value) {
-          return 'Please select a month first!';
+  // Create error notification element
+  const errorNotification = document.createElement('div');
+  errorNotification.className = 'modal-error-notification';
+  errorNotification.style.cssText = `
+    background-color: #fee;
+    border-left: 4px solid #f44336;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    animation: slideDown 0.3s ease;
+  `;
+  errorNotification.innerHTML = `
+    <i class="fas fa-exclamation-circle" style="color: #f44336; margin-top: 2px; flex-shrink: 0;"></i>
+    <div style="color: #c62828; font-size: 14px; line-height: 1.5;">${errorMessage}</div>
+  `;
+
+  // Insert error after modal body title or at the beginning of modal body
+  const modalBody = modalOverlay.querySelector('.modal-body');
+  const infoBox = modalBody.querySelector('.info-box');
+  
+  if (infoBox) {
+    infoBox.parentNode.insertBefore(errorNotification, infoBox.nextSibling);
+  } else {
+    modalBody.insertBefore(errorNotification, modalBody.firstChild);
+  }
+
+  // Add animation keyframes
+  if (!document.querySelector('style[data-error-animation]')) {
+    const style = document.createElement('style');
+    style.setAttribute('data-error-animation', 'true');
+    style.innerHTML = `
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
       }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Show loading message briefly
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Auto-remove error after 5 seconds if user doesn't interact
+  setTimeout(() => {
+    if (errorNotification.parentNode) {
+      errorNotification.style.animation = 'slideDown 0.3s ease reverse';
+      setTimeout(() => {
+        if (errorNotification.parentNode) {
+          errorNotification.remove();
+        }
+      }, 300);
+    }
+  }, 5000);
+}
+});
+
+    // Validation badge update
+    function updateValidationBadge() {
+      fetch("{% url 'pending-validation-count' %}")
+        .then(response => response.json())
+        .then(data => {
+          const badge = document.getElementById("validation-badge");
+          if (data.pending_count > 0) {
+            badge.textContent = data.pending_count;
+            badge.style.display = "inline-block";
+          } else {
+            badge.style.display = "none";
+          }
+        })
+        .catch(error => console.error("Error fetching pending count:", error));
+    }
+
+    setInterval(updateValidationBadge, 5000);
+    updateValidationBadge();
+
+    // Generate Report Button
+    const generateReportBtn = document.getElementById("generateReportBtn");
+    if (generateReportBtn) {
+      generateReportBtn.addEventListener("click", function (e) {
+        e.preventDefault();
         Swal.fire({
-          title: 'Generating Report...',
-          text: 'Please wait while we prepare your report.',
-          icon: 'info',
-          allowOutsideClick: false,
-          showConfirmButton: false,
-          didOpen: () => {
-            Swal.showLoading();
+          title: 'Select Month for Report',
+          input: 'month',
+          showCancelButton: true,
+          confirmButtonColor: '#3498db',
+          cancelButtonColor: '#95a5a6',
+          confirmButtonText: 'Generate Report',
+          cancelButtonText: 'Cancel',
+          inputValidator: (value) => {
+            if (!value) {
+              return 'Please select a month first!';
+            }
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              title: 'Generating Report...',
+              text: 'Please wait while we prepare your report.',
+              icon: 'info',
+              allowOutsideClick: false,
+              showConfirmButton: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+
+            const reportUrl = `/generate-admin-report/?month=${result.value}`;
+            setTimeout(() => {
+              window.open(reportUrl, '_blank');
+              Swal.close();
+            }, 1000);
           }
         });
-
-        const reportUrl = `/generate-admin-report/?month=${result.value}`;
-
-        // Open in a new browser tab
-        setTimeout(() => {
-          window.open(reportUrl, '_blank');
-          Swal.close();
-        }, 1000);
-      }
-    });
-  });
-}
-
-
-
-
-</script>
-
+      });
+    }
+  </script>
 </body>
 </html>
-
-
-
