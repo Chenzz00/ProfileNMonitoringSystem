@@ -588,7 +588,7 @@
           <button onclick="filterLogs()">Search</button>
         </div>
 
-        <!-- Parent Logs Container -->
+       <!-- Parent Logs Container -->
         <div class="activity-section">
           <h3 class="section-title">Parent Activity History (All Barangays)</h3>
           
@@ -599,7 +599,7 @@
                 <tr>
                   <th>Full Name</th>
                   <th>Activity</th>
-                  <th>Barangay</th>
+                  <th>Previous Barangay</th>
                   <th>Date & Time</th>
                 </tr>
               </thead>
@@ -612,7 +612,7 @@
                   <td>{{ log.timestamp|date:"F d, Y - h:i A"}}</td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="4" class="no-data">No parent activity yet.</td></tr>
+                <tr><td colspan="4" class="no-data">No transfer activity yet.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
