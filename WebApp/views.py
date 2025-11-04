@@ -9257,8 +9257,16 @@ def admin_logs(request):
     ParentActivityLog.objects.filter(timestamp__lt=yesterday).delete()
     PreschoolerActivityLog.objects.filter(timestamp__lt=yesterday).delete()
 
-    parent_logs_all = ParentActivityLog.objects.select_related('parent', 'barangay').order_by('-timestamp')
-    preschooler_logs_all = PreschoolerActivityLog.objects.select_related('barangay').order_by('-timestamp')
+    # Filter to show only "Transferred to" activities
+    parent_logs_all = ParentActivityLog.objects.select_related('parent', 'barangay').filter(
+        activity__startswith='Transferred to'
+    ).order_by('-timestamp')
+    
+    preschooler_logs_all = PreschoolerActivityLog.objects.select_related('barangay').filter(
+        activity__startswith='Transferred to'
+    ).exclude(
+        activity__startswith='Recently transferred'
+    ).order_by('-timestamp')
 
     # Paginate
     parent_paginator = Paginator(parent_logs_all, 10)  # 10 per page
@@ -9273,6 +9281,7 @@ def admin_logs(request):
     }
 
     return render(request, 'HTML/admin_logs.html', context)
+
 
 
 
@@ -10979,6 +10988,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
