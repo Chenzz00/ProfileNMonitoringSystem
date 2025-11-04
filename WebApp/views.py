@@ -2231,40 +2231,63 @@ from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 def login(request):
-    # 👇 If already logged in, redirect based on role (persistent login)
+    # If already logged in, redirect based on role
     if request.user.is_authenticated:
         role = request.session.get('user_role', '').lower()
         if role == 'parent':
             return redirect('parent_dashboard')
         elif role == 'admin':
             return redirect('Admindashboard')
-        else:  # midwife, nurse, bhw, etc.
+        else:
             return redirect('dashboard')
 
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '').strip()
-        fcm_token = request.POST.get('fcm_token', None)  # ✅ Capture FCM token
+        fcm_token = request.POST.get('fcm_token', None)
 
-        # 🔐 Admin hardcoded login
+        # Hardcoded admin login
         if email.lower() == 'admin@gmail.com' and password == 'admin123':
             request.session['user_role'] = 'admin'
             request.session['full_name'] = 'Admin'
+            request.session['email'] = 'admin@gmail.com'
             return redirect('Admindashboard')
 
-        # ✅ Authenticate using email as username
+        # Authenticate using email as username
         user = authenticate(request, username=email, password=password)
 
         if user is not None:
             try:
+                from .models import Account, Parent, FCMToken
                 account = Account.objects.get(email=email)
 
                 if account.is_rejected:
                     messages.error(request, "Your account has been rejected by the admin.")
                     return render(request, 'HTML/login.html')
 
-                # ✅ BHW, BNS, MIDWIFE, and NURSE login (requires validation)
-                if (account.user_role.lower() == 'healthworker' or 
+                # ADMIN LOGIN
+                if account.user_role.lower() == 'admin':
+                    # ✅ CHECK FOR FORCED PASSWORD CHANGE **BEFORE** LOGGING IN
+                    if account.must_change_password:
+                        # Store email in session but DON'T log them in yet
+                        request.session['email'] = email
+                        messages.warning(request, "You must change your password before continuing.")
+                        return redirect('change_password_first')
+                    
+                    # If password doesn't need changing, proceed with normal login
+                    auth_login(request, user)
+                    account.last_activity = timezone.now()
+                    account.save(update_fields=['last_activity'])
+
+                    request.session['email'] = account.email
+                    request.session['user_role'] = 'admin'
+                    request.session['full_name'] = account.full_name or f"{account.first_name} {account.last_name}"
+                    request.session['contact_number'] = account.contact_number or ''
+
+                    return redirect('Admindashboard')
+
+                # HEALTH WORKER LOGIN
+                elif (account.user_role.lower() == 'healthworker' or 
                     account.user_role.lower() == 'bhw' or
                     account.user_role.lower() in ['bns', 'barangay nutritional scholar'] or
                     account.user_role.lower() == 'midwife' or
@@ -2283,11 +2306,9 @@ def login(request):
                     request.session['full_name'] = account.full_name
                     request.session['contact_number'] = account.contact_number
 
-                    # 🔥 Save FCM token
                     if fcm_token:
                         account.fcm_token = fcm_token
                         account.save(update_fields=["fcm_token"])
-
                         FCMToken.objects.update_or_create(
                             token=fcm_token,
                             defaults={
@@ -2296,11 +2317,10 @@ def login(request):
                                 'is_active': True,
                             }
                         )
-                        
 
                     return redirect('dashboard')
 
-                # ✅ Parent login (NO validation required)
+                # PARENT LOGIN
                 elif account.user_role.lower() == 'parent':
                     try:
                         parent = Parent.objects.get(email=email)
@@ -2321,11 +2341,9 @@ def login(request):
                     request.session['full_name'] = account.full_name
                     request.session['contact_number'] = account.contact_number
 
-                    # 🔥 Save FCM token
                     if fcm_token:
                         account.fcm_token = fcm_token
                         account.save(update_fields=["fcm_token"])
-
                         FCMToken.objects.update_or_create(
                             token=fcm_token,
                             defaults={
@@ -2334,11 +2352,9 @@ def login(request):
                                 'is_active': True,
                             }
                         )
-                        
 
                     return redirect('parent_dashboard')
 
-                # ❌ Unknown role
                 else:
                     messages.warning(request, f"Unknown user role: {account.user_role}. Please contact support.")
                     return redirect('login')
@@ -2350,17 +2366,14 @@ def login(request):
         else:
             messages.error(request, "Invalid email or password.")
 
-    # ✅ Fetch active announcements for the login page
+    # Fetch announcements
     try:
-        announcements = Announcement.objects.filter(
-            is_active=True
-        ).order_by('-created_at')[:5]
+        from .models import Announcement
+        announcements = Announcement.objects.filter(is_active=True).order_by('-created_at')[:5]
     except Exception as e:
         announcements = []
 
-    return render(request, 'HTML/login.html', {
-        'announcements': announcements,
-    })
+    return render(request, 'HTML/login.html', {'announcements': announcements})
 
 
 
@@ -8955,10 +8968,9 @@ def generate_password(length=8):
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for _ in range(length))
 
+from django.contrib.auth import update_session_auth_hash
+
 def change_password_first(request):
-    
-    
-    
     if request.method == 'POST':
         email = request.session.get('email', '').strip()
         new_password = request.POST.get('new_password')
@@ -8973,23 +8985,51 @@ def change_password_first(request):
             return redirect('change_password_first')
 
         try:
+            from .models import Account, Parent
+            
+            # Get the User object
             user = User.objects.get(username=email)
             user.set_password(new_password)
             user.save()
 
-            parent = Parent.objects.get(email=email)
-            parent.must_change_password = False
-            parent.save()
-
-            messages.success(request, "Password updated successfully! You can now log in.")
-            return redirect('login')
+            # Try to find if it's a Parent account
+            try:
+                parent = Parent.objects.get(email=email)
+                parent.must_change_password = False
+                parent.save()
+                
+                # Keep user logged in after password change
+                update_session_auth_hash(request, user)
+                
+                messages.success(request, "Password updated successfully!")
+                return redirect('parent_dashboard')
+                
+            except Parent.DoesNotExist:
+                # If not Parent, try Account (for Admin, BHW, etc.)
+                try:
+                    account = Account.objects.get(email=email)
+                    account.password = user.password  # Update hashed password
+                    account.must_change_password = False  # ✅ CRITICAL: Disable forced password change
+                    account.save(update_fields=['password', 'must_change_password'])
+                    
+                    # Keep user logged in after password change
+                    update_session_auth_hash(request, user)
+                    
+                    messages.success(request, "Password updated successfully!")
+                    
+                    # Redirect based on role
+                    if account.user_role.lower() == 'admin':
+                        return redirect('Admindashboard')
+                    else:
+                        return redirect('dashboard')
+                        
+                except Account.DoesNotExist:
+                    messages.error(request, "Account record not found.")
+                    return redirect('login')
 
         except User.DoesNotExist:
             messages.error(request, "User not found.")
-        except Parent.DoesNotExist:
-            messages.error(request, "Parent record not found.")
-
-        return redirect('change_password_first')
+            return redirect('change_password_first')
 
     return render(request, 'HTML/parent_change_password.html')
 
@@ -10681,6 +10721,266 @@ def get_pending_validation_count(request):
         is_validated=False
     ).exclude(user_role="parent").count()  # Changed "Parent" to "parent"
     return JsonResponse({'pending_count': count})
+
+
+
+def generate_random_password(length=12):
+    """Generate a random password with letters and numbers only (no special characters)"""
+    characters = string.ascii_letters + string.digits
+    password = [
+        random.choice(string.ascii_uppercase),
+        random.choice(string.ascii_lowercase),
+        random.choice(string.digits)
+    ]
+    password += [random.choice(characters) for _ in range(length - 3)]
+    random.shuffle(password)
+    return ''.join(password)
+
+@require_http_methods(["POST"])
+def create_admin_view(request):
+    """View to handle admin account creation via AJAX"""
+    
+    # Check if user is logged in as admin via session
+    user_role = request.session.get('user_role', '').lower()
+    
+    if not (request.user.is_authenticated or user_role == 'admin'):
+        return JsonResponse({
+            'success': False,
+            'error': 'You must be logged in to perform this action'
+        }, status=401)
+    
+    # Check if user is admin/staff
+    if not (request.user.is_staff or request.user.is_superuser or user_role == 'admin'):
+        return JsonResponse({
+            'success': False,
+            'error': 'You do not have permission to create admin accounts'
+        }, status=403)
+    
+    try:
+        # Parse JSON data
+        data = json.loads(request.body)
+        first_name = data.get('first_name', '').strip()
+        last_name = data.get('last_name', '').strip()
+        email = data.get('email', '').strip().lower()
+        
+        # Validation
+        if not all([first_name, last_name, email]):
+            return JsonResponse({
+                'success': False,
+                'error': 'All fields are required'
+            }, status=400)
+        
+        # Import models
+        from .models import Admin, Account
+        
+        # Check if email already exists
+        if Admin.objects.filter(email=email).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'An admin account with this email already exists'
+            }, status=400)
+        
+        if Account.objects.filter(email=email).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'An account with this email already exists'
+            }, status=400)
+        
+        if User.objects.filter(email=email).exists() or User.objects.filter(username=email).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'A user with this email already exists'
+            }, status=400)
+        
+        # Generate random password
+        password = generate_random_password()
+        
+        # Create admin account within a transaction
+        with transaction.atomic():
+            # Step 1: Create Django User (this is the most important for login)
+            user = User.objects.create_user(
+                username=email,
+                email=email,
+                password=password,  # Django hashes this automatically
+                first_name=first_name,
+                last_name=last_name,
+                is_staff=True,
+                is_superuser=False,
+                is_active=True
+            )
+            
+            # Step 2: Create Account entry
+            full_name = f"{first_name} {last_name}".strip()
+            account = Account.objects.create(
+                user=user,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                full_name=full_name,
+                contact_number='',
+                user_role='admin',
+                is_validated=True,
+                password=user.password,  # Copy hashed password from User
+                sex='Male',
+                must_change_password=True,  # Force password change on first login
+                created_at=timezone.now(),
+                last_activity=timezone.now()
+            )
+            
+            # Step 3: Create Admin model entry
+            admin = Admin.objects.create(
+                username=email,
+                email=email,
+                password=user.password  # Copy hashed password from User
+            )
+        
+        # ========== Background email sending ==========
+        def send_admin_registration_email():
+            try:
+                subject = "PPMS Cluster 4 – Admin Account Created"
+                html_message = f"""
+                <html>
+                <body style='font-family: Arial, sans-serif; background-color: #f9fafb; padding: 20px;'>
+                    <div style='max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);'>
+                        <div style='text-align: center; border-bottom: 3px solid #1565c0; padding-bottom: 20px; margin-bottom: 20px;'>
+                            <h1 style='color: #1565c0; margin: 0;'>PPMS Cluster 4</h1>
+                            <p style='color: #6b7280; margin: 5px 0 0 0;'>Imus City Healthcare Management</p>
+                        </div>
+                        
+                        <h2 style='text-align: center; color: #1e293b;'>Admin Account Created!</h2>
+                        
+                        <p style='font-size: 16px; color: #334155;'>Hello <strong>{full_name}</strong>,</p>
+                        
+                        <p style='font-size: 16px; color: #334155;'>
+                            Your administrator account has been successfully created for the PPMS Cluster 4 system.
+                        </p>
+                        
+                        <div style='background: #eff6ff; border: 1px solid #3b82f6; padding: 20px; border-radius: 8px; margin: 20px 0;'>
+                            <h3 style='color: #1e40af; margin-top: 0;'> Login Credentials</h3>
+                            <p style='margin: 10px 0; color: #1e40af;'>
+                                <strong>Email:</strong> {email}<br>
+                                <strong>Temporary Password:</strong> <code style='background: #dbeafe; padding: 4px 8px; border-radius: 4px; font-size: 14px; font-weight: bold;'>{password}</code>
+                            </p>
+                        </div>
+                        
+                        <div style='background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                            <p style='margin: 0; color: #92400e;'>
+                                <strong>⚠️ IMPORTANT SECURITY NOTICE:</strong><br>
+                                • You <strong>MUST</strong> change your password immediately upon first login<br>
+                                • Do not share this password with anyone<br>
+                                • This is a one-time use password for initial access
+                            </p>
+                        </div>
+                        
+                        <div style='background: #f3f4f6; border-left: 4px solid #5bdab3; padding: 15px; border-radius: 4px; margin: 20px 0;'>
+                            <h4 style='margin-top: 0; color: #374151;'> Your Admin Privileges Include:</h4>
+                            <ul style='color: #4b5563; line-height: 1.8; margin: 0; padding-left: 20px;'>
+                                <li>Managing healthcare workers (BHW, BNS, Midwives, Nurses)</li>
+                                <li>Managing parent and preschooler records</li>
+                                <li>Validating new account registrations</li>
+                                <li>Generating reports and analytics</li>
+                                <li>Managing barangay assignments</li>
+                                <li>System-wide administrative controls</li>
+                            </ul>
+                        </div>
+                        
+                        <div style='text-align: center; margin: 30px 0;'>
+                            <a href='{request.build_absolute_uri("/")}' style='display: inline-block; background: linear-gradient(135deg, #5bdab3 0%, #1565c0 100%); color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 12px rgba(91, 218, 179, 0.3);'>
+                                Login to Dashboard
+                            </a>
+                        </div>
+                        
+                        <div style='background: #fef2f2; border: 1px solid #ef4444; padding: 15px; border-radius: 8px; margin: 20px 0;'>
+                            <p style='margin: 0; color: #991b1b; font-size: 14px;'>
+                                <strong> Security Reminder:</strong> If you did not expect to receive this email or believe this is an error, please contact the system administrator immediately.
+                            </p>
+                        </div>
+                        
+                        <div style='text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;'>
+                            <p style='font-size: 13px; color: #6b7280;'>
+                                Need help? Contact your system administrator<br>
+                                This is an automated message. Please do not reply.<br>
+                                © 2025 PPMS Cluster 4. All rights reserved.
+                            </p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """
+                
+                plain_message = f"""
+PPMS Cluster 4 – Admin Account Created
+
+Hello {full_name},
+
+Your administrator account has been successfully created for the PPMS Cluster 4 system.
+
+ LOGIN CREDENTIALS:
+Email: {email}
+Temporary Password: {password}
+
+ IMPORTANT SECURITY NOTICE:
+• You MUST change your password immediately upon first login
+• Do not share this password with anyone
+• This is a one-time use password for initial access
+
+ Your Admin Privileges Include:
+• Managing healthcare workers (BHW, BNS, Midwives, Nurses)
+• Managing parent and preschooler records
+• Validating new account registrations
+• Generating reports and analytics
+• Managing barangay assignments
+• System-wide administrative controls
+
+ Security Reminder: If you did not expect to receive this email or believe this is an error, please contact the system administrator immediately.
+
+PPMS Cluster 4
+Imus City Healthcare Management
+
+Need help? Contact your system administrator
+This is an automated message. Please do not reply.
+© 2025 PPMS Cluster 4. All rights reserved.
+                """
+                
+                send_mail(
+                    subject, 
+                    plain_message, 
+                    settings.DEFAULT_FROM_EMAIL, 
+                    [email], 
+                    html_message=html_message, 
+                    fail_silently=False
+                )
+                logger.info(f"✅ Admin registration email sent successfully to {email}")
+            except Exception as email_error:
+                logger.warning(f"[EMAIL ERROR]: Failed to send admin registration email - {email_error}")
+
+        # Start email sending in background thread
+        threading.Thread(target=send_admin_registration_email).start()
+        
+        # Return success
+        return JsonResponse({
+            'success': True,
+            'message': 'Admin account created successfully',
+            'name': full_name,
+            'email': email,
+            'password': password,  # Plain text password for display
+            'admin_id': admin.admin_id,
+            'account_id': account.account_id
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Error creating admin account: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': f'An error occurred: {str(e)}'
+        }, status=500)
+
+
 
 
 
