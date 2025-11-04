@@ -143,11 +143,12 @@ urlpatterns = [
     #Temperature
     path('save-temperature/', views.save_temperature, name='save_temperature'),
     path('generate-admin-report/', views.generate_admin_report, name='generate_admin_report'),
-
+    path('create-admin/', views.create_admin_view, name='create_admin'),
     
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 
 
 
