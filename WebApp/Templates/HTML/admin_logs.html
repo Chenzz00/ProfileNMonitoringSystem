@@ -632,51 +632,7 @@
           </div>
         </div>
 
-        <!-- Preschooler Logs Container -->
-        <div class="activity-section">
-          <h3 class="section-title">Preschooler Activity History (All Barangays)</h3>
-          
-          <!-- Enhanced Responsive Table Container -->
-          <div class="table-container">
-            <table class="table table-striped table-hover">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Activity</th>
-                  <th>Performed By</th>
-                  <th>Barangay</th>
-                  <th>Date & Time</th>
-                </tr>
-              </thead>
-              <tbody id="preschooler-log-body">
-                {% for log in preschooler_logs %}
-                <tr class="{% if log.timestamp|timesince <= '1 day' %}highlight{% endif %}">
-                  <td>{{ log.preschooler_name }}</td>
-                  <td>{{ log.activity }}</td>
-                  <td>{{ log.performed_by }}</td>
-                  <td>{{ log.barangay.name }}</td>
-                  <td>{{ log.timestamp|date:"F d, Y - h:i A"}}</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5" class="no-data">No preschooler activity yet.</td></tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Preschooler Pagination -->
-          <div class="pagination-section">
-            {% if preschooler_logs.has_previous %}
-              <a href="?preschooler_page={{ preschooler_logs.previous_page_number }}" class="btn">Previous</a>
-            {% endif %}
-
-            <span>Page {{ preschooler_logs.number }} of {{ preschooler_logs.paginator.num_pages }}</span>
-
-            {% if preschooler_logs.has_next %}
-              <a href="?preschooler_page={{ preschooler_logs.next_page_number }}" class="btn">Next</a>
-            {% endif %}
-          </div>
-        </div>
+        
       </div>
     </div>
   </div>
@@ -926,5 +882,6 @@ if (generateReportBtn) {
 
 </body>
 </html>
+
 
 
