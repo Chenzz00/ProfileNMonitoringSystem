@@ -5133,13 +5133,8 @@ def preschoolers(request):
             Prefetch('temperature_set', queryset=Temperature.objects.order_by('-date_recorded'), to_attr='temp_records')
         )
 
-    # Pagination
-    paginator = Paginator(preschoolers_qs, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    # Process nutritional status, delivery place color coding, and age in months
-    for p in page_obj.object_list:
+    # Process nutritional status, delivery place color coding, and age in months BEFORE pagination
+    for p in preschoolers_qs:
         # Handle empty middle name and suffix - set to empty string instead of None
         if not p.middle_name:
             p.middle_name = ''
@@ -5182,6 +5177,18 @@ def preschoolers(request):
         else:
             p.delivery_class = 'delivery-na'
 
+    # ✅ FILTER BY NUTRITIONAL STATUS (if provided in URL)
+    filter_status = request.GET.get('status', 'All')
+    if filter_status and filter_status != 'All':
+        preschoolers_qs = [p for p in preschoolers_qs if p.nutritional_status == filter_status]
+    else:
+        preschoolers_qs = list(preschoolers_qs)
+
+    # ✅ Pagination AFTER filtering
+    paginator = Paginator(preschoolers_qs, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     # Determine user role for template
     if raw_role in ['bhw', 'bns', 'midwife', 'nurse']:
         template_user_role = 'health_worker'
@@ -5195,6 +5202,7 @@ def preschoolers(request):
         'user_role': template_user_role,
         'original_role': raw_role,
         'barangay_name': barangay_name,
+        'filter_status': filter_status,  # ✅ Pass filter status to template
     }
 
     return render(request, 'HTML/preschoolers.html', context)
@@ -10996,6 +11004,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
