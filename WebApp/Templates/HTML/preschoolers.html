@@ -1507,14 +1507,15 @@
         <div class="search-section">
           <label for="status-select"><strong>Filter by Nutritional Status:</strong></label>
           <select id="status-select" class="search-input">
-            <option value="All">All</option>
-            <option value="Severely Wasted">Severely Wasted</option>
-            <option value="Wasted">Wasted</option>
-            <option value="Normal">Normal</option>
-            <option value="Risk of Overweight">Risk of Overweight</option>
-            <option value="Overweight">Overweight</option>
-            <option value="Obese">Obese</option>
+            <option value="All" {% if not filter_status or filter_status == 'All' %}selected{% endif %}>All</option>
+            <option value="Severely Wasted" {% if filter_status == 'Severely Wasted' %}selected{% endif %}>Severely Wasted</option>
+            <option value="Wasted" {% if filter_status == 'Wasted' %}selected{% endif %}>Wasted</option>
+            <option value="Normal" {% if filter_status == 'Normal' %}selected{% endif %}>Normal</option>
+            <option value="Risk of Overweight" {% if filter_status == 'Risk of Overweight' %}selected{% endif %}>Risk of Overweight</option>
+            <option value="Overweight" {% if filter_status == 'Overweight' %}selected{% endif %}>Overweight</option>
+            <option value="Obese" {% if filter_status == 'Obese' %}selected{% endif %}>Obese</option>
           </select>
+
           <input type="text" id="search-input" class="search-input" placeholder="Search by name...">
           <button id="search-btn" class="btn">Search</button>
         </div>
@@ -1567,7 +1568,7 @@
 
       <div class="pagination-section">
         {% if preschoolers.has_previous %}
-          <a href="?page={{ preschoolers.previous_page_number }}" class="btn">Previous</a>
+          <a href="?page={{ preschoolers.previous_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">Previous</a>
         {% endif %}
 
         <span>
@@ -1575,7 +1576,7 @@
         </span>
 
         {% if preschoolers.has_next %}
-          <a href="?page={{ preschoolers.next_page_number }}" class="btn">Next</a>
+          <a href="?page={{ preschoolers.next_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">Next</a>
         {% endif %}
       </div>
     </div>
