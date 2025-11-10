@@ -1184,7 +1184,7 @@
           <input type="text" id="child_last_name" name="last_name" required>    
         </div>
         <div class="form-group">
-          <label>Suffix</label>
+          <label>Suffix (Optional)</label>
           <input type="text" id="child_suffix" name="suffix" placeholder="e.g., Jr., III">
         </div>
       </div>
@@ -1242,7 +1242,7 @@
           <label>Place of Delivery <span style="color: red;">*</span></label>
           <select id="place_of_delivery" name="place_of_delivery" required>
             <option value="" disabled selected>Select Place</option>
-            <option value="Home">Home</option>
+            <option value="Center to Center">Center to Center</option>
             <option value="Private/Lying-in">Private/Lying-in</option>
             <option value="Public Hospital">Public Hospital</option>
             <option value="Others">Others</option>
@@ -1557,53 +1557,59 @@
         });
       });
 
-      function openModal() {
-        modalParentName.textContent = selectedParentName;
-        hiddenParentInput.value = selectedParentName;
-        hiddenParentIdInput.value = selectedParentId;
-        modal.classList.add("show");  // Only this—CSS handles display: flex and opacity
-      }
+     function openModal() {
+  modalParentName.textContent = selectedParentName;
+  hiddenParentInput.value = selectedParentName;
+  hiddenParentIdInput.value = selectedParentId;
+  modal.classList.add("show");  // Only this—CSS handles display: flex and opacity
+}
 
-      closeButton.onclick = () => {
-        modal.classList.remove("show");  // CSS handles fade-out and revert to display: none
-      };
+closeButton.onclick = () => {
+  modal.classList.remove("show");  // CSS handles fade-out and revert to display: none
+};
 
-      window.onclick = (e) => {
-        if (e.target === modal) {
-          modal.classList.remove("show");
-        }
-      };
+window.onclick = (e) => {
+  if (e.target === modal) {
+    modal.classList.remove("show");
+  }
+};
 
-      function validateNameInput(inputElement) {
-        inputElement.addEventListener("input", function () {
-          let value = this.value.replace(/[^A-Za-z\s]/g, "").replace(/\s+/g, " ").trimStart();
-          this.value = value;
-        });
-      }
+// Helper function to capitalize first letter of each word
+function capitalizeFirstLetter(str) {
+  if (!str) return str;
+  return str
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
 
-      function validateNameInput(inputElement) {
-        inputElement.addEventListener("input", function () {
-          // Allow A-Z, a-z, ñ, Ñ, and spaces
-          let value = this.value.replace(/[^A-Za-zñÑ\s]/g, "").replace(/\s+/g, " ").trimStart();
-          this.value = value;
-        });
-      }
+// Validate name input - letters, ñ, Ñ, and spaces only
+function validateNameInput(inputElement) {
+  inputElement.addEventListener("input", function () {
+    let value = this.value.replace(/[^A-Za-zñÑ\s]/g, "").replace(/\s+/g, " ").trimStart();
+    // Auto-capitalize in real-time
+    this.value = capitalizeFirstLetter(value);
+  });
+}
 
-      function validateTextInput(inputElement) {
-        inputElement.addEventListener("input", function () {
-          // Updated to include numbers (0-9), ñ, Ñ in addition to letters, spaces, commas, periods, and hyphens
-          let value = this.value.replace(/[^A-Za-z0-9ñÑ\s,.-]/g, "").replace(/\s+/g, " ").trimStart();
-          this.value = value;
-        });
-      }
+// Validate text input - letters, numbers, ñ, Ñ, spaces, commas, periods, and hyphens
+function validateTextInput(inputElement) {
+  inputElement.addEventListener("input", function () {
+    let value = this.value.replace(/[^A-Za-z0-9ñÑ\s,.-]/g, "").replace(/\s+/g, " ").trimStart();
+    // Auto-capitalize in real-time
+    this.value = capitalizeFirstLetter(value);
+  });
+}
 
-      validateNameInput(document.getElementById("child_first_name"));
-      validateNameInput(document.getElementById("child_middle_name"));
-      validateNameInput(document.getElementById("child_last_name"));
-      validateNameInput(document.getElementById("child_suffix"));
-      validateTextInput(document.getElementById("place_of_birth"));
-      form.addEventListener("submit", async function (e) {
-      e.preventDefault();
+// Apply validation to modal form fields
+validateNameInput(document.getElementById("child_first_name"));
+validateNameInput(document.getElementById("child_middle_name"));
+validateNameInput(document.getElementById("child_last_name"));
+validateNameInput(document.getElementById("child_suffix"));
+validateTextInput(document.getElementById("place_of_birth"));
+
+form.addEventListener("submit", async function (e) {
+  e.preventDefault();
 
       const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
       const firstName = document.getElementById("child_first_name").value.trim();
