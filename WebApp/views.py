@@ -1634,7 +1634,7 @@ def Admin(request):
         'Severely Wasted': 0,
         'Wasted': 0,
         'Normal': 0,
-        'Risk of overweight': 0,
+        'Risk of Overweight': 0,
         'Overweight': 0,
         'Obese': 0,
     }
@@ -1689,9 +1689,9 @@ def Admin(request):
                     elif category == "Normal":
                         nutritional_summary['normal'] += 1
                         status_totals['Normal'] += 1
-                    elif category == "Risk of overweight":
+                    elif category == "Risk of Overweight":
                         nutritional_summary['risk_overweight'] += 1
-                        status_totals['Risk of overweight'] += 1
+                        status_totals['Risk of Overweight'] += 1
                     elif category == "Overweight":
                         nutritional_summary['overweight'] += 1
                         status_totals['Overweight'] += 1
@@ -2001,7 +2001,7 @@ def dashboard(request):
                     nutritional_summary['wasted'] += 1
                 elif category == "Normal":
                     nutritional_summary['normal'] += 1
-                elif category == "Risk of overweight":
+                elif category == "Risk of Overweight":
                     nutritional_summary['risk_of_overweight'] += 1
                 elif category == "Overweight":
                     nutritional_summary['overweight'] += 1
@@ -5171,8 +5171,8 @@ def preschoolers(request):
         # Delivery place color coding
         delivery_place = getattr(p, 'place_of_delivery', None)
 
-        if delivery_place == 'Home':
-            p.delivery_class = 'delivery-home'
+        if delivery_place == 'Center to Center':
+            p.delivery_class = 'delivery-center'
         elif delivery_place == 'Private/Lying-in':
             p.delivery_class = 'delivery-lying-in'
         elif delivery_place == 'Public Hospital':
@@ -5225,7 +5225,7 @@ def profile(request):
 
         # House number first
         if account.house_number and str(account.house_number).strip().lower() not in invalid_values:
-            address_parts.append(f"House {account.house_number}")
+            address_parts.append(f"{account.house_number}")
 
         # Then Block, Lot, Phase
         if account.block and str(account.block).strip().lower() not in invalid_values:
@@ -6318,8 +6318,8 @@ def registered_preschoolers(request):
             p.nutritional_status = "N/A"
 
         delivery_place = getattr(p, 'place_of_delivery', None)
-        if delivery_place == 'Home':
-            p.delivery_class = 'delivery-home'
+        if delivery_place == 'Center to Center':
+            p.delivery_class = 'delivery-center'
         elif delivery_place == 'Private/Lying-in':
             p.delivery_class = 'delivery-lying-in'
         elif delivery_place == 'Public Hospital':
@@ -8644,7 +8644,7 @@ def register_parent(request):
             # Build complete address
             address_parts = []
             if house_number and house_number.lower() not in invalid_values:
-                address_parts.append(f"House {house_number}")
+                address_parts.append(f"{house_number}")
             if block and block.lower() not in invalid_values:
                 address_parts.append(f"Block {block}")
             if lot and lot.lower() not in invalid_values:
@@ -9900,7 +9900,7 @@ def generate_report(request):
                         elif category == "Normal":
                             nutritional_counts['normal'] += 1
                             overall_summary['Normal'] += 1
-                        elif category in ["Risk of overweight", "Overweight"]:
+                        elif category in ["Risk of Overweight", "Overweight"]:
                             nutritional_counts['overweight'] += 1
                             overall_summary['Overweight'] += 1
                         elif category == "Obese":
