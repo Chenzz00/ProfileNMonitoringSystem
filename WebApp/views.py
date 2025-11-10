@@ -9546,11 +9546,12 @@ def registered_barangays(request):
     
 @admin_required 
 def healthcare_workers(request):
-    """Improved healthcare workers view with better BNS handling"""
+    """Improved healthcare workers view with better BNS handling and pagination"""
     from django.utils import timezone
     from django.utils.timesince import timesince
     from django.db.models import Q
     from datetime import timedelta
+    from django.core.paginator import Paginator
     
     # Get all barangays for the filter dropdown
     barangays = Barangay.objects.all().order_by('name')
@@ -9707,14 +9708,38 @@ def healthcare_workers(request):
         
         set_activity_status(nurse)
     
-
+    # ===== PAGINATION - 10 rows per page =====
+    # Get the current page and worker type filter
+    page_number = request.GET.get('page', 1)
+    worker_type = request.GET.get('type', 'bhw')  # Default to BHW
+    
+    # Select which list to paginate based on worker_type
+    if worker_type == 'bns':
+        worker_list = bns_list
+    elif worker_type == 'midwife':
+        worker_list = midwife_list
+    elif worker_type == 'nurse':
+        worker_list = nurse_list
+    else:  # Default to BHW
+        worker_list = bhw_list
+        worker_type = 'bhw'
+    
+    # Apply pagination
+    paginator = Paginator(worker_list, 10)
+    page_obj = paginator.get_page(page_number)
     
     context = {
         'barangays': barangays,
-        'bhws': bhw_list,
-        'bnss': bns_list,
-        'midwives': midwife_list,
-        'nurses': nurse_list,
+        'bhws': page_obj if worker_type == 'bhw' else bhw_list,
+        'bnss': page_obj if worker_type == 'bns' else bns_list,
+        'midwives': page_obj if worker_type == 'midwife' else midwife_list,
+        'nurses': page_obj if worker_type == 'nurse' else nurse_list,
+        'page_obj': page_obj,
+        'worker_type': worker_type,
+        'all_bhws': bhw_list,  # Full list for count display
+        'all_bnss': bns_list,
+        'all_midwives': midwife_list,
+        'all_nurses': nurse_list,
     }
     
     return render(request, 'HTML/healthcare_workers.html', context)
@@ -11004,6 +11029,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
