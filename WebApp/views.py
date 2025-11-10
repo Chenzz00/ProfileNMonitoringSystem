@@ -6329,7 +6329,14 @@ def registered_preschoolers(request):
         else:
             p.delivery_class = 'delivery-na'
 
-    # ✅ Pagination after sorting
+    # ✅ FILTER BY NUTRITIONAL STATUS (if provided)
+    filter_status = request.GET.get('status', 'All')
+    if filter_status and filter_status != 'All':
+        preschoolers_qs = [p for p in preschoolers_qs if p.nutritional_status == filter_status]
+    else:
+        preschoolers_qs = list(preschoolers_qs)
+
+    # ✅ Pagination after filtering and sorting
     paginator = Paginator(preschoolers_qs, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -6339,6 +6346,7 @@ def registered_preschoolers(request):
     return render(request, 'HTML/registered_preschoolers.html', {
         'preschoolers': page_obj,
         'barangays': barangays,
+        'filter_status': filter_status,  # ✅ Pass filter status to template
     })
 
 
@@ -10988,6 +10996,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
