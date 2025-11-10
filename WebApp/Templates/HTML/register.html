@@ -219,7 +219,7 @@
         </div>
         <div class="col-md-6 mb-3">
           <label for="middleName" class="form-label">Middle Name</label>
-          <input type="text" id="middleName" name="middleName" class="form-control" required>
+          <input type="text" id="middleName" name="middleName" class="form-control" >
         </div>
       </div>
 
@@ -229,7 +229,7 @@
           <input type="text" id="lastName" name="lastName" class="form-control" required>
         </div>
         <div class="col-md-6 mb-3">
-          <label for="suffix" class="form-label">Suffix</label>
+          <label for="suffix" class="form-label">Suffix (Optional)</label>
           <input type="text" id="suffix" name="suffix" class="form-control">
         </div>
       </div>
@@ -662,7 +662,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // House/Block/Lot/Phase field validation - NUMBERS ONLY (and NA)
-  [houseNumber, block, lot, phase].forEach(input => {
+  [ block, lot, phase].forEach(input => {
     input.addEventListener('input', e => {
       let value = e.target.value.toUpperCase();
 
@@ -737,6 +737,66 @@ document.addEventListener('DOMContentLoaded', function () {
     if (event.target === termsModal) termsModal.style.display = "none";
     if (event.target === privacyModal) privacyModal.style.display = "none";
   };
+});
+
+
+</script>
+
+<script>
+// Helper function to capitalize first letter of each word
+function capitalizeFirstLetter(str) {
+  if (!str) return str;
+  return str
+    .split(/\s+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+// Input validation with real-time auto-capitalize for name fields
+[firstName, middleName, lastName, suffix].forEach(input => {
+  input.addEventListener('input', e => {
+    let value = e.target.value
+      .replace(/[^a-zA-ZñÑ\s]/g, '')   
+      .replace(/^\s+|\s{2,}/g, ' ');
+    
+    // Auto-capitalize in real-time
+    e.target.value = capitalizeFirstLetter(value);
+  });
+});
+
+// House number field validation - letters, numbers, and single space only (with auto-capitalize)
+houseNumber.addEventListener('input', e => {
+  let value = e.target.value
+    .replace(/[^a-zA-Z0-9\s]/g, '')  // Allow letters, numbers, and space only
+    .replace(/\s{2,}/g, ' ');        // Replace multiple spaces with single space
+  
+  // Auto-capitalize first character in real-time
+  e.target.value = capitalizeFirstLetter(value);
+});
+
+// Address field validation with real-time auto-capitalize
+[street, city, province, subdivision].forEach(input => {
+  input.addEventListener('input', e => {
+    let value = e.target.value
+      .replace(/[^a-zA-Z0-9ñÑ\s.,#/-]/g, '')  
+      .replace(/^\s+|\s{2,}/g, ' ');
+    
+    // Auto-capitalize in real-time (unless it's N/A)
+    if (value.trim().toLowerCase() !== 'n/a') {
+      e.target.value = capitalizeFirstLetter(value);
+    } else {
+      e.target.value = value;
+    }
+  });
+
+  // Handle N/A format on blur
+  input.addEventListener('blur', e => {
+    const trimmed = e.target.value.trim();
+    
+    if (trimmed.toLowerCase() === 'n/a') {
+      e.target.value = 'N/A';
+    }
+  });
 });
 </script>
 
