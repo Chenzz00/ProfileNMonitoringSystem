@@ -676,6 +676,40 @@
         width: 100%;
       }
     }
+
+
+    .pagination-nav-btn {
+    padding: 8px 16px;
+    background: #5bdab3;
+    color: #1e1e2f;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pagination-nav-btn:hover:not(:disabled) {
+    background: #1565c0;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+  }
+
+  .pagination-nav-btn:disabled {
+    background: #e0e0e0;
+    color: #999;
+    cursor: not-allowed;
+  }
+
+  .pagination-nav-btn i {
+    font-size: 12px;
+  }
   </style>
 </head>
 <body>
@@ -1106,11 +1140,16 @@
 
         <!-- Pagination Section -->
         <div class="pagination-section">
-          <span id="pagination-info">Page 1 of 1</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <button id="prev-btn" class="pagination-nav-btn" style="visibility: hidden;">
+              <i class="fas fa-chevron-left"></i> Previous
+            </button>
+            <span id="pagination-info" style="flex: 1; text-align: center;">Page 1 of 1</span>
+            <button id="next-btn" class="pagination-nav-btn" style="visibility: hidden;">
+              Next <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Create Admin Modal -->
   <div class="modal-overlay" id="modalOverlay">
@@ -1743,6 +1782,7 @@ class PaginationManager {
     
     this.renderPage();
     this.updatePaginationInfo();
+    this.updateNavigationButtons();
   }
 
   renderPage() {
@@ -1762,7 +1802,7 @@ class PaginationManager {
       row.style.animation = `fadeIn 0.3s ease ${index * 0.05}s`;
     });
     
-    // Update info text
+    // Update empty state
     const noResultsRow = document.getElementById('no-results-row');
     if (this.filteredRows.length === 0) {
       noResultsRow.style.display = '';
@@ -1776,11 +1816,30 @@ class PaginationManager {
     paginationInfo.textContent = `Page ${this.currentPage} of ${this.totalPages}`;
   }
 
+  updateNavigationButtons() {
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    
+    if (this.totalPages > 1) {
+      // Show buttons if more than 1 page
+      prevBtn.style.visibility = this.currentPage === 1 ? 'hidden' : 'visible';
+      nextBtn.style.visibility = this.currentPage === this.totalPages ? 'hidden' : 'visible';
+      
+      prevBtn.disabled = this.currentPage === 1;
+      nextBtn.disabled = this.currentPage === this.totalPages;
+    } else {
+      // Hide both buttons if only 1 page
+      prevBtn.style.visibility = 'hidden';
+      nextBtn.style.visibility = 'hidden';
+    }
+  }
+
   goToPage(page) {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
       this.renderPage();
       this.updatePaginationInfo();
+      this.updateNavigationButtons();
       // Scroll to top of table
       document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth' });
     }
@@ -1802,11 +1861,23 @@ class PaginationManager {
 // Initialize pagination manager
 let paginationManager;
 
-// Update this part in your DOMContentLoaded event
+// Initialize pagination after page loads
 document.addEventListener("DOMContentLoaded", () => {
   // Initialize pagination
   paginationManager = new PaginationManager();
   paginationManager.initialize();
+
+  // Setup Previous/Next button event listeners
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+  
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => paginationManager.previousPage());
+  }
+  
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => paginationManager.nextPage());
+  }
 
   // Update the existing filter event listeners
   const roleFilter = document.getElementById('role-filter');
