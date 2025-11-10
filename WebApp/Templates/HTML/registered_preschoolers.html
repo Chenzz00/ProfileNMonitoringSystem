@@ -834,38 +834,43 @@
       });
 
       // Original search functionality
-      const searchInput = document.getElementById("search-input");
-      const statusSelect = document.getElementById("status-select");
-      const searchBtn = document.getElementById("search-btn");
-      const tableRows = document.querySelectorAll(".preschooler-row");
+const searchInput = document.getElementById("search-input");
+const statusSelect = document.getElementById("status-select");
+const searchBtn = document.getElementById("search-btn");
+const tableRows = document.querySelectorAll(".preschooler-row");
 
-      function performSearch() {
-        const input = searchInput.value.toLowerCase();
-        const filterStatus = statusSelect.value;
+function performSearch() {
+  const input = searchInput.value.toLowerCase();
 
-        // Search table rows
-        tableRows.forEach(row => {
-          const name = row.cells[0].textContent.toLowerCase();
-          const status = row.cells[6].textContent.trim();
+  // Search table rows by name only (client-side search on current page)
+  tableRows.forEach(row => {
+    const name = row.cells[0].textContent.toLowerCase();
+    const nameMatch = name.includes(input);
+    row.style.display = nameMatch ? "" : "none";
+  });
+}
 
-          const nameMatch = name.includes(input);
-          const statusMatch = (filterStatus === "All" || status === filterStatus);
+// Status filter change - reload page with filter parameter (backend filtering)
+statusSelect.addEventListener("change", function() {
+  const selectedStatus = this.value;
+  
+  // Redirect to page 1 with filter parameter - backend will filter ALL data
+  if (selectedStatus === "All") {
+    window.location.href = window.location.pathname;
+  } else {
+    window.location.href = `${window.location.pathname}?status=${encodeURIComponent(selectedStatus)}`;
+  }
+});
 
-          row.style.display = (nameMatch && statusMatch) ? "" : "none";
-        });
-      }
+// Search button click - only filters current page by name
+searchBtn.addEventListener("click", performSearch);
 
-      // Event listeners
-      searchBtn.addEventListener("click", performSearch);
-      statusSelect.addEventListener("change", performSearch);
-      
-      // Search on Enter key
-      searchInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") {
-          performSearch();
-        }
-      });
-
+// Search on Enter key
+searchInput.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    performSearch();
+  }
+});
       
     });
 
