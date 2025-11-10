@@ -1691,5 +1691,231 @@ function showEmailErrorInModal(errorMessage) {
       });
     }
   </script>
+  <script>
+// PAGINATION MANAGEMENT
+class PaginationManager {
+  constructor() {
+    this.currentPage = 1;
+    this.itemsPerPage = 10;
+    this.allRows = [];
+    this.filteredRows = [];
+    this.totalPages = 1;
+  }
+
+  initialize() {
+    this.getAllRows();
+    this.updatePagination();
+  }
+
+  getAllRows() {
+    // Get all table rows that contain worker data (not the empty state row)
+    this.allRows = Array.from(document.querySelectorAll('table tbody tr[data-role]'));
+    console.log(`Total rows found: ${this.allRows.length}`);
+  }
+
+  getFilteredRows() {
+    const roleFilter = document.getElementById('role-filter')?.value.toLowerCase() || 'all';
+    const barangayFilter = document.getElementById('barangay-filter')?.value.toLowerCase() || 'all';
+    
+    return this.allRows.filter(row => {
+      const rowRole = row.getAttribute('data-role');
+      const rowBarangay = row.getAttribute('data-barangay');
+      
+      let passRole = roleFilter === 'all' || rowRole === roleFilter;
+      
+      let passBarangay = true;
+      if (barangayFilter !== 'all') {
+        if (barangayFilter === 'no barangay') {
+          passBarangay = rowBarangay === 'no barangay' || rowBarangay === '' || rowBarangay === null;
+        } else {
+          passBarangay = rowBarangay === barangayFilter || (rowBarangay && rowBarangay.includes(barangayFilter));
+        }
+      }
+      
+      return passRole && passBarangay;
+    });
+  }
+
+  updatePagination() {
+    this.filteredRows = this.getFilteredRows();
+    this.totalPages = Math.ceil(this.filteredRows.length / this.itemsPerPage) || 1;
+    this.currentPage = 1; // Reset to first page when filters change
+    
+    this.renderPage();
+    this.updatePaginationInfo();
+  }
+
+  renderPage() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    const pageRows = this.filteredRows.slice(startIndex, endIndex);
+    
+    // Hide all rows first
+    this.allRows.forEach(row => {
+      row.style.display = 'none';
+      row.style.opacity = '1';
+    });
+    
+    // Show current page rows with animation
+    pageRows.forEach((row, index) => {
+      row.style.display = '';
+      row.style.animation = `fadeIn 0.3s ease ${index * 0.05}s`;
+    });
+    
+    // Update info text
+    const noResultsRow = document.getElementById('no-results-row');
+    if (this.filteredRows.length === 0) {
+      noResultsRow.style.display = '';
+    } else {
+      noResultsRow.style.display = 'none';
+    }
+  }
+
+  updatePaginationInfo() {
+    const paginationInfo = document.getElementById('pagination-info');
+    paginationInfo.textContent = `Page ${this.currentPage} of ${this.totalPages}`;
+  }
+
+  goToPage(page) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.renderPage();
+      this.updatePaginationInfo();
+      // Scroll to top of table
+      document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.goToPage(this.currentPage - 1);
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.goToPage(this.currentPage + 1);
+    }
+  }
+}
+
+// Initialize pagination manager
+let paginationManager;
+
+// Update this part in your DOMContentLoaded event
+document.addEventListener("DOMContentLoaded", () => {
+  // Initialize pagination
+  paginationManager = new PaginationManager();
+  paginationManager.initialize();
+
+  // Update the existing filter event listeners
+  const roleFilter = document.getElementById('role-filter');
+  const barangayFilter = document.getElementById('barangay-filter');
+  
+  if (roleFilter) {
+    roleFilter.addEventListener('change', () => {
+      paginationManager.updatePagination();
+    });
+  }
+  
+  if (barangayFilter) {
+    barangayFilter.addEventListener('change', () => {
+      paginationManager.updatePagination();
+    });
+  }
+
+  // Update the remove button handler to refresh pagination after removal
+  document.querySelectorAll('.remove-btn').forEach(button => {
+    button.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      const name = this.getAttribute('data-name');
+      const type = this.getAttribute('data-type');
+      const form = this.closest('form');
+      
+      Swal.fire({
+        title: 'Are you sure?',
+        html: `Do you want to remove <strong>${name}</strong> (${type}) from the system?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#95a5a6',
+        confirmButtonText: 'Yes, remove them',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+          
+          fetch(form.action, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': csrfToken,
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: new URLSearchParams({
+              'csrfmiddlewaretoken': csrfToken
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              const row = this.closest('tr');
+              row.style.transition = 'all 0.3s ease';
+              row.style.opacity = '0';
+              row.style.transform = 'translateX(-20px)';
+              
+              setTimeout(() => {
+                row.remove();
+                // Reinitialize pagination after removal
+                paginationManager.getAllRows();
+                paginationManager.updatePagination();
+              }, 300);
+              
+              Swal.fire({
+                icon: 'success',
+                title: 'Successfully Removed!',
+                html: `<strong>${data.name}</strong> (${data.type}) has been removed from the system and notified via email.`,
+                timer: 3000,
+                showConfirmButton: false
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: data.error || 'Failed to remove the worker. Please try again.',
+              });
+            }
+          })
+          .catch(error => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Network Error!',
+              text: `Failed to remove the worker: ${error.message}`,
+            });
+          });
+        }
+      });
+    });
+  });
+});
+
+// Add fade-in animation if not already defined
+if (!document.querySelector('style[data-pagination-animation]')) {
+  const style = document.createElement('style');
+  style.setAttribute('data-pagination-animation', 'true');
+  style.innerHTML = `
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+</script>
 </body>
 </html>
