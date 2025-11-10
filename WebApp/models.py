@@ -456,7 +456,7 @@ class Preschooler(models.Model):
     type_of_birth = models.CharField(max_length=20, choices=TYPE_OF_BIRTH_CHOICES, blank=True, null=True)
 
     PLACE_OF_DELIVERY_CHOICES = [
-        ('Home', 'Home'),
+        ('Center to Center', 'Center to Center'),
         ('Private/Lying-in', 'Private/Lying-in'),
         ('Public Hospital', 'Public Hospital'),
         ('Others', 'Others'),
@@ -597,7 +597,7 @@ def classify_bmi_for_age(z: float) -> str:
     elif -2 <= z <= 1:
         return "Normal"
     elif 1 < z <= 2:
-        return "Risk of overweight"
+        return "Risk of Overweight"
     elif 2 < z <= 3:
         return "Overweight"
     else:
