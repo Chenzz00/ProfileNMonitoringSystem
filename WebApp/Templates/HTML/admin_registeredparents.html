@@ -510,9 +510,8 @@
         <h2>Registered Parents</h2>
 
         <div class="search-section">
-          <input type="text" id="search-input" name="search" class="search-input" 
-       placeholder="Search by parent name..." value="{{ search_query }}">
-<button id="search-btn" class="btn">Search</button>
+          <input type="text" id="search-input" class="search-input" placeholder="Search by parent name...">
+          <button id="search-btn" class="btn">Search</button>
         </div>
 
         <!-- Enhanced Responsive Table Container -->
@@ -659,10 +658,8 @@
 
       // Original search functionality
       document.getElementById("search-btn").addEventListener("click", () => {
-    const input = document.getElementById("search-input").value;
-    // Redirect to the same page with ?search=...
-    window.location.href = `?search=${encodeURIComponent(input)}`;
-});
+        performSearch();
+      });
 
       // Enter key search
       document.getElementById("search-input").addEventListener("keypress", (e) => {
