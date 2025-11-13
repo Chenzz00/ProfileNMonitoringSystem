@@ -5489,39 +5489,34 @@ def profile(request):
     })
     
 def registered_parents(request):
+    # ✅ Redirect if not authenticated
     if not request.user.is_authenticated:
         return redirect('login')
 
+    # ✅ Get the current user's account
     account = get_object_or_404(Account, email=request.user.email)
     raw_role = (account.user_role or '').strip().lower()
 
-    search_query = request.GET.get('search', '').strip()  # ✅ Get search input
+    print("=== REGISTERED PARENTS VIEW DEBUG ===")
+    print("User: {account.full_name} ({account.user_role})")
 
-    # Base queryset
+    # ✅ Query parents
     if raw_role == 'admin':
-        parents_qs = Parent.objects.all()
+        parents_qs = Parent.objects.all().order_by('-created_at')
         barangay_name = "All Barangays"
     else:
-        parents_qs = Parent.objects.filter(barangay=account.barangay)
+        parents_qs = Parent.objects.filter(
+            barangay=account.barangay
+        ).order_by('-created_at')
         barangay_name = account.barangay.name if account.barangay else "No Barangay"
+        print("Showing parents for barangay: {barangay_name}")
 
-    # ✅ Apply search filter if input exists
-    if search_query:
-        parents_qs = parents_qs.filter(
-            Q(full_name__icontains=search_query) |
-            Q(email__icontains=search_query) |
-            Q(contact_number__icontains=search_query)
-        )
-
-    # ✅ Order by creation date
-    parents_qs = parents_qs.order_by('-created_at')
-
-    # Pagination
-    paginator = Paginator(parents_qs, 10)
+    # ✅ Pagination
+    paginator = Paginator(parents_qs, 10)  # 10 parents per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # Compute children + age display
+    # ✅ Compute children + age
     today = date.today()
     for parent in page_obj:
         preschoolers = Preschooler.objects.filter(parent_id=parent)
@@ -5540,9 +5535,11 @@ def registered_parents(request):
         'account': account,
         'parents': page_obj,
         'barangay_name': barangay_name,
-        'search_query': search_query,  # ✅ keep input in the box
-        'has_parents': parents_qs.exists(),
+        'has_parents': parents_qs.exists(),  # ✅ para sa "No parents registered"
     }
+
+    print("Parents count: {parents_qs.count()}")
+    print("=== END REGISTERED PARENTS DEBUG ===")
 
     return render(request, 'HTML/registered_parent.html', context)
     
@@ -11000,37 +10997,8 @@ This is an automated message. Please do not reply.
 
 
 
-@require_http_methods(["GET"])
-def all_parents_api(request):
-    """API endpoint to get all parents data"""
-    if not request.user.is_authenticated:
-        return JsonResponse({'error': 'Unauthorized'}, status=401)
-    
-    account = get_object_or_404(Account, email=request.user.email)
-    raw_role = (account.user_role or '').strip().lower()
-    
-    # Get parents based on role
-    if raw_role == 'admin':
-        parents_qs = Parent.objects.all().order_by('-created_at')
-    else:
-        parents_qs = Parent.objects.filter(
-            barangay=account.barangay
-        ).order_by('-created_at')
-    
-    # Format data for JSON response
-    parents_data = [
-        {
-            'id': parent.id,
-            'full_name': parent.full_name,
-            'contact_number': parent.contact_number,
-            'email': parent.email,
-            'created_at': parent.created_at.strftime('%B %d, %Y'),
-            'barangay_name': parent.barangay.name if parent.barangay else 'N/A'
-        }
-        for parent in parents_qs
-    ]
-    
-    return JsonResponse({'parents': parents_data})
+
+
 
 
 
