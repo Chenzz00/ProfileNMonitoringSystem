@@ -9148,22 +9148,25 @@ def history(request):
 
     print(f"DEBUG: History access authorized for {current_user_info['role']} in {user_barangay}")
 
-    # Calculate time boundaries for log cleanup
+    # Calculate time boundaries for log filtering
     now = timezone.now()
     yesterday = now - timedelta(days=1)
 
-    # Optional: delete old logs (only for current user's barangay)
-    deleted_parent_logs = ParentActivityLog.objects.filter(barangay=user_barangay, timestamp__lt=yesterday).delete()
-    deleted_preschooler_logs = PreschoolerActivityLog.objects.filter(barangay=user_barangay, timestamp__lt=yesterday).delete()
+    # CHANGED: Instead of deleting, filter to hide old logs
+    # Only show logs from today and yesterday
+    parent_logs = ParentActivityLog.objects.filter(
+        barangay=user_barangay, 
+        timestamp__gte=yesterday  # Only show logs from yesterday onwards
+    ).select_related('parent', 'barangay').order_by('-timestamp')
     
-    if deleted_parent_logs[0] > 0 or deleted_preschooler_logs[0] > 0:
-        print(f"DEBUG: Cleaned up {deleted_parent_logs[0]} parent logs and {deleted_preschooler_logs[0]} preschooler logs older than yesterday")
-
-    # Get logs ONLY from user's barangay
-    parent_logs = ParentActivityLog.objects.filter(barangay=user_barangay).select_related('parent', 'barangay').order_by('-timestamp')
-    preschooler_logs = PreschoolerActivityLog.objects.filter(barangay=user_barangay).select_related('barangay').order_by('-timestamp')
-
+    preschooler_logs = PreschoolerActivityLog.objects.filter(
+        barangay=user_barangay, 
+        timestamp__gte=yesterday  # Only show logs from yesterday onwards
+    ).select_related('barangay').order_by('-timestamp')
     
+    if parent_logs.count() > 0 or preschooler_logs.count() > 0:
+        print(f"DEBUG: Displaying {parent_logs.count()} parent logs and {preschooler_logs.count()} preschooler logs from the last day")
+
     # Debug: Show some sample logs
     for log in parent_logs[:3]:
         print(f"DEBUG: Parent log: {log.activity} - {log.timestamp} - Barangay: {log.barangay}")
@@ -9190,6 +9193,7 @@ def history(request):
         'total_parent_logs': parent_logs.count(),
         'total_preschooler_logs': preschooler_logs.count(),
     })
+
 
 
 # Additional helper function to create activity logs with barangay validation
@@ -11029,6 +11033,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
