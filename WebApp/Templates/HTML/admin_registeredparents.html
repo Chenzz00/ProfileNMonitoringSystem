@@ -368,8 +368,7 @@
       <div class="nav-item">
         <button class="nav-link" onclick="location.href='/registered-barangays/'">
           <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
           </svg>
           Barangay List
         </button>
@@ -513,6 +512,7 @@
         <div class="search-section">
           <input type="text" id="search-input" class="search-input" placeholder="Search by parent name...">
           <button id="search-btn" class="btn">Search</button>
+          <button id="clear-btn" class="btn" style="background-color: #95a5a6; display: none;">Clear</button>
         </div>
 
         <!-- Enhanced Responsive Table Container -->
@@ -792,8 +792,139 @@ if (generateReportBtn) {
 
 </script>
 
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("search-input");
+  const searchBtn = document.getElementById("search-btn");
+  const clearBtn = document.getElementById("clear-btn");
+  let searchActive = false;
+  let searchQuery = '';
+
+  // Get all parent data from the page (current page only)
+  function getAllParentRows() {
+    return document.querySelectorAll(".parent-row");
+  }
+
+  // Filter visible rows on current page
+  function filterCurrentPage(query) {
+    const rows = getAllParentRows();
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      if (row.cells && row.cells.length >= 1) {
+        const name = row.cells[0].textContent.toLowerCase();
+        const contact = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
+        const email = row.cells[2] ? row.cells[2].textContent.toLowerCase() : '';
+        const barangay = row.cells[4] ? row.cells[4].textContent.toLowerCase() : '';
+        
+        const matches = name.includes(query) || 
+                       contact.includes(query) || 
+                       email.includes(query) || 
+                       barangay.includes(query);
+        
+        if (matches) {
+          row.style.display = "";
+          visibleCount++;
+        } else {
+          row.style.display = "none";
+        }
+      }
+    });
+
+    // Show "No results" message if no matches
+    const tbody = document.querySelector("table tbody");
+    let noResultsRow = document.getElementById("no-results-row");
+    
+    if (visibleCount === 0 && query !== '') {
+      if (!noResultsRow) {
+        noResultsRow = document.createElement('tr');
+        noResultsRow.id = "no-results-row";
+        noResultsRow.innerHTML = `<td colspan="5" style="text-align:center; padding: 40px; color: #999;">No parents found matching "${query}"</td>`;
+        tbody.appendChild(noResultsRow);
+      }
+    } else if (noResultsRow) {
+      noResultsRow.remove();
+    }
+  }
+
+  // Perform search and navigate if needed
+  function performSearch() {
+    searchQuery = searchInput.value.toLowerCase().trim();
+    
+    if (searchQuery === '') {
+      // Clear search
+      searchActive = false;
+      clearBtn.style.display = "none";
+      const rows = getAllParentRows();
+      rows.forEach(row => {
+        row.style.display = "";
+      });
+      const noResultsRow = document.getElementById("no-results-row");
+      if (noResultsRow) noResultsRow.remove();
+      return;
+    }
+
+    searchActive = true;
+    clearBtn.style.display = "inline-block";
+    
+    // Reset to page 1 for search results
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.delete('page');
+    
+    // Add search query to URL
+    currentUrl.searchParams.set('search', searchQuery);
+    
+    // Navigate to page 1 with search query
+    window.location.href = currentUrl.toString();
+  }
+
+  // Clear search
+  function clearSearch() {
+    searchInput.value = '';
+    searchQuery = '';
+    searchActive = false;
+    clearBtn.style.display = "none";
+    
+    // Remove search from URL and go back to page 1
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.delete('search');
+    currentUrl.searchParams.delete('page');
+    
+    window.location.href = currentUrl.toString();
+  }
+
+  // Event listeners
+  searchBtn.addEventListener("click", performSearch);
+  clearBtn.addEventListener("click", clearSearch);
+  
+  searchInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      performSearch();
+    }
+  });
+
+  // Client-side filtering for the current page
+  searchInput.addEventListener("input", (e) => {
+    if (searchActive) {
+      filterCurrentPage(e.target.value.toLowerCase().trim());
+    }
+  });
+
+  // Check if we have a search query in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const searchFromUrl = urlParams.get('search');
+  
+  if (searchFromUrl) {
+    searchInput.value = searchFromUrl;
+    searchQuery = searchFromUrl;
+    searchActive = true;
+    clearBtn.style.display = "inline-block";
+    filterCurrentPage(searchFromUrl);
+  }
+});
+</script>
+
 </body>
 </html>
-
 
 
