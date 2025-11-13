@@ -5489,34 +5489,39 @@ def profile(request):
     })
     
 def registered_parents(request):
-    # ✅ Redirect if not authenticated
     if not request.user.is_authenticated:
         return redirect('login')
 
-    # ✅ Get the current user's account
     account = get_object_or_404(Account, email=request.user.email)
     raw_role = (account.user_role or '').strip().lower()
 
-    print("=== REGISTERED PARENTS VIEW DEBUG ===")
-    print("User: {account.full_name} ({account.user_role})")
+    search_query = request.GET.get('search', '').strip()  # ✅ Get search input
 
-    # ✅ Query parents
+    # Base queryset
     if raw_role == 'admin':
-        parents_qs = Parent.objects.all().order_by('-created_at')
+        parents_qs = Parent.objects.all()
         barangay_name = "All Barangays"
     else:
-        parents_qs = Parent.objects.filter(
-            barangay=account.barangay
-        ).order_by('-created_at')
+        parents_qs = Parent.objects.filter(barangay=account.barangay)
         barangay_name = account.barangay.name if account.barangay else "No Barangay"
-        print("Showing parents for barangay: {barangay_name}")
 
-    # ✅ Pagination
-    paginator = Paginator(parents_qs, 10)  # 10 parents per page
+    # ✅ Apply search filter if input exists
+    if search_query:
+        parents_qs = parents_qs.filter(
+            Q(full_name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(contact_number__icontains=search_query)
+        )
+
+    # ✅ Order by creation date
+    parents_qs = parents_qs.order_by('-created_at')
+
+    # Pagination
+    paginator = Paginator(parents_qs, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # ✅ Compute children + age
+    # Compute children + age display
     today = date.today()
     for parent in page_obj:
         preschoolers = Preschooler.objects.filter(parent_id=parent)
@@ -5535,11 +5540,9 @@ def registered_parents(request):
         'account': account,
         'parents': page_obj,
         'barangay_name': barangay_name,
-        'has_parents': parents_qs.exists(),  # ✅ para sa "No parents registered"
+        'search_query': search_query,  # ✅ keep input in the box
+        'has_parents': parents_qs.exists(),
     }
-
-    print("Parents count: {parents_qs.count()}")
-    print("=== END REGISTERED PARENTS DEBUG ===")
 
     return render(request, 'HTML/registered_parent.html', context)
     
@@ -11028,6 +11031,7 @@ def all_parents_api(request):
     ]
     
     return JsonResponse({'parents': parents_data})
+
 
 
 
