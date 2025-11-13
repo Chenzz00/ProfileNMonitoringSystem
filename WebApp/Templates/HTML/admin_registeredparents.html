@@ -543,19 +543,28 @@
           </table>
         </div>
 
-        <div class="pagination-section">
+        <div class="pagination-section" id="pagination-section">
+        {% if not is_searching %}
+          <!-- Only show pagination when NOT searching -->
           {% if parents.has_previous %}
             <a href="?page={{ parents.previous_page_number }}" class="btn">Previous</a>
           {% endif %}
 
-          {% if parents.paginator.num_pages > 1 %}
-            <span>Page {{ parents.number }} of {{ parents.paginator.num_pages }}</span>
+          {% if paginator.num_pages > 1 %}
+            <span>Page {{ parents.number }} of {{ paginator.num_pages }}</span>
           {% endif %}
 
           {% if parents.has_next %}
             <a href="?page={{ parents.next_page_number }}" class="btn">Next</a>
           {% endif %}
-        </div>
+        {% else %}
+          <!-- Show search results count when searching -->
+          <span style="color: #666; font-weight: 500;">
+            🔍 Found <strong>{{ parents.count }}</strong> parent(s) matching "{{ search_query }}"
+            <a href="{% url 'registered-parents' %}" style="margin-left: 15px; color: #5bdab3; text-decoration: none;">Clear Search</a>
+          </span>
+        {% endif %}
+      </div>
       </div>
     </div>
   </div>
@@ -797,129 +806,54 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("search-input");
   const searchBtn = document.getElementById("search-btn");
   const clearBtn = document.getElementById("clear-btn");
-  let searchActive = false;
-  let searchQuery = '';
 
-  // Get all parent data from the page (current page only)
-  function getAllParentRows() {
-    return document.querySelectorAll(".parent-row");
-  }
-
-  // Filter visible rows on current page
-  function filterCurrentPage(query) {
-    const rows = getAllParentRows();
-    let visibleCount = 0;
-
-    rows.forEach(row => {
-      if (row.cells && row.cells.length >= 1) {
-        const name = row.cells[0].textContent.toLowerCase();
-        const contact = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
-        const email = row.cells[2] ? row.cells[2].textContent.toLowerCase() : '';
-        const barangay = row.cells[4] ? row.cells[4].textContent.toLowerCase() : '';
-        
-        const matches = name.includes(query) || 
-                       contact.includes(query) || 
-                       email.includes(query) || 
-                       barangay.includes(query);
-        
-        if (matches) {
-          row.style.display = "";
-          visibleCount++;
-        } else {
-          row.style.display = "none";
-        }
-      }
-    });
-
-    // Show "No results" message if no matches
-    const tbody = document.querySelector("table tbody");
-    let noResultsRow = document.getElementById("no-results-row");
-    
-    if (visibleCount === 0 && query !== '') {
-      if (!noResultsRow) {
-        noResultsRow = document.createElement('tr');
-        noResultsRow.id = "no-results-row";
-        noResultsRow.innerHTML = `<td colspan="5" style="text-align:center; padding: 40px; color: #999;">No parents found matching "${query}"</td>`;
-        tbody.appendChild(noResultsRow);
-      }
-    } else if (noResultsRow) {
-      noResultsRow.remove();
-    }
-  }
-
-  // Perform search and navigate if needed
-  function performSearch() {
-    searchQuery = searchInput.value.toLowerCase().trim();
-    
-    if (searchQuery === '') {
-      // Clear search
-      searchActive = false;
-      clearBtn.style.display = "none";
-      const rows = getAllParentRows();
-      rows.forEach(row => {
-        row.style.display = "";
-      });
-      const noResultsRow = document.getElementById("no-results-row");
-      if (noResultsRow) noResultsRow.remove();
-      return;
-    }
-
-    searchActive = true;
-    clearBtn.style.display = "inline-block";
-    
-    // Reset to page 1 for search results
-    const currentUrl = new URL(window.location);
-    currentUrl.searchParams.delete('page');
-    
-    // Add search query to URL
-    currentUrl.searchParams.set('search', searchQuery);
-    
-    // Navigate to page 1 with search query
-    window.location.href = currentUrl.toString();
-  }
-
-  // Clear search
-  function clearSearch() {
-    searchInput.value = '';
-    searchQuery = '';
-    searchActive = false;
-    clearBtn.style.display = "none";
-    
-    // Remove search from URL and go back to page 1
-    const currentUrl = new URL(window.location);
-    currentUrl.searchParams.delete('search');
-    currentUrl.searchParams.delete('page');
-    
-    window.location.href = currentUrl.toString();
-  }
-
-  // Event listeners
-  searchBtn.addEventListener("click", performSearch);
-  clearBtn.addEventListener("click", clearSearch);
-  
-  searchInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      performSearch();
-    }
-  });
-
-  // Client-side filtering for the current page
-  searchInput.addEventListener("input", (e) => {
-    if (searchActive) {
-      filterCurrentPage(e.target.value.toLowerCase().trim());
-    }
-  });
-
-  // Check if we have a search query in URL
+  // Get search query from URL if exists
   const urlParams = new URLSearchParams(window.location.search);
   const searchFromUrl = urlParams.get('search');
   
   if (searchFromUrl) {
     searchInput.value = searchFromUrl;
-    searchQuery = searchFromUrl;
-    searchActive = true;
-    clearBtn.style.display = "inline-block";
-    filterCurrentPage(searchFromUrl);
+    if (clearBtn) clearBtn.style.display = "inline-block";
+  }
+
+  // Perform search
+  function performSearch() {
+    const searchQuery = searchInput.value.toLowerCase().trim();
+    
+    if (searchQuery === '') {
+      // If empty, go back to normal view
+      window.location.href = window.location.pathname;
+      return;
+    }
+
+    // Navigate with search query - shows ALL results without pagination
+    const url = new URL(window.location);
+    url.searchParams.set('search', searchQuery);
+    url.searchParams.delete('page'); // Reset to first page with all results
+    window.location.href = url.toString();
+  }
+
+  // Clear search
+  function clearSearch() {
+    searchInput.value = '';
+    window.location.href = window.location.pathname; // Go back to normal view
+  }
+
+  // Event listeners
+  if (searchBtn) {
+    searchBtn.addEventListener("click", performSearch);
+  }
+  
+  if (clearBtn) {
+    clearBtn.addEventListener("click", clearSearch);
+  }
+  
+  if (searchInput) {
+    searchInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        performSearch();
+      }
+    });
   }
 });
 </script>
