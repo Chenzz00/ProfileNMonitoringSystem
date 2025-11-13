@@ -866,6 +866,19 @@ document.addEventListener("DOMContentLoaded", () => {
     location.reload(); // Reload to show original pagination
   }
 
+  // Add hover effect to parent rows for better UX
+  tableBody.addEventListener('mouseenter', function(e) {
+    if (e.target.closest('.parent-row')) {
+      e.target.closest('.parent-row').style.backgroundColor = 'rgba(91, 218, 179, 0.1)';
+    }
+  }, true);
+
+  tableBody.addEventListener('mouseleave', function(e) {
+    if (e.target.closest('.parent-row')) {
+      e.target.closest('.parent-row').style.backgroundColor = '';
+    }
+  }, true);
+
   // Event listeners
   searchBtn.addEventListener("click", performSearch);
   clearBtn.addEventListener("click", clearSearch);
@@ -880,5 +893,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
