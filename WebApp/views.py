@@ -9548,31 +9548,27 @@ def registered_barangays(request):
 
     return render(request, "HTML/barangay_list.html", {"barangays": page_obj})
     
-@admin_required 
+@admin_required
 def healthcare_workers(request):
-    """Healthcare workers view with client-side pagination"""
+    """Improved healthcare workers view with pagination (10 rows per page by default)."""
     from django.utils import timezone
     from django.db.models import Q
-    
-    # Get all barangays for the filter dropdown
+    from django.core.paginator import Paginator
+    from datetime import timedelta
+
     barangays = Barangay.objects.all().order_by('name')
-    
-    # ===== BHW DATA =====
+
+    # ===== BHW =====
     bhw_list = Account.objects.filter(
         Q(user_role__iexact='healthworker') | Q(user_role__iexact='BHW'),
         is_validated=True
-    ).select_related('barangay').order_by('full_name')
-    
+    ).select_related('barangay')
+
     for bhw in bhw_list:
-        try:
-            bhw.bhw_data = BHW.objects.filter(email=bhw.email).first()
-        except Exception as e:
-            print(f"Error getting BHW data for {bhw.full_name}: {str(e)}")
-            bhw.bhw_data = None
-        
+        bhw.bhw_data = BHW.objects.filter(email=bhw.email).first()
         set_activity_status(bhw)
-    
-    # ===== BNS DATA =====
+
+    # ===== BNS =====
     bns_queries = [
         Q(user_role__iexact='bns'),
         Q(user_role__iexact='BNS'),
@@ -9580,86 +9576,74 @@ def healthcare_workers(request):
         Q(user_role__icontains='BNS'),
         Q(user_role__icontains='Nutritional'),
         Q(user_role__icontains='Scholar'),
+        Q(user_role__icontains='bns'),
+        Q(user_role__icontains='nutritional'),
+        Q(user_role__icontains='scholar'),
     ]
-    
     combined_query = bns_queries[0]
-    for query in bns_queries[1:]:
-        combined_query |= query
-    
+    for q in bns_queries[1:]:
+        combined_query |= q
+
     bns_list = Account.objects.filter(
         combined_query,
         is_validated=True
-    ).select_related('barangay').distinct().order_by('full_name')
-    
+    ).select_related('barangay').distinct()
+
     for bns in bns_list:
-        try:
-            bns.bns_data = None
-            
-            try:
-                bns.bns_data = BNS.objects.get(email=bns.email)
-            except BNS.DoesNotExist:
-                try:
-                    bns.bns_data = BNS.objects.get(full_name__iexact=bns.full_name)
-                except BNS.DoesNotExist:
-                    bns.bns_data = BNS.objects.filter(
-                        Q(full_name__icontains=bns.full_name.split()[0]) |
-                        Q(full_name__icontains=bns.full_name.split()[-1])
-                    ).first()
-                except BNS.MultipleObjectsReturned:
-                    bns.bns_data = BNS.objects.filter(full_name__iexact=bns.full_name).first()
-            except BNS.MultipleObjectsReturned:
-                bns.bns_data = BNS.objects.filter(email=bns.email).first()
-                
-        except Exception as e:
-            print(f"Error processing BNS {bns.full_name}: {str(e)}")
-            bns.bns_data = None
-        
+        bns.bns_data = BNS.objects.filter(email=bns.email).first() or \
+                       BNS.objects.filter(full_name__iexact=bns.full_name).first()
         set_activity_status(bns)
-    
-    # ===== MIDWIFE DATA =====
+
+    # ===== MIDWIFE =====
     midwife_list = Account.objects.filter(
         Q(user_role__iexact='midwife') | Q(user_role__iexact='Midwife'),
         is_validated=True
-    ).select_related('barangay').order_by('full_name')
-    
+    ).select_related('barangay')
+
     for midwife in midwife_list:
-        try:
-            midwife.midwife_data = Midwife.objects.filter(email=midwife.email).first()
-        except Exception as e:
-            print(f"Error getting Midwife data for {midwife.full_name}: {str(e)}")
-            midwife.midwife_data = None
-        
+        midwife.midwife_data = Midwife.objects.filter(email=midwife.email).first()
         set_activity_status(midwife)
-    
-    # ===== NURSE DATA =====
+
+    # ===== NURSE =====
     nurse_list = Account.objects.filter(
         Q(user_role__iexact='nurse') | Q(user_role__iexact='Nurse'),
         is_validated=True
-    ).select_related('barangay').order_by('full_name')
-    
+    ).select_related('barangay')
+
     for nurse in nurse_list:
-        try:
-            nurse.nurse_data = Nurse.objects.filter(email=nurse.email).first()
-        except Exception as e:
-            print(f"Error getting Nurse data for {nurse.full_name}: {str(e)}")
-            nurse.nurse_data = None
-        
+        nurse.nurse_data = Nurse.objects.filter(email=nurse.email).first()
         set_activity_status(nurse)
-    
-    # ===== SEND ALL DATA TO TEMPLATE FOR CLIENT-SIDE PAGINATION =====
+
+    # ===== Pagination (10 per page default) =====
+    page_number = request.GET.get('page', 1)
+    worker_type = request.GET.get('type', 'bhw')
+
+    if worker_type == 'bns':
+        worker_list = bns_list
+    elif worker_type == 'midwife':
+        worker_list = midwife_list
+    elif worker_type == 'nurse':
+        worker_list = nurse_list
+    else:
+        worker_list = bhw_list
+        worker_type = 'bhw'
+
+    paginator = Paginator(worker_list, 10)
+    page_obj = paginator.get_page(page_number)
+
     context = {
         'barangays': barangays,
-        'bhws': bhw_list,          # Send all BHW data
-        'bnss': bns_list,          # Send all BNS data
-        'midwives': midwife_list,  # Send all Midwife data
-        'nurses': nurse_list,      # Send all Nurse data
-        'total_bhws': bhw_list.count(),
-        'total_bnss': bns_list.count(),
-        'total_midwives': midwife_list.count(),
-        'total_nurses': nurse_list.count(),
+        'page_obj': page_obj,
+        'worker_type': worker_type,
+        # Keep full lists only for counts, not for display
+        'all_bhws': bhw_list,
+        'all_bnss': bns_list,
+        'all_midwives': midwife_list,
+        'all_nurses': nurse_list,
     }
-    
+
     return render(request, 'HTML/healthcare_workers.html', context)
+
 
 
 def set_activity_status(user):
@@ -10946,6 +10930,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
