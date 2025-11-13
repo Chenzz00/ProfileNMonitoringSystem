@@ -9550,7 +9550,7 @@ def registered_barangays(request):
     
 @admin_required
 def healthcare_workers(request):
-    """Improved healthcare workers view with pagination (10 rows per page by default)."""
+    """Improved healthcare workers view with working 10-row pagination and template compatibility."""
     from django.utils import timezone
     from django.db.models import Q
     from django.core.paginator import Paginator
@@ -9614,7 +9614,7 @@ def healthcare_workers(request):
         nurse.nurse_data = Nurse.objects.filter(email=nurse.email).first()
         set_activity_status(nurse)
 
-    # ===== Pagination (10 per page default) =====
+    # ===== Pagination (10 rows per page) =====
     page_number = request.GET.get('page', 1)
     worker_type = request.GET.get('type', 'bhw')
 
@@ -9631,11 +9631,15 @@ def healthcare_workers(request):
     paginator = Paginator(worker_list, 10)
     page_obj = paginator.get_page(page_number)
 
+    # Keep compatibility with template variable names
     context = {
         'barangays': barangays,
+        'bhws': page_obj if worker_type == 'bhw' else bhw_list[:0],
+        'bnss': page_obj if worker_type == 'bns' else bns_list[:0],
+        'midwives': page_obj if worker_type == 'midwife' else midwife_list[:0],
+        'nurses': page_obj if worker_type == 'nurse' else nurse_list[:0],
         'page_obj': page_obj,
         'worker_type': worker_type,
-        # Keep full lists only for counts, not for display
         'all_bhws': bhw_list,
         'all_bnss': bns_list,
         'all_midwives': midwife_list,
@@ -9643,6 +9647,7 @@ def healthcare_workers(request):
     }
 
     return render(request, 'HTML/healthcare_workers.html', context)
+
 
 
 
@@ -10930,6 +10935,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
