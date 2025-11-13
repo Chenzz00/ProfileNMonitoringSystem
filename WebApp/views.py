@@ -10997,6 +10997,42 @@ This is an automated message. Please do not reply.
 
 
 
+@require_http_methods(["GET"])
+def all_parents_api(request):
+    """API endpoint to get all parents data"""
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Unauthorized'}, status=401)
+    
+    account = get_object_or_404(Account, email=request.user.email)
+    raw_role = (account.user_role or '').strip().lower()
+    
+    # Get parents based on role
+    if raw_role == 'admin':
+        parents_qs = Parent.objects.all().order_by('-created_at')
+    else:
+        parents_qs = Parent.objects.filter(
+            barangay=account.barangay
+        ).order_by('-created_at')
+    
+    # Format data for JSON response
+    parents_data = [
+        {
+            'id': parent.id,
+            'full_name': parent.full_name,
+            'contact_number': parent.contact_number,
+            'email': parent.email,
+            'created_at': parent.created_at.strftime('%B %d, %Y'),
+            'barangay_name': parent.barangay.name if parent.barangay else 'N/A'
+        }
+        for parent in parents_qs
+    ]
+    
+    return JsonResponse({'parents': parents_data})
+
+
+
+
+
 
 
 
