@@ -510,52 +510,52 @@
         <h2>Registered Parents</h2>
 
         <div class="search-section">
-          <input type="text" id="search-input" class="search-input" placeholder="Search by parent name, email, contact, or barangay...">
-          <button id="search-btn" class="btn">Search</button>
-          <button id="clear-search-btn" class="btn" style="background-color: #95a5a6; display: none;">Clear</button>
+          <input type="text" id="search-input" name="search" class="search-input" 
+       placeholder="Search by parent name..." value="{{ search_query }}">
+<button id="search-btn" class="btn">Search</button>
         </div>
 
         <!-- Enhanced Responsive Table Container -->
         <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Full Name</th>
-              <th>Contact</th>
-              <th>Email</th>
-              <th>Registered Date</th>
-              <th>Barangay</th>
-            </tr>
-          </thead>
-          <tbody id="parents-table-body">
-            {% for parent in parents %}
-            <tr class="parent-row" data-parent-id="{{ parent.id }}" data-search-text="{{ parent.full_name|lower }} {{ parent.contact_number|lower }} {{ parent.email|lower }} {{ parent.barangay.name|lower }}">
-              <td>{{ parent.full_name }}</td>
-              <td>{{ parent.contact_number }}</td>
-              <td>{{ parent.email }}</td>
-              <td>{{ parent.created_at|date:"F j, Y" }}</td>
-              <td>{{ parent.barangay.name }}</td>
-            </tr>
-            {% empty %}
-            <tr class="no-data-row"><td colspan="5" style="text-align:center; padding: 40px; color: #999;">No parents registered.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      
-      <div class="pagination-section" id="pagination-section">
-        {% if parents.has_previous %}
-          <a href="?page={{ parents.previous_page_number }}" class="btn">Previous</a>
-        {% endif %}
-      
-        {% if parents.paginator.num_pages > 1 %}
-          <span id="pagination-info">Page {{ parents.number }} of {{ parents.paginator.num_pages }}</span>
-        {% endif %}
-      
-        {% if parents.has_next %}
-          <a href="?page={{ parents.next_page_number }}" class="btn">Next</a>
-        {% endif %}
-      </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Full Name</th>
+                <th>Contact</th>
+                <th>Email</th>
+                <th>Registered Date</th>
+                <th>Barangay</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for parent in parents %}
+              <tr class="parent-row">
+                <td>{{ parent.full_name }}</td>
+                <td>{{ parent.contact_number }}</td>
+                <td>{{ parent.email }}</td>
+                <td>{{ parent.created_at|date:"F j, Y" }}</td>
+                <td>{{ parent.barangay.name }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="5" style="text-align:center; padding: 40px; color: #999;">No parents registered.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination-section">
+          {% if parents.has_previous %}
+            <a href="?page={{ parents.previous_page_number }}" class="btn">Previous</a>
+          {% endif %}
+
+          {% if parents.paginator.num_pages > 1 %}
+            <span>Page {{ parents.number }} of {{ parents.paginator.num_pages }}</span>
+          {% endif %}
+
+          {% if parents.has_next %}
+            <a href="?page={{ parents.next_page_number }}" class="btn">Next</a>
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>
@@ -659,8 +659,10 @@
 
       // Original search functionality
       document.getElementById("search-btn").addEventListener("click", () => {
-        performSearch();
-      });
+    const input = document.getElementById("search-input").value;
+    // Redirect to the same page with ?search=...
+    window.location.href = `?search=${encodeURIComponent(input)}`;
+});
 
       // Enter key search
       document.getElementById("search-input").addEventListener("keypress", (e) => {
@@ -792,129 +794,7 @@ if (generateReportBtn) {
 
 </script>
 
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const searchInput = document.getElementById("search-input");
-  const searchBtn = document.getElementById("search-btn");
-  const clearBtn = document.getElementById("clear-search-btn");
-  const tableBody = document.getElementById("parents-table-body");
-  const paginationSection = document.getElementById("pagination-section");
-  
-  let allRows = [];
-  let isSearchActive = false;
-
-  // Store all rows from current page
-  function storeAllRows() {
-    allRows = Array.from(tableBody.querySelectorAll(".parent-row"));
-  }
-
-  // Load all pages data
-  async function loadAllPages() {
-    try {
-      const paginationText = document.getElementById("pagination-info")?.textContent || "";
-      const match = paginationText.match(/(\d+)\s+of\s+(\d+)/);
-      const totalPages = match ? parseInt(match[2]) : 1;
-      
-      if (totalPages <= 1) {
-        return allRows;
-      }
-
-      let allParentRows = [...allRows];
-
-      // Fetch remaining pages
-      for (let page = 2; page <= totalPages; page++) {
-        try {
-          const response = await fetch(`?page=${page}`);
-          if (!response.ok) continue;
-          const html = await response.text();
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(html, 'text/html');
-          const pageRows = Array.from(doc.querySelectorAll("#parents-table-body .parent-row"));
-          
-          // Extract data and create new rows with search-text attribute
-          pageRows.forEach(row => {
-            if (row.cells && row.cells.length >= 5) {
-              const searchText = `${row.cells[0].textContent} ${row.cells[1].textContent} ${row.cells[2].textContent} ${row.cells[4].textContent}`.toLowerCase();
-              row.setAttribute("data-search-text", searchText);
-              allParentRows.push(row);
-            }
-          });
-        } catch (pageError) {
-          console.error(`Error loading page ${page}:`, pageError);
-        }
-      }
-
-      return allParentRows;
-    } catch (error) {
-      console.error("Error loading all pages:", error);
-      return allRows;
-    }
-  }
-
-  // Perform search
-  async function performSearch() {
-    const input = searchInput.value.toLowerCase().trim();
-    
-    if (input === "") {
-      // Reset to initial state
-      location.reload();
-      return;
-    }
-
-    isSearchActive = true;
-    clearBtn.style.display = "inline-block";
-    paginationSection.innerHTML = ""; // Clear pagination completely
-    paginationSection.style.display = "none";
-
-    // Load all pages
-    const allParentRows = await loadAllPages();
-
-    // Filter based on search input
-    const filtered = allParentRows.filter(row => {
-      const searchText = row.getAttribute("data-search-text") || 
-                        `${row.cells[0].textContent} ${row.cells[1].textContent} ${row.cells[2].textContent} ${row.cells[4].textContent}`.toLowerCase();
-      return searchText.includes(input);
-    });
-
-    // Display filtered results
-    if (filtered.length === 0) {
-      tableBody.innerHTML = '<tr class="no-data-row"><td colspan="5" style="text-align:center; padding: 40px; color: #999;">No results found.</td></tr>';
-    } else {
-      tableBody.innerHTML = "";
-      filtered.forEach(row => {
-        const clonedRow = row.cloneNode(true);
-        tableBody.appendChild(clonedRow);
-      });
-    }
-  }
-
-  // Clear search
-  function clearSearch() {
-    searchInput.value = "";
-    location.reload();
-  }
-
-  // Event listeners
-  searchBtn.addEventListener("click", performSearch);
-  clearBtn.addEventListener("click", clearSearch);
-  
-  searchInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-      performSearch();
-    }
-  });
-
-  // Initialize
-  storeAllRows();
-});
-</script>
-
 </body>
 </html>
-
-
-
-
 
 
