@@ -1140,11 +1140,11 @@
 
         <!-- Pagination Section -->
         <div class="pagination-section">
-          <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
             <button id="prev-btn" class="pagination-nav-btn" style="visibility: hidden;">
               <i class="fas fa-chevron-left"></i> Previous
             </button>
-            <span id="pagination-info" style="min-width: 120px; text-align: center;">Page 1 of 1</span>
+            <span id="pagination-info" style="flex: 1; text-align: center;">Page 1 of 1</span>
             <button id="next-btn" class="pagination-nav-btn" style="visibility: hidden;">
               Next <i class="fas fa-chevron-right"></i>
             </button>
@@ -1744,6 +1744,8 @@ class PaginationManager {
   initialize() {
     this.getAllRows();
     this.updatePagination();
+    // IMPORTANT: Render the first page immediately
+    this.renderPage();
   }
 
   getAllRows() {
@@ -1813,7 +1815,11 @@ class PaginationManager {
 
   updatePaginationInfo() {
     const paginationInfo = document.getElementById('pagination-info');
-    paginationInfo.textContent = `Page ${this.currentPage} of ${this.totalPages}`;
+    if (this.filteredRows.length === 0) {
+      paginationInfo.textContent = 'No results';
+    } else {
+      paginationInfo.textContent = `Page ${this.currentPage} of ${this.totalPages} (${this.filteredRows.length} total)`;
+    }
   }
 
   updateNavigationButtons() {
@@ -1861,7 +1867,7 @@ class PaginationManager {
 // Initialize pagination manager
 let paginationManager;
 
-// Initialize pagination after page loads
+// Initialize pagination after page loads - THIS IS THE KEY FIX
 document.addEventListener("DOMContentLoaded", () => {
   // Initialize pagination
   paginationManager = new PaginationManager();
@@ -1990,4 +1996,3 @@ if (!document.querySelector('style[data-pagination-animation]')) {
 </script>
 </body>
 </html>
-
