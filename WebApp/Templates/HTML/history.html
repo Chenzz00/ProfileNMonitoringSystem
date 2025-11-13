@@ -935,47 +935,9 @@
           </div>
         </div>
 
-        <!-- Preschooler Activity History Container -->
-        <div class="history-container">
-          <h3 class="section-title">Preschooler Activity History</h3>
-          <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
-                <tr>
-                  <th>Preschooler Name</th>
-                  <th>Activity</th>
-                  <th>Performed By</th>
-                  <th>Date & Time</th>
-                </tr>
-              </thead>
-              <tbody id="preschooler-log-body">
-                {% if preschooler_logs %}
-                  {% for log in preschooler_logs %}
-                    <tr class="{% if log.timestamp|timesince <= '1 day' %}highlight{% endif %}">
-                      <td>{{ log.preschooler_name }}</td>
-                      <td>{{ log.activity }}</td>
-                      <td>{{ log.performed_by }}</td>
-                      <td>{{ log.timestamp|date:"F d, Y - h:i A" }}</td>
-                    </tr>
-                  {% endfor %}
-                {% else %}
-                  <tr><td colspan="4" class="no-data">No preschooler activity yet.</td></tr>
-                {% endif %}
-              </tbody>
-            </table>
-          </div>
+       
           
-          <!-- Pagination for Preschooler Logs -->
-          <div class="pagination-wrapper">
-            {% if preschooler_logs.has_previous %}
-              <a href="?preschooler_page={{ preschooler_logs.previous_page_number }}{% if parent_logs.number %}&parent_page={{ parent_logs.number }}{% endif %}">Previous</a>
-            {% endif %}
-            <span>Page {{ preschooler_logs.number }} of {{ preschooler_logs.paginator.num_pages }}</span>
-            {% if preschooler_logs.has_next %}
-              <a href="?preschooler_page={{ preschooler_logs.next_page_number }}{% if parent_logs.number %}&parent_page={{ parent_logs.number }}{% endif %}">Next</a>
-            {% endif %}
-          </div>
-        </div>
+          
       </div>
     </div>
   </div>
@@ -1228,6 +1190,7 @@
 
 </body>
 </html> 
+
 
 
 
