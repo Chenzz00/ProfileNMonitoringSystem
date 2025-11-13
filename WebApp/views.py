@@ -5511,8 +5511,11 @@ def registered_parents(request):
         barangay_name = account.barangay.name if account.barangay else "No Barangay"
         print(f"Showing parents for barangay: {barangay_name}")
 
-    # ✅ Apply search filter if provided
+    # ✅ Check if search is active
     search_query = request.GET.get('search', '').strip()
+    is_searching = bool(search_query)
+
+    # ✅ Apply search filter if provided
     if search_query:
         parents_qs = parents_qs.filter(
             Q(full_name__icontains=search_query) |
@@ -5522,10 +5525,16 @@ def registered_parents(request):
         )
         print(f"Search query: '{search_query}' - Found {parents_qs.count()} results")
 
-    # ✅ Pagination
-    paginator = Paginator(parents_qs, 10)  # 10 parents per page
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
+    # ✅ Pagination - ONLY if NOT searching
+    if is_searching:
+        # Show ALL search results without pagination
+        page_obj = parents_qs
+        paginator = None
+    else:
+        # Use pagination only for normal browsing
+        paginator = Paginator(parents_qs, 10)  # 10 parents per page
+        page_number = request.GET.get('page', 1)
+        page_obj = paginator.get_page(page_number)
 
     # ✅ Compute children + age
     today = date.today()
@@ -5545,16 +5554,18 @@ def registered_parents(request):
     context = {
         'account': account,
         'parents': page_obj,
+        'paginator': paginator,  # ✅ Will be None when searching
         'barangay_name': barangay_name,
         'has_parents': parents_qs.exists(),
-        'search_query': search_query,  # ✅ Pass search query to template
+        'search_query': search_query,
+        'is_searching': is_searching,  # ✅ Flag to hide pagination
     }
 
     print(f"Parents count: {parents_qs.count()}")
+    print(f"Is searching: {is_searching}")
     print("=== END REGISTERED PARENTS DEBUG ===")
 
     return render(request, 'HTML/registered_parent.html', context)
-
 def register(request):
     if request.method == 'POST':
         first_name   = request.POST.get("firstName")
@@ -11006,6 +11017,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
