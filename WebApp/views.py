@@ -5498,9 +5498,9 @@ def registered_parents(request):
     raw_role = (account.user_role or '').strip().lower()
 
     print("=== REGISTERED PARENTS VIEW DEBUG ===")
-    print("User: {account.full_name} ({account.user_role})")
+    print(f"User: {account.full_name} ({account.user_role})")
 
-    # ✅ Query parents
+    # ✅ Query parents based on user role
     if raw_role == 'admin':
         parents_qs = Parent.objects.all().order_by('-created_at')
         barangay_name = "All Barangays"
@@ -5509,11 +5509,22 @@ def registered_parents(request):
             barangay=account.barangay
         ).order_by('-created_at')
         barangay_name = account.barangay.name if account.barangay else "No Barangay"
-        print("Showing parents for barangay: {barangay_name}")
+        print(f"Showing parents for barangay: {barangay_name}")
+
+    # ✅ Apply search filter if provided
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        parents_qs = parents_qs.filter(
+            Q(full_name__icontains=search_query) |
+            Q(contact_number__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(barangay__name__icontains=search_query)
+        )
+        print(f"Search query: '{search_query}' - Found {parents_qs.count()} results")
 
     # ✅ Pagination
     paginator = Paginator(parents_qs, 10)  # 10 parents per page
-    page_number = request.GET.get('page')
+    page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
     # ✅ Compute children + age
@@ -5535,10 +5546,11 @@ def registered_parents(request):
         'account': account,
         'parents': page_obj,
         'barangay_name': barangay_name,
-        'has_parents': parents_qs.exists(),  # ✅ para sa "No parents registered"
+        'has_parents': parents_qs.exists(),
+        'search_query': search_query,  # ✅ Pass search query to template
     }
 
-    print("Parents count: {parents_qs.count()}")
+    print(f"Parents count: {parents_qs.count()}")
     print("=== END REGISTERED PARENTS DEBUG ===")
 
     return render(request, 'HTML/registered_parent.html', context)
@@ -10994,6 +11006,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
