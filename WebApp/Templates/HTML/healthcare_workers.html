@@ -1743,7 +1743,16 @@ class PaginationManager {
 
   initialize() {
     this.getAllRows();
-    this.updatePagination();
+    this.filteredRows = this.getFilteredRows();
+    this.totalPages = Math.max(1, Math.ceil(this.filteredRows.length / this.itemsPerPage));
+    this.currentPage = 1;
+    
+    console.log(`Initialize: Total rows: ${this.allRows.length}, Filtered: ${this.filteredRows.length}, Pages: ${this.totalPages}`);
+    
+    // CRITICAL: Force render immediately
+    this.renderPage();
+    this.updatePaginationInfo();
+    this.updateNavigationButtons();
   }
 
   getAllRows() {
@@ -1875,9 +1884,17 @@ let paginationManager;
 
 // Initialize pagination after page loads
 document.addEventListener("DOMContentLoaded", () => {
-  // Initialize pagination
-  paginationManager = new PaginationManager();
-  paginationManager.initialize();
+  // Small delay to ensure all DOM elements are ready
+  setTimeout(() => {
+    // Initialize pagination
+    paginationManager = new PaginationManager();
+    paginationManager.initialize();
+    
+    // Force render of first page immediately
+    paginationManager.renderPage();
+    paginationManager.updatePaginationInfo();
+    paginationManager.updateNavigationButtons();
+  }, 100);
 
   // Setup Previous/Next button event listeners
   const prevBtn = document.getElementById('prev-btn');
