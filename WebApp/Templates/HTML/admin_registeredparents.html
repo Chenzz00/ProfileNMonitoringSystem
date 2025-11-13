@@ -510,61 +510,53 @@
         <h2>Registered Parents</h2>
 
         <div class="search-section">
-          <input type="text" id="search-input" class="search-input" placeholder="Search by parent name...">
+          <input type="text" id="search-input" class="search-input" placeholder="Search by parent name, email, contact, or barangay...">
           <button id="search-btn" class="btn">Search</button>
-          <button id="clear-btn" class="btn" style="background-color: #95a5a6; display: none;">Clear</button>
+          <button id="clear-search-btn" class="btn" style="background-color: #95a5a6; display: none;">Clear</button>
         </div>
 
         <!-- Enhanced Responsive Table Container -->
         <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Full Name</th>
-                <th>Contact</th>
-                <th>Email</th>
-                <th>Registered Date</th>
-                <th>Barangay</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for parent in parents %}
-              <tr class="parent-row">
-                <td>{{ parent.full_name }}</td>
-                <td>{{ parent.contact_number }}</td>
-                <td>{{ parent.email }}</td>
-                <td>{{ parent.created_at|date:"F j, Y" }}</td>
-                <td>{{ parent.barangay.name }}</td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="5" style="text-align:center; padding: 40px; color: #999;">No parents registered.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Full Name</th>
+              <th>Contact</th>
+              <th>Email</th>
+              <th>Registered Date</th>
+              <th>Barangay</th>
+            </tr>
+          </thead>
+          <tbody id="parents-table-body">
+            {% for parent in parents %}
+            <tr class="parent-row" data-parent-id="{{ parent.id }}">
+              <td>{{ parent.full_name }}</td>
+              <td>{{ parent.contact_number }}</td>
+              <td>{{ parent.email }}</td>
+              <td>{{ parent.created_at|date:"F j, Y" }}</td>
+              <td>{{ parent.barangay.name }}</td>
+            </tr>
+            {% empty %}
+            <tr class="no-data-row"><td colspan="5" style="text-align:center; padding: 40px; color: #999;">No parents registered.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
 
         <div class="pagination-section" id="pagination-section">
-        {% if not is_searching %}
-          <!-- Only show pagination when NOT searching -->
-          {% if parents.has_previous %}
-            <a href="?page={{ parents.previous_page_number }}" class="btn">Previous</a>
-          {% endif %}
+        {% if parents.has_previous %}
+          <a href="?page={{ parents.previous_page_number }}" class="btn">Previous</a>
+        {% endif %}
 
-          {% if paginator.num_pages > 1 %}
-            <span>Page {{ parents.number }} of {{ paginator.num_pages }}</span>
-          {% endif %}
+        {% if parents.paginator.num_pages > 1 %}
+          <span id="pagination-info">Page {{ parents.number }} of {{ parents.paginator.num_pages }}</span>
+        {% endif %}
 
-          {% if parents.has_next %}
-            <a href="?page={{ parents.next_page_number }}" class="btn">Next</a>
-          {% endif %}
-        {% else %}
-          <!-- Show search results count when searching -->
-          <span style="color: #666; font-weight: 500;">
-            🔍 Found <strong>{{ parents.count }}</strong> parent(s) matching "{{ search_query }}"
-            <a href="{% url 'registered-parents' %}" style="margin-left: 15px; color: #5bdab3; text-decoration: none;">Clear Search</a>
-          </span>
+        {% if parents.has_next %}
+          <a href="?page={{ parents.next_page_number }}" class="btn">Next</a>
         {% endif %}
       </div>
+
       </div>
     </div>
   </div>
@@ -801,60 +793,92 @@ if (generateReportBtn) {
 
 </script>
 
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("search-input");
   const searchBtn = document.getElementById("search-btn");
-  const clearBtn = document.getElementById("clear-btn");
-
-  // Get search query from URL if exists
-  const urlParams = new URLSearchParams(window.location.search);
-  const searchFromUrl = urlParams.get('search');
+  const clearBtn = document.getElementById("clear-search-btn");
+  const tableBody = document.getElementById("parents-table-body");
+  const paginationSection = document.getElementById("pagination-section");
   
-  if (searchFromUrl) {
-    searchInput.value = searchFromUrl;
-    if (clearBtn) clearBtn.style.display = "inline-block";
+  let allParents = [];
+  let isSearchActive = false;
+
+  // Collect all parent data from the table on page load
+  function collectAllParents() {
+    const rows = tableBody.querySelectorAll(".parent-row");
+    allParents = Array.from(rows).map(row => ({
+      id: row.getAttribute("data-parent-id"),
+      name: row.cells[0].textContent.trim(),
+      contact: row.cells[1].textContent.trim(),
+      email: row.cells[2].textContent.trim(),
+      date: row.cells[3].textContent.trim(),
+      barangay: row.cells[4].textContent.trim(),
+      element: row
+    }));
   }
 
-  // Perform search
+  // Perform search across all parents
   function performSearch() {
-    const searchQuery = searchInput.value.toLowerCase().trim();
+    const input = searchInput.value.toLowerCase().trim();
     
-    if (searchQuery === '') {
-      // If empty, go back to normal view
-      window.location.href = window.location.pathname;
+    if (input === "") {
+      // Reset to initial state
+      showAllParents();
+      isSearchActive = false;
+      clearBtn.style.display = "none";
+      paginationSection.style.display = "block";
       return;
     }
 
-    // Navigate with search query - shows ALL results without pagination
-    const url = new URL(window.location);
-    url.searchParams.set('search', searchQuery);
-    url.searchParams.delete('page'); // Reset to first page with all results
-    window.location.href = url.toString();
+    isSearchActive = true;
+    clearBtn.style.display = "inline-block";
+    paginationSection.style.display = "none";
+
+    // Filter parents based on search input
+    const filtered = allParents.filter(parent => {
+      const searchableText = `${parent.name} ${parent.contact} ${parent.email} ${parent.barangay}`.toLowerCase();
+      return searchableText.includes(input);
+    });
+
+    // Show/hide rows based on search results
+    if (filtered.length === 0) {
+      tableBody.innerHTML = '<tr class="no-data-row"><td colspan="5" style="text-align:center; padding: 40px; color: #999;">No results found.</td></tr>';
+    } else {
+      tableBody.innerHTML = "";
+      filtered.forEach(parent => {
+        tableBody.appendChild(parent.element);
+      });
+    }
+  }
+
+  // Show all parents (reset search)
+  function showAllParents() {
+    tableBody.innerHTML = "";
+    allParents.forEach(parent => {
+      tableBody.appendChild(parent.element);
+    });
   }
 
   // Clear search
   function clearSearch() {
-    searchInput.value = '';
-    window.location.href = window.location.pathname; // Go back to normal view
+    searchInput.value = "";
+    performSearch();
   }
 
   // Event listeners
-  if (searchBtn) {
-    searchBtn.addEventListener("click", performSearch);
-  }
+  searchBtn.addEventListener("click", performSearch);
+  clearBtn.addEventListener("click", clearSearch);
   
-  if (clearBtn) {
-    clearBtn.addEventListener("click", clearSearch);
-  }
-  
-  if (searchInput) {
-    searchInput.addEventListener("keypress", (e) => {
-      if (e.key === "Enter") {
-        performSearch();
-      }
-    });
-  }
+  searchInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      performSearch();
+    }
+  });
+
+  // Initialize
+  collectAllParents();
 });
 </script>
 
