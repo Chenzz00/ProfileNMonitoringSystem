@@ -9550,96 +9550,66 @@ def registered_barangays(request):
     
 @admin_required
 def healthcare_workers(request):
-    """Improved healthcare workers view with working 10-row pagination and template compatibility."""
-    from django.utils import timezone
+    """Show all workers (BHW, BNS, Midwife, Nurse) together with 10 rows per page."""
     from django.db.models import Q
     from django.core.paginator import Paginator
     from datetime import timedelta
+    from django.utils import timezone
 
     barangays = Barangay.objects.all().order_by('name')
 
-    # ===== BHW =====
+    # ====== GET ALL WORKERS ======
     bhw_list = Account.objects.filter(
         Q(user_role__iexact='healthworker') | Q(user_role__iexact='BHW'),
         is_validated=True
     ).select_related('barangay')
 
-    for bhw in bhw_list:
-        bhw.bhw_data = BHW.objects.filter(email=bhw.email).first()
-        set_activity_status(bhw)
-
-    # ===== BNS =====
-    bns_queries = [
-        Q(user_role__iexact='bns'),
-        Q(user_role__iexact='BNS'),
-        Q(user_role__iexact='Barangay Nutritional Scholar'),
-        Q(user_role__icontains='BNS'),
-        Q(user_role__icontains='Nutritional'),
-        Q(user_role__icontains='Scholar'),
-        Q(user_role__icontains='bns'),
-        Q(user_role__icontains='nutritional'),
-        Q(user_role__icontains='scholar'),
-    ]
-    combined_query = bns_queries[0]
-    for q in bns_queries[1:]:
-        combined_query |= q
-
     bns_list = Account.objects.filter(
-        combined_query,
+        Q(user_role__iexact='bns') | Q(user_role__iexact='BNS') |
+        Q(user_role__icontains='nutritional') | Q(user_role__icontains='scholar'),
         is_validated=True
     ).select_related('barangay').distinct()
 
-    for bns in bns_list:
-        bns.bns_data = BNS.objects.filter(email=bns.email).first() or \
-                       BNS.objects.filter(full_name__iexact=bns.full_name).first()
-        set_activity_status(bns)
-
-    # ===== MIDWIFE =====
     midwife_list = Account.objects.filter(
-        Q(user_role__iexact='midwife') | Q(user_role__iexact='Midwife'),
+        Q(user_role__iexact='midwife'),
         is_validated=True
     ).select_related('barangay')
 
-    for midwife in midwife_list:
-        midwife.midwife_data = Midwife.objects.filter(email=midwife.email).first()
-        set_activity_status(midwife)
-
-    # ===== NURSE =====
     nurse_list = Account.objects.filter(
-        Q(user_role__iexact='nurse') | Q(user_role__iexact='Nurse'),
+        Q(user_role__iexact='nurse'),
         is_validated=True
     ).select_related('barangay')
 
-    for nurse in nurse_list:
-        nurse.nurse_data = Nurse.objects.filter(email=nurse.email).first()
-        set_activity_status(nurse)
+    # Combine all into one unified list
+    all_workers = list(bhw_list) + list(bns_list) + list(midwife_list) + list(nurse_list)
 
-    # ===== Pagination (10 rows per page) =====
+    # ====== Apply Filters ======
+    selected_role = request.GET.get('role', 'All Roles')
+    selected_barangay = request.GET.get('barangay', 'All Barangays')
+
+    if selected_role and selected_role != 'All Roles':
+        all_workers = [w for w in all_workers if w.user_role.lower() == selected_role.lower()]
+
+    if selected_barangay and selected_barangay != 'All Barangays':
+        all_workers = [w for w in all_workers if w.barangay and w.barangay.name == selected_barangay]
+
+    # ====== Sort for consistency ======
+    all_workers.sort(key=lambda w: (w.barangay.name if w.barangay else '', w.full_name.lower()))
+
+    # ====== Activity status ======
+    for worker in all_workers:
+        set_activity_status(worker)
+
+    # ====== PAGINATION (10 rows total per page) ======
+    paginator = Paginator(all_workers, 10)
     page_number = request.GET.get('page', 1)
-    worker_type = request.GET.get('type', 'bhw')
-
-    if worker_type == 'bns':
-        worker_list = bns_list
-    elif worker_type == 'midwife':
-        worker_list = midwife_list
-    elif worker_type == 'nurse':
-        worker_list = nurse_list
-    else:
-        worker_list = bhw_list
-        worker_type = 'bhw'
-
-    paginator = Paginator(worker_list, 10)
     page_obj = paginator.get_page(page_number)
 
-    # Keep compatibility with template variable names
     context = {
         'barangays': barangays,
-        'bhws': page_obj if worker_type == 'bhw' else bhw_list[:0],
-        'bnss': page_obj if worker_type == 'bns' else bns_list[:0],
-        'midwives': page_obj if worker_type == 'midwife' else midwife_list[:0],
-        'nurses': page_obj if worker_type == 'nurse' else nurse_list[:0],
-        'page_obj': page_obj,
-        'worker_type': worker_type,
+        'page_obj': page_obj,  # display 10 at a time
+        'selected_role': selected_role,
+        'selected_barangay': selected_barangay,
         'all_bhws': bhw_list,
         'all_bnss': bns_list,
         'all_midwives': midwife_list,
@@ -9647,7 +9617,6 @@ def healthcare_workers(request):
     }
 
     return render(request, 'HTML/healthcare_workers.html', context)
-
 
 
 
@@ -10935,6 +10904,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
