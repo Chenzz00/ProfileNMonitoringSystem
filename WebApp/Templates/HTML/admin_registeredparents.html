@@ -543,7 +543,7 @@
         </table>
       </div>
 
-        <div class="pagination-section" id="pagination-section">
+      <div class="pagination-section" id="pagination-section">
         {% if parents.has_previous %}
           <a href="?page={{ parents.previous_page_number }}" class="btn">Previous</a>
         {% endif %}
@@ -805,30 +805,25 @@ document.addEventListener("DOMContentLoaded", () => {
   let allParents = [];
   let isSearchActive = false;
 
-  // Collect all parent data from the table on page load
-  function collectAllParents() {
-    const rows = tableBody.querySelectorAll(".parent-row");
-    allParents = Array.from(rows).map(row => ({
-      id: row.getAttribute("data-parent-id"),
-      name: row.cells[0].textContent.trim(),
-      contact: row.cells[1].textContent.trim(),
-      email: row.cells[2].textContent.trim(),
-      date: row.cells[3].textContent.trim(),
-      barangay: row.cells[4].textContent.trim(),
-      element: row
-    }));
+  // Fetch all parents from backend
+  async function fetchAllParents() {
+    try {
+      const response = await fetch('/api/all-parents/'); // You'll need to create this endpoint
+      const data = await response.json();
+      return data.parents || [];
+    } catch (error) {
+      console.error("Error fetching all parents:", error);
+      return [];
+    }
   }
 
-  // Perform search across all parents
-  function performSearch() {
+  // Perform search across ALL parents (including other pages)
+  async function performSearch() {
     const input = searchInput.value.toLowerCase().trim();
     
     if (input === "") {
       // Reset to initial state
-      showAllParents();
-      isSearchActive = false;
-      clearBtn.style.display = "none";
-      paginationSection.style.display = "block";
+      location.reload(); // Reload to show original pagination
       return;
     }
 
@@ -836,9 +831,12 @@ document.addEventListener("DOMContentLoaded", () => {
     clearBtn.style.display = "inline-block";
     paginationSection.style.display = "none";
 
+    // Fetch all parents
+    const allParentsData = await fetchAllParents();
+
     // Filter parents based on search input
-    const filtered = allParents.filter(parent => {
-      const searchableText = `${parent.name} ${parent.contact} ${parent.email} ${parent.barangay}`.toLowerCase();
+    const filtered = allParentsData.filter(parent => {
+      const searchableText = `${parent.full_name} ${parent.contact_number} ${parent.email} ${parent.barangay_name}`.toLowerCase();
       return searchableText.includes(input);
     });
 
@@ -848,23 +846,24 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       tableBody.innerHTML = "";
       filtered.forEach(parent => {
-        tableBody.appendChild(parent.element);
+        const row = document.createElement("tr");
+        row.className = "parent-row";
+        row.innerHTML = `
+          <td>${parent.full_name}</td>
+          <td>${parent.contact_number}</td>
+          <td>${parent.email}</td>
+          <td>${parent.created_at}</td>
+          <td>${parent.barangay_name}</td>
+        `;
+        tableBody.appendChild(row);
       });
     }
-  }
-
-  // Show all parents (reset search)
-  function showAllParents() {
-    tableBody.innerHTML = "";
-    allParents.forEach(parent => {
-      tableBody.appendChild(parent.element);
-    });
   }
 
   // Clear search
   function clearSearch() {
     searchInput.value = "";
-    performSearch();
+    location.reload(); // Reload to show original pagination
   }
 
   // Event listeners
@@ -876,9 +875,6 @@ document.addEventListener("DOMContentLoaded", () => {
       performSearch();
     }
   });
-
-  // Initialize
-  collectAllParents();
 });
 </script>
 
