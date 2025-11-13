@@ -542,16 +542,16 @@
           </tbody>
         </table>
       </div>
-
+      
       <div class="pagination-section" id="pagination-section">
         {% if parents.has_previous %}
           <a href="?page={{ parents.previous_page_number }}" class="btn">Previous</a>
         {% endif %}
-
+      
         {% if parents.paginator.num_pages > 1 %}
           <span id="pagination-info">Page {{ parents.number }} of {{ parents.paginator.num_pages }}</span>
         {% endif %}
-
+      
         {% if parents.has_next %}
           <a href="?page={{ parents.next_page_number }}" class="btn">Next</a>
         {% endif %}
@@ -893,6 +893,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
