@@ -9059,16 +9059,12 @@ def history(request):
         return redirect('login')
     """History view with proper barangay filtering - only shows logs from user's barangay"""
     
-    # Get user's barangay using consistent logic
     user_barangay = get_user_barangay(request.user)
     current_user_info = None
-    
 
-    
     if request.user.is_authenticated:
         # Try each model to find the user
         try:
-            # Try Account model first
             account = Account.objects.select_related('barangay').get(email=request.user.email)
             current_user_info = {
                 'model': 'Account',
@@ -9076,10 +9072,8 @@ def history(request):
                 'role': account.user_role,
                 'object': account
             }
-            
         except Account.DoesNotExist:
             try:
-                # Try BHW model
                 bhw = BHW.objects.select_related('barangay').get(email=request.user.email)
                 current_user_info = {
                     'model': 'BHW',
@@ -9087,10 +9081,8 @@ def history(request):
                     'role': 'BHW',
                     'object': bhw
                 }
-               
             except BHW.DoesNotExist:
                 try:
-                    # Try BNS model
                     bns = BNS.objects.select_related('barangay').get(email=request.user.email)
                     current_user_info = {
                         'model': 'BNS',
@@ -9098,10 +9090,8 @@ def history(request):
                         'role': 'BNS',
                         'object': bns
                     }
-                    
                 except BNS.DoesNotExist:
                     try:
-                        # Try Midwife model
                         midwife = Midwife.objects.select_related('barangay').get(email=request.user.email)
                         current_user_info = {
                             'model': 'Midwife',
@@ -9109,10 +9099,8 @@ def history(request):
                             'role': 'Midwife',
                             'object': midwife
                         }
-                        
                     except Midwife.DoesNotExist:
                         try:
-                            # Try Nurse model
                             nurse = Nurse.objects.select_related('barangay').get(email=request.user.email)
                             current_user_info = {
                                 'model': 'Nurse',
@@ -9120,10 +9108,8 @@ def history(request):
                                 'role': 'Nurse',
                                 'object': nurse
                             }
-                            
                         except Nurse.DoesNotExist:
                             try:
-                                # Try Parent model
                                 parent = Parent.objects.select_related('barangay').get(email=request.user.email)
                                 current_user_info = {
                                     'model': 'Parent',
@@ -9131,11 +9117,9 @@ def history(request):
                                     'role': 'Parent',
                                     'object': parent
                                 }
-                         
                             except Parent.DoesNotExist:
                                 print("DEBUG: User not found in any model")
 
-    # If no user found or no barangay assigned, show empty history
     if not current_user_info or not user_barangay:
         print(f"DEBUG: No user info or barangay found. User info: {current_user_info}, Barangay: {user_barangay}")
         return render(request, 'HTML/history.html', {
@@ -9148,33 +9132,12 @@ def history(request):
 
     print(f"DEBUG: History access authorized for {current_user_info['role']} in {user_barangay}")
 
-    # Calculate time boundaries for log filtering
-    now = timezone.now()
-    yesterday = now - timedelta(days=1)
+    # 🔹 Removed automatic deletion of logs older than 1 day
 
-    # CHANGED: Instead of deleting, filter to hide old logs
-    # Only show logs from today and yesterday
-    parent_logs = ParentActivityLog.objects.filter(
-        barangay=user_barangay, 
-        timestamp__gte=yesterday  # Only show logs from yesterday onwards
-    ).select_related('parent', 'barangay').order_by('-timestamp')
-    
-    preschooler_logs = PreschoolerActivityLog.objects.filter(
-        barangay=user_barangay, 
-        timestamp__gte=yesterday  # Only show logs from yesterday onwards
-    ).select_related('barangay').order_by('-timestamp')
-    
-    if parent_logs.count() > 0 or preschooler_logs.count() > 0:
-        print(f"DEBUG: Displaying {parent_logs.count()} parent logs and {preschooler_logs.count()} preschooler logs from the last day")
+    # Get logs ONLY from user's barangay
+    parent_logs = ParentActivityLog.objects.filter(barangay=user_barangay).select_related('parent', 'barangay').order_by('-timestamp')
+    preschooler_logs = PreschoolerActivityLog.objects.filter(barangay=user_barangay).select_related('barangay').order_by('-timestamp')
 
-    # Debug: Show some sample logs
-    for log in parent_logs[:3]:
-        print(f"DEBUG: Parent log: {log.activity} - {log.timestamp} - Barangay: {log.barangay}")
-    
-    for log in preschooler_logs[:3]:
-        print(f"DEBUG: Preschooler log: {log.activity} - {log.timestamp} - Barangay: {log.barangay}")
-
-    # Paginate each log type
     parent_paginator = Paginator(parent_logs, 10)
     preschooler_paginator = Paginator(preschooler_logs, 10)
 
@@ -9193,6 +9156,7 @@ def history(request):
         'total_parent_logs': parent_logs.count(),
         'total_preschooler_logs': preschooler_logs.count(),
     })
+
 
 
 
@@ -11030,6 +10994,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
