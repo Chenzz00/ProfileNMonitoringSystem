@@ -529,7 +529,7 @@
           </thead>
           <tbody id="parents-table-body">
             {% for parent in parents %}
-            <tr class="parent-row" data-parent-id="{{ parent.id }}">
+            <tr class="parent-row" data-parent-id="{{ parent.id }}" data-search-text="{{ parent.full_name|lower }} {{ parent.contact_number|lower }} {{ parent.email|lower }} {{ parent.barangay.name|lower }}">
               <td>{{ parent.full_name }}</td>
               <td>{{ parent.contact_number }}</td>
               <td>{{ parent.email }}</td>
@@ -802,28 +802,49 @@ document.addEventListener("DOMContentLoaded", () => {
   const tableBody = document.getElementById("parents-table-body");
   const paginationSection = document.getElementById("pagination-section");
   
-  let allParents = [];
+  let allRows = [];
   let isSearchActive = false;
 
-  // Fetch all parents from backend
-  async function fetchAllParents() {
+  // Store all rows from current page
+  function storeAllRows() {
+    allRows = Array.from(tableBody.querySelectorAll(".parent-row"));
+  }
+
+  // Load all pages data
+  async function loadAllPages() {
     try {
-      const response = await fetch('/api/all-parents/'); // You'll need to create this endpoint
-      const data = await response.json();
-      return data.parents || [];
+      const totalPages = parseInt(document.getElementById("pagination-info")?.textContent.match(/\d+/g)?.[1] || "1");
+      
+      if (totalPages <= 1) {
+        return allRows;
+      }
+
+      let allParentRows = [...allRows];
+
+      // Fetch remaining pages
+      for (let page = 2; page <= totalPages; page++) {
+        const response = await fetch(`?page=${page}`);
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const pageRows = Array.from(doc.querySelectorAll("#parents-table-body .parent-row"));
+        allParentRows = allParentRows.concat(pageRows);
+      }
+
+      return allParentRows;
     } catch (error) {
-      console.error("Error fetching all parents:", error);
-      return [];
+      console.error("Error loading all pages:", error);
+      return allRows;
     }
   }
 
-  // Perform search across ALL parents (including other pages)
+  // Perform search
   async function performSearch() {
     const input = searchInput.value.toLowerCase().trim();
     
     if (input === "") {
       // Reset to initial state
-      location.reload(); // Reload to show original pagination
+      location.reload();
       return;
     }
 
@@ -831,31 +852,24 @@ document.addEventListener("DOMContentLoaded", () => {
     clearBtn.style.display = "inline-block";
     paginationSection.style.display = "none";
 
-    // Fetch all parents
-    const allParentsData = await fetchAllParents();
+    // Load all pages
+    const allParentRows = await loadAllPages();
 
-    // Filter parents based on search input
-    const filtered = allParentsData.filter(parent => {
-      const searchableText = `${parent.full_name} ${parent.contact_number} ${parent.email} ${parent.barangay_name}`.toLowerCase();
-      return searchableText.includes(input);
+    // Filter based on search input
+    const filtered = allParentRows.filter(row => {
+      const searchText = row.getAttribute("data-search-text") || 
+                        `${row.cells[0].textContent} ${row.cells[1].textContent} ${row.cells[2].textContent} ${row.cells[4].textContent}`.toLowerCase();
+      return searchText.includes(input);
     });
 
-    // Show/hide rows based on search results
+    // Display filtered results
     if (filtered.length === 0) {
       tableBody.innerHTML = '<tr class="no-data-row"><td colspan="5" style="text-align:center; padding: 40px; color: #999;">No results found.</td></tr>';
     } else {
       tableBody.innerHTML = "";
-      filtered.forEach(parent => {
-        const row = document.createElement("tr");
-        row.className = "parent-row";
-        row.innerHTML = `
-          <td>${parent.full_name}</td>
-          <td>${parent.contact_number}</td>
-          <td>${parent.email}</td>
-          <td>${parent.created_at}</td>
-          <td>${parent.barangay_name}</td>
-        `;
-        tableBody.appendChild(row);
+      filtered.forEach(row => {
+        const clonedRow = row.cloneNode(true);
+        tableBody.appendChild(clonedRow);
       });
     }
   }
@@ -863,21 +877,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // Clear search
   function clearSearch() {
     searchInput.value = "";
-    location.reload(); // Reload to show original pagination
+    location.reload();
   }
-
-  // Add hover effect to parent rows for better UX
-  tableBody.addEventListener('mouseenter', function(e) {
-    if (e.target.closest('.parent-row')) {
-      e.target.closest('.parent-row').style.backgroundColor = 'rgba(91, 218, 179, 0.1)';
-    }
-  }, true);
-
-  tableBody.addEventListener('mouseleave', function(e) {
-    if (e.target.closest('.parent-row')) {
-      e.target.closest('.parent-row').style.backgroundColor = '';
-    }
-  }, true);
 
   // Event listeners
   searchBtn.addEventListener("click", performSearch);
@@ -888,11 +889,15 @@ document.addEventListener("DOMContentLoaded", () => {
       performSearch();
     }
   });
+
+  // Initialize
+  storeAllRows();
 });
 </script>
 
 </body>
 </html>
+
 
 
 
