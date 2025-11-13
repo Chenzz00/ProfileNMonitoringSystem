@@ -9550,12 +9550,9 @@ def registered_barangays(request):
     
 @admin_required 
 def healthcare_workers(request):
-    """Improved healthcare workers view with proper initial pagination"""
+    """Healthcare workers view with client-side pagination"""
     from django.utils import timezone
-    from django.utils.timesince import timesince
     from django.db.models import Q
-    from datetime import timedelta
-    from django.core.paginator import Paginator
     
     # Get all barangays for the filter dropdown
     barangays = Barangay.objects.all().order_by('name')
@@ -9564,7 +9561,7 @@ def healthcare_workers(request):
     bhw_list = Account.objects.filter(
         Q(user_role__iexact='healthworker') | Q(user_role__iexact='BHW'),
         is_validated=True
-    ).select_related('barangay')
+    ).select_related('barangay').order_by('full_name')
     
     for bhw in bhw_list:
         try:
@@ -9575,7 +9572,7 @@ def healthcare_workers(request):
         
         set_activity_status(bhw)
     
-    # ===== BNS DATA - COMPREHENSIVE APPROACH =====
+    # ===== BNS DATA =====
     bns_queries = [
         Q(user_role__iexact='bns'),
         Q(user_role__iexact='BNS'),
@@ -9592,7 +9589,7 @@ def healthcare_workers(request):
     bns_list = Account.objects.filter(
         combined_query,
         is_validated=True
-    ).select_related('barangay').distinct()
+    ).select_related('barangay').distinct().order_by('full_name')
     
     for bns in bns_list:
         try:
@@ -9623,7 +9620,7 @@ def healthcare_workers(request):
     midwife_list = Account.objects.filter(
         Q(user_role__iexact='midwife') | Q(user_role__iexact='Midwife'),
         is_validated=True
-    ).select_related('barangay')
+    ).select_related('barangay').order_by('full_name')
     
     for midwife in midwife_list:
         try:
@@ -9638,7 +9635,7 @@ def healthcare_workers(request):
     nurse_list = Account.objects.filter(
         Q(user_role__iexact='nurse') | Q(user_role__iexact='Nurse'),
         is_validated=True
-    ).select_related('barangay')
+    ).select_related('barangay').order_by('full_name')
     
     for nurse in nurse_list:
         try:
@@ -9649,18 +9646,13 @@ def healthcare_workers(request):
         
         set_activity_status(nurse)
     
-    # ===== COMBINE ALL WORKERS FOR CLIENT-SIDE PAGINATION =====
-    # Instead of server-side pagination, send all data to template
-    # and let client-side JavaScript handle 10 items per page
-    all_workers = list(bhw_list) + list(bns_list) + list(midwife_list) + list(nurse_list)
-    
+    # ===== SEND ALL DATA TO TEMPLATE FOR CLIENT-SIDE PAGINATION =====
     context = {
         'barangays': barangays,
-        'bhws': bhw_list,
-        'bnss': bns_list,
-        'midwives': midwife_list,
-        'nurses': nurse_list,
-        'all_workers_count': len(all_workers),
+        'bhws': bhw_list,          # Send all BHW data
+        'bnss': bns_list,          # Send all BNS data
+        'midwives': midwife_list,  # Send all Midwife data
+        'nurses': nurse_list,      # Send all Nurse data
         'total_bhws': bhw_list.count(),
         'total_bnss': bns_list.count(),
         'total_midwives': midwife_list.count(),
@@ -10954,6 +10946,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
