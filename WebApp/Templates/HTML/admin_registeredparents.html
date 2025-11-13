@@ -556,7 +556,6 @@
           <a href="?page={{ parents.next_page_number }}" class="btn">Next</a>
         {% endif %}
       </div>
-
       </div>
     </div>
   </div>
@@ -813,7 +812,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load all pages data
   async function loadAllPages() {
     try {
-      const totalPages = parseInt(document.getElementById("pagination-info")?.textContent.match(/\d+/g)?.[1] || "1");
+      const paginationText = document.getElementById("pagination-info")?.textContent || "";
+      const match = paginationText.match(/(\d+)\s+of\s+(\d+)/);
+      const totalPages = match ? parseInt(match[2]) : 1;
       
       if (totalPages <= 1) {
         return allRows;
@@ -823,12 +824,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Fetch remaining pages
       for (let page = 2; page <= totalPages; page++) {
-        const response = await fetch(`?page=${page}`);
-        const html = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const pageRows = Array.from(doc.querySelectorAll("#parents-table-body .parent-row"));
-        allParentRows = allParentRows.concat(pageRows);
+        try {
+          const response = await fetch(`?page=${page}`);
+          if (!response.ok) continue;
+          const html = await response.text();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const pageRows = Array.from(doc.querySelectorAll("#parents-table-body .parent-row"));
+          
+          // Extract data and create new rows with search-text attribute
+          pageRows.forEach(row => {
+            if (row.cells && row.cells.length >= 5) {
+              const searchText = `${row.cells[0].textContent} ${row.cells[1].textContent} ${row.cells[2].textContent} ${row.cells[4].textContent}`.toLowerCase();
+              row.setAttribute("data-search-text", searchText);
+              allParentRows.push(row);
+            }
+          });
+        } catch (pageError) {
+          console.error(`Error loading page ${page}:`, pageError);
+        }
       }
 
       return allParentRows;
@@ -850,6 +864,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     isSearchActive = true;
     clearBtn.style.display = "inline-block";
+    paginationSection.innerHTML = ""; // Clear pagination completely
     paginationSection.style.display = "none";
 
     // Load all pages
@@ -897,6 +912,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
