@@ -9270,12 +9270,7 @@ def admin_logs(request):
     if request.session.get('user_role') != 'admin':
         return redirect('login')
 
-    now = timezone.now()
-    yesterday = now - timedelta(days=1)
-
-    # Delete logs older than 1 day
-    ParentActivityLog.objects.filter(timestamp__lt=yesterday).delete()
-    PreschoolerActivityLog.objects.filter(timestamp__lt=yesterday).delete()
+    # Removed automatic deletion of logs older than 1 day
 
     # Filter to show only "Transferred to" activities
     parent_logs_all = ParentActivityLog.objects.select_related('parent', 'barangay').filter(
@@ -9301,6 +9296,7 @@ def admin_logs(request):
     }
 
     return render(request, 'HTML/admin_logs.html', context)
+
 
 
 
@@ -11034,6 +11030,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
