@@ -5108,15 +5108,15 @@ def preschoolers(request):
     user_email = request.session.get('email')
     raw_role = (request.session.get('user_role') or '').strip().lower()
 
-    # Get current account
+   
     account = get_object_or_404(Account, email=user_email)
 
-    # AUTO-ARCHIVE CHECK - Run this every time the view is accessed
+   
     auto_archived_count = auto_archive_aged_preschoolers()
     if auto_archived_count > 0:
         print(f"AUTO-ARCHIVED: {auto_archived_count} preschoolers aged out (60+ months)")
 
-    # Query preschoolers (now excluding newly auto-archived ones)
+   
     if raw_role == 'admin':
         preschoolers_qs = Preschooler.objects.filter(is_archived=False)
         barangay_name = "All Barangays"
@@ -5133,9 +5133,11 @@ def preschoolers(request):
             Prefetch('temperature_set', queryset=Temperature.objects.order_by('-date_recorded'), to_attr='temp_records')
         )
 
-    # Process nutritional status, delivery place color coding, and age in months BEFORE pagination
+    today = date.today()
+
+   
     for p in preschoolers_qs:
-        # Handle empty middle name and suffix - set to empty string instead of None
+        
         if not p.middle_name:
             p.middle_name = ''
         if not p.suffix:
@@ -5177,14 +5179,27 @@ def preschoolers(request):
         else:
             p.delivery_class = 'delivery-na'
 
+    # Convert to list for filtering
+    preschoolers_qs = list(preschoolers_qs)
+
     # ✅ FILTER BY NUTRITIONAL STATUS (if provided in URL)
     filter_status = request.GET.get('status', 'All')
     if filter_status and filter_status != 'All':
         preschoolers_qs = [p for p in preschoolers_qs if p.nutritional_status == filter_status]
-    else:
-        preschoolers_qs = list(preschoolers_qs)
 
-    # ✅ Pagination AFTER filtering
+    # ✅ GLOBAL SEARCH - Search by preschooler name ACROSS ALL DATA
+    search_query = request.GET.get('search', '').strip()
+    is_searching = False
+    
+    if search_query:
+        is_searching = True
+        search_lower = search_query.lower()
+        preschoolers_qs = [
+            p for p in preschoolers_qs 
+            if search_lower in f"{p.first_name} {p.last_name}".lower()
+        ]
+
+    # ✅ Pagination AFTER filtering and searching
     paginator = Paginator(preschoolers_qs, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -5202,7 +5217,9 @@ def preschoolers(request):
         'user_role': template_user_role,
         'original_role': raw_role,
         'barangay_name': barangay_name,
-        'filter_status': filter_status,  # ✅ Pass filter status to template
+        'filter_status': filter_status,  
+        'search_query': search_query,     
+        'is_searching': is_searching,     
     }
 
     return render(request, 'HTML/preschoolers.html', context)
@@ -11020,6 +11037,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
