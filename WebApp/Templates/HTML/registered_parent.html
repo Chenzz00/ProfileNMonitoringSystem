@@ -918,7 +918,14 @@
         </div>
 
         <div class="search-section">
-          <input type="text" id="search-input" class="search-input" placeholder="Search by name...">
+          <label for="search-input"><strong>Search by Name (All Pages):</strong></label>
+          <input 
+            type="text" 
+            id="search-input" 
+            class="search-input" 
+            placeholder="Search by name..." 
+            value="{{ search_query }}"
+          >
           <button id="search-btn" class="btn">Search</button>
         </div>
         
@@ -955,16 +962,20 @@
     </div>
 
     <div class="pagination-section">
-      {% if parents.has_previous %}
-        <a href="?page={{ parents.previous_page_number }}" class="btn">Previous</a>
-      {% endif %}
-
-      <span>
-        Page {{ parents.number }} of {{ parents.paginator.num_pages }}
-      </span>
-
-      {% if parents.has_next %}
-        <a href="?page={{ parents.next_page_number }}" class="btn">Next</a>
+      {% if is_searching %}
+        <!-- Hide pagination when searching, show nothing -->
+      {% else %}
+        {% if parents.has_previous %}
+          <a href="?page={{ parents.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="btn">Previous</a>
+        {% endif %}
+        
+        <span>
+          Page {{ parents.number }} of {{ parents.paginator.num_pages }}
+        </span>
+        
+        {% if parents.has_next %}
+          <a href="?page={{ parents.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="btn">Next</a>
+        {% endif %}
       {% endif %}
     </div>
   </div>
@@ -996,7 +1007,7 @@
             {% endif %}
           </div>
           <p><strong>Name:</strong> {{ child.first_name }} {{ child.last_name }}</p>
-          <p><strong>Age:</strong> {{ child.age_display }}</p>
+          <p><strong>Age:</strong> {{ child.age_text }}</p>
           <p><strong>Registered:</strong><br>{{ child.date_registered|date:"M d, Y" }}</p>
         </div>
         {% endfor %}
@@ -1268,8 +1279,40 @@
     };
   </script>
 
+
+<script>
+// Global Search Functionality
+document.getElementById("search-btn").addEventListener("click", () => {
+  const searchTerm = document.getElementById("search-input").value.trim();
+
+  // If input is empty, go back to default (all parents)
+  if (searchTerm === "") {
+    window.location.href = window.location.pathname;
+    return;
+  }
+
+  // Otherwise perform global search across all data (backend search)
+  window.location.href = `${window.location.pathname}?search=${encodeURIComponent(searchTerm)}`;
+});
+
+// Enter key performs search
+document.getElementById("search-input").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    document.getElementById("search-btn").click();
+  }
+});
+
+// Optional: Clear search functionality
+document.getElementById("search-input").addEventListener("keydown", (e) => {
+  // Press Escape to clear search and go back to all parents
+  if (e.key === "Escape") {
+    document.getElementById("search-input").value = "";
+    window.location.href = window.location.pathname;
+  }
+});
+</script>
+
 </body>
 </html>/
-
 
 
