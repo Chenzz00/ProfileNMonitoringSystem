@@ -6295,13 +6295,14 @@ def registered_preschoolers(request):
             Prefetch('bmi_set', queryset=BMI.objects.order_by('-date_recorded'), to_attr='bmi_records'),
             Prefetch('temperature_set', queryset=Temperature.objects.order_by('-date_recorded'), to_attr='temp_records')
         )
-        .order_by('first_name', 'last_name')  # ✅ Sort alphabetically here
+        .order_by('first_name', 'last_name')
     )
 
     today = date.today()
 
-    # --- Compute nutritional status ---
+    # --- Compute nutritional status and delivery class ---
     for p in preschoolers_qs:
+        # Calculate nutritional status
         latest_bmi = p.bmi_records[0] if hasattr(p, 'bmi_records') and p.bmi_records else None
 
         if latest_bmi:
@@ -6325,6 +6326,7 @@ def registered_preschoolers(request):
         else:
             p.nutritional_status = "N/A"
 
+        # Set delivery class for row coloring
         delivery_place = getattr(p, 'place_of_delivery', None)
         if delivery_place == 'Center to Center':
             p.delivery_class = 'delivery-center'
@@ -6337,12 +6339,25 @@ def registered_preschoolers(request):
         else:
             p.delivery_class = 'delivery-na'
 
+    # Convert to list for filtering
+    preschoolers_qs = list(preschoolers_qs)
+
     # ✅ FILTER BY NUTRITIONAL STATUS (if provided)
     filter_status = request.GET.get('status', 'All')
     if filter_status and filter_status != 'All':
         preschoolers_qs = [p for p in preschoolers_qs if p.nutritional_status == filter_status]
-    else:
-        preschoolers_qs = list(preschoolers_qs)
+
+    # ✅ GLOBAL SEARCH - Search by preschooler name ONLY
+    search_query = request.GET.get('search', '').strip()
+    is_searching = False
+    
+    if search_query:
+        is_searching = True
+        search_lower = search_query.lower()
+        preschoolers_qs = [
+            p for p in preschoolers_qs 
+            if search_lower in f"{p.first_name} {p.last_name}".lower()
+        ]
 
     # ✅ Pagination after filtering and sorting
     paginator = Paginator(preschoolers_qs, 10)
@@ -6354,9 +6369,10 @@ def registered_preschoolers(request):
     return render(request, 'HTML/registered_preschoolers.html', {
         'preschoolers': page_obj,
         'barangays': barangays,
-        'filter_status': filter_status,  # ✅ Pass filter status to template
+        'filter_status': filter_status,
+        'search_query': search_query,
+        'is_searching': is_searching,
     })
-
 
 def reportTemplate(request):
     if not request.user.is_authenticated:
@@ -10994,6 +11010,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
