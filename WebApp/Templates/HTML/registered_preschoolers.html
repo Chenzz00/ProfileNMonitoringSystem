@@ -497,8 +497,7 @@
       <div class="nav-item">
         <button class="nav-link" onclick="location.href='/registered-barangays/'">
           <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
           </svg>
           Barangay List
         </button>
@@ -666,21 +665,22 @@
           <div class="search-group">
             <label for="status-select">Filter by Nutritional Status:</label>
             <select id="status-select" class="search-select">
-            <option value="All" {% if not filter_status or filter_status == 'All' %}selected{% endif %}>All</option>
-            <option value="Severely Wasted" {% if filter_status == 'Severely Wasted' %}selected{% endif %}>Severely Wasted</option>
-            <option value="Wasted" {% if filter_status == 'Wasted' %}selected{% endif %}>Wasted</option>
-            <option value="Normal" {% if filter_status == 'Normal' %}selected{% endif %}>Normal</option>
-            <option value="Risk of Overweight" {% if filter_status == 'Risk of Overweight' %}selected{% endif %}>Risk of Overweight</option>
-            <option value="Overweight" {% if filter_status == 'Overweight' %}selected{% endif %}>Overweight</option>
-            <option value="Obese" {% if filter_status == 'Obese' %}selected{% endif %}>Obese</option>
-          </select>
+              <option value="All" {% if not filter_status or filter_status == 'All' %}selected{% endif %}>All</option>
+              <option value="Severely Wasted" {% if filter_status == 'Severely Wasted' %}selected{% endif %}>Severely Wasted</option>
+              <option value="Wasted" {% if filter_status == 'Wasted' %}selected{% endif %}>Wasted</option>
+              <option value="Normal" {% if filter_status == 'Normal' %}selected{% endif %}>Normal</option>
+              <option value="Risk of Overweight" {% if filter_status == 'Risk of Overweight' %}selected{% endif %}>Risk of Overweight</option>
+              <option value="Overweight" {% if filter_status == 'Overweight' %}selected{% endif %}>Overweight</option>
+              <option value="Obese" {% if filter_status == 'Obese' %}selected{% endif %}>Obese</option>
+            </select>
           </div>
           <div class="search-group">
-            <label for="search-input">Search by Name:</label>
-            <input type="text" id="search-input" class="search-input" placeholder="Search by name...">
+            <label for="search-input">Search by Name (All Pages):</label>
+            <input type="text" id="search-input" class="search-input" placeholder="Search by name..." value="{{ search_query }}">
           </div>
           <button id="search-btn" class="search-btn">Search</button>
         </div>
+
 
        <!-- Table Container -->
         <div class="table-container">
@@ -720,17 +720,20 @@
 
         <!-- Pagination Section -->
         <div class="pagination-section">
-        <div class="pagination-section">
-          {% if preschoolers.has_previous %}
-            <a href="?page={{ preschoolers.previous_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">Previous</a>
-          {% endif %}
+          {% if is_searching %}
+            <!-- Hide pagination when searching, show nothing -->
+          {% else %}
+            {% if preschoolers.has_previous %}
+              <a href="?page={{ preschoolers.previous_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">Previous</a>
+            {% endif %}
 
-          <span>
-            Page {{ preschoolers.number }} of {{ preschoolers.paginator.num_pages }}
-          </span>
+            <span>
+              Page {{ preschoolers.number }} of {{ preschoolers.paginator.num_pages }}
+            </span>
 
-          {% if preschoolers.has_next %}
-            <a href="?page={{ preschoolers.next_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">Next</a>
+            {% if preschoolers.has_next %}
+              <a href="?page={{ preschoolers.next_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">Next</a>
+            {% endif %}
           {% endif %}
         </div>
       </div>
@@ -739,167 +742,188 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const notifBtn = document.getElementById("notifBtn");
-      const notifMenu = document.getElementById("notifMenu");
-      const notifDot = document.getElementById("notifDot");
-      const mobileToggle = document.getElementById("mobileToggle");
-      const sidebar = document.getElementById("sidebar");
-      const sidebarOverlay = document.getElementById("sidebarOverlay");
-
-      // Mobile sidebar toggle
-      if (mobileToggle) {
-        mobileToggle.addEventListener("click", () => {
-          sidebar.classList.toggle("open");
-          sidebarOverlay.classList.toggle("active");
-        });
-        sidebarOverlay.addEventListener("click", () => {
-          sidebar.classList.remove("open");
-          sidebarOverlay.classList.remove("active");
-        });
-      }
-
-      // Notification red dot
-      const latestNotifTimestampStr = "{{ latest_notif_timestamp }}";
-      const latestNotifTimestamp = latestNotifTimestampStr ? new Date(latestNotifTimestampStr) : null;
-      let lastReadTimestampStr = localStorage.getItem('lastReadNotifTimestamp');
-      let lastReadTimestamp = lastReadTimestampStr ? new Date(lastReadTimestampStr) : null;
-      if (latestNotifTimestamp && (!lastReadTimestamp || latestNotifTimestamp > lastReadTimestamp)) {
-        notifDot.style.display = "inline-block";
-      }
-
-      if (notifBtn && notifMenu) {
-        notifBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          notifMenu.style.display = notifMenu.style.display === "block" ? "none" : "block";
-          notifDot.style.display = "none";
-          if (latestNotifTimestamp) localStorage.setItem('lastReadNotifTimestamp', latestNotifTimestamp.toISOString());
-        });
-        document.addEventListener("click", (e) => {
-          if (!e.target.closest(".notif-dropdown")) notifMenu.style.display = "none";
-        });
-      }
-
-      // Logout confirmation
-      const logoutLink = document.getElementById("logoutLink");
-      if (logoutLink) {
-        logoutLink.addEventListener("click", function(e) {
-          e.preventDefault();
-          Swal.fire({
-            title: 'Are you sure you want to logout?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3498db',
-            cancelButtonColor: '#95a5a6',
-            confirmButtonText: 'Yes, logout',
-            cancelButtonText: 'Cancel'
-          }).then((result) => {
-            if (result.isConfirmed) window.location.href = "/logout/";
-          });
-        });
-      }
-
-      // Notification item click handler
-      document.querySelectorAll('.notif-item').forEach(item => {
-        item.addEventListener('click', function (e) {
-          e.preventDefault();
-          const notifId = this.getAttribute('data-id');
-          const notifType = this.getAttribute('data-type');
-          const targetUrl = this.getAttribute('href');
-          const notifText = this.querySelector('.notif-text');
-
-          fetch('/mark-notif-read/', {
-            method: 'POST',
-            headers: {
-              'X-CSRFToken': '{{ csrf_token }}',
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: notifId, type: notifType }),
-          })
-          .then(res => res.json())
-          .then(data => {
-            if (data.status && notifText) notifText.style.fontWeight = 'normal';
-            window.location.href = targetUrl;
-          })
-          .catch(() => window.location.href = targetUrl);
-        });
-      });
-
-      // Set active nav item
-      const currentPath = window.location.pathname;
-      document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-        const onclick = link.getAttribute('onclick');
-        if (onclick && onclick.includes(currentPath)) link.classList.add('active');
-      });
-
-      // Original search functionality
-const searchInput = document.getElementById("search-input");
-const statusSelect = document.getElementById("status-select");
-const searchBtn = document.getElementById("search-btn");
-const tableRows = document.querySelectorAll(".preschooler-row");
-
-function performSearch() {
-  const input = searchInput.value.toLowerCase();
-
-  // Search table rows by name only (client-side search on current page)
-  tableRows.forEach(row => {
-    const name = row.cells[0].textContent.toLowerCase();
-    const nameMatch = name.includes(input);
-    row.style.display = nameMatch ? "" : "none";
-  });
-}
-
-// Status filter change - reload page with filter parameter (backend filtering)
-statusSelect.addEventListener("change", function() {
-  const selectedStatus = this.value;
-  
-  // Redirect to page 1 with filter parameter - backend will filter ALL data
-  if (selectedStatus === "All") {
-    window.location.href = window.location.pathname;
-  } else {
-    window.location.href = `${window.location.pathname}?status=${encodeURIComponent(selectedStatus)}`;
-  }
-});
-
-// Search button click - only filters current page by name
-searchBtn.addEventListener("click", performSearch);
-
-// Search on Enter key
-searchInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
-    performSearch();
-  }
-});
-      
-    });
-
-
-    function updateValidationBadge() {
-    fetch("{% url 'pending-validation-count' %}")
-        .then(response => response.json())
-        .then(data => {
-            const badge = document.getElementById("validation-badge");
-            if (data.pending_count > 0) {
-                badge.textContent = data.pending_count;
-                badge.style.display = "inline-block";
-            } else {
-                badge.style.display = "none";
-            }
-        })
-        .catch(error => console.error("Error fetching pending count:", error));
-}
-
-// Update every 5 seconds
-setInterval(updateValidationBadge, 5000);
-
-// Run immediately on load
-updateValidationBadge();
-  </script>
 
 <script>
-  // Generate Report Button with SweetAlert Modal
+document.addEventListener("DOMContentLoaded", () => {
+
+  /* ------------------------------
+        EXISTING NOTIFICATION + SIDEBAR
+  ------------------------------ */
+  const notifBtn = document.getElementById("notifBtn");
+  const notifMenu = document.getElementById("notifMenu");
+  const notifDot = document.getElementById("notifDot");
+  const mobileToggle = document.getElementById("mobileToggle");
+  const sidebar = document.getElementById("sidebar");
+  const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+  // Mobile sidebar toggle
+  if (mobileToggle) {
+    mobileToggle.addEventListener("click", () => {
+      sidebar.classList.toggle("open");
+      sidebarOverlay.classList.toggle("active");
+    });
+    sidebarOverlay.addEventListener("click", () => {
+      sidebar.classList.remove("open");
+      sidebarOverlay.classList.remove("active");
+    });
+  }
+
+  // Notification red dot
+  const latestNotifTimestampStr = "{{ latest_notif_timestamp }}";
+  const latestNotifTimestamp = latestNotifTimestampStr ? new Date(latestNotifTimestampStr) : null;
+  let lastReadTimestampStr = localStorage.getItem('lastReadNotifTimestamp');
+  let lastReadTimestamp = lastReadTimestampStr ? new Date(lastReadTimestampStr) : null;
+
+  if (latestNotifTimestamp && (!lastReadTimestamp || latestNotifTimestamp > lastReadTimestamp)) {
+    notifDot.style.display = "inline-block";
+  }
+
+  if (notifBtn && notifMenu) {
+    notifBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      notifMenu.style.display = notifMenu.style.display === "block" ? "none" : "block";
+      notifDot.style.display = "none";
+      
+      if (latestNotifTimestamp)
+        localStorage.setItem('lastReadNotifTimestamp', latestNotifTimestamp.toISOString());
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".notif-dropdown"))
+        notifMenu.style.display = "none";
+    });
+  }
+
+  // Logout confirmation
+  const logoutLink = document.getElementById("logoutLink");
+  if (logoutLink) {
+    logoutLink.addEventListener("click", function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Are you sure you want to logout?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3498db',
+        cancelButtonColor: '#95a5a6',
+        confirmButtonText: 'Yes, logout',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) window.location.href = "/logout/";
+      });
+    });
+  }
+
+  // Notification item click handler
+  document.querySelectorAll('.notif-item').forEach(item => {
+    item.addEventListener('click', function (e) {
+      e.preventDefault();
+      const notifId = this.getAttribute('data-id');
+      const notifType = this.getAttribute('data-type');
+      const targetUrl = this.getAttribute('href');
+      const notifText = this.querySelector('.notif-text');
+
+      fetch('/mark-notif-read/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: notifId, type: notifType }),
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status && notifText)
+          notifText.style.fontWeight = 'normal';
+
+        window.location.href = targetUrl;
+      })
+      .catch(() => window.location.href = targetUrl);
+    });
+  });
+
+  // Set active sidebar link
+  const currentPath = window.location.pathname;
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.classList.remove('active');
+    const onclick = link.getAttribute('onclick');
+    if (onclick && onclick.includes(currentPath)) link.classList.add('active');
+  });
+
+
+
+  /* ---------------------------------------
+         🔍 GLOBAL SEARCH (BACKEND)
+         — your original search system —
+  --------------------------------------- */
+  const searchInput = document.getElementById("search-input");
+  const statusSelect = document.getElementById("status-select");
+  const searchBtn = document.getElementById("search-btn");
+
+  // Search button → redirects (search whole DB or clear if empty)
+  searchBtn.addEventListener("click", function () {
+    const searchTerm = searchInput.value.trim();
+
+    // If input is empty, go back to default (all preschoolers)
+    if (searchTerm === "") {
+      window.location.href = window.location.pathname;
+      return;
+    }
+
+    // Otherwise perform search across all data
+    window.location.href = `${window.location.pathname}?search=${encodeURIComponent(searchTerm)}`;
+  });
+
+  // Enter key performs search
+  searchInput.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") searchBtn.click();
+  });
+
+  // Status filter (global)
+  statusSelect.addEventListener("change", function () {
+    const selectedStatus = this.value;
+    const currentSearch = "{{ search_query }}";
+
+    if (selectedStatus === "All") {
+      if (currentSearch) {
+        window.location.href = `${window.location.pathname}?search=${encodeURIComponent(currentSearch)}`;
+      } else {
+        window.location.href = window.location.pathname;
+      }
+    } else {
+      if (currentSearch) {
+        window.location.href = `${window.location.pathname}?search=${encodeURIComponent(currentSearch)}&status=${encodeURIComponent(selectedStatus)}`;
+      } else {
+        window.location.href = `${window.location.pathname}?status=${encodeURIComponent(selectedStatus)}`;
+      }
+    }
+  });
+});
+</script>
+
+
+<!-- VALIDATION BADGE REFRESH -->
+<script>
+function updateValidationBadge() {
+  fetch("{% url 'pending-validation-count' %}")
+    .then(response => response.json())
+    .then(data => {
+      const badge = document.getElementById("validation-badge");
+      if (data.pending_count > 0) {
+        badge.textContent = data.pending_count;
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+    });
+}
+
+setInterval(updateValidationBadge, 5000);
+updateValidationBadge();
+</script>
+
+
+<!-- REPORT GENERATOR -->
+<script>
 const generateReportBtn = document.getElementById("generateReportBtn");
 if (generateReportBtn) {
   generateReportBtn.addEventListener("click", function (e) {
@@ -913,50 +937,38 @@ if (generateReportBtn) {
       confirmButtonText: 'Generate Report',
       cancelButtonText: 'Cancel',
       inputValidator: (value) => {
-        if (!value) {
-          return 'Please select a month first!';
-        }
+        if (!value) return 'Please select a month first!';
       }
     }).then((result) => {
       if (result.isConfirmed) {
-        // Show loading message briefly
         Swal.fire({
           title: 'Generating Report...',
-          text: 'Please wait while we prepare your report.',
+          text: 'Please wait.',
           icon: 'info',
           allowOutsideClick: false,
           showConfirmButton: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
+          didOpen: () => Swal.showLoading()
         });
 
-        const reportUrl = `/generate-admin-report/?month=${result.value}`;
-
-        // Open in a new browser tab
-        setTimeout(() => {
-          window.open(reportUrl, '_blank');
-          Swal.close();
-        }, 1000);
+        window.open(`/generate-admin-report/?month=${result.value}`, '_blank');
+        setTimeout(() => Swal.close(), 1000);
       }
     });
   });
 }
-
-
-
-
 </script>
 
+
+<!-- AUTO SORT TABLE ALPHABETICALLY -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
   const table = document.querySelector(".table-container table");
+  if (!table) return;
   const tbody = table.querySelector("tbody");
   const rows = Array.from(tbody.querySelectorAll("tr")).filter(
     row => row.querySelectorAll("td").length > 0
   );
 
-  // Sort by first column (Name)
   rows.sort((a, b) => {
     const nameA = a.querySelectorAll("td")[0].innerText.trim().toLowerCase();
     const nameB = b.querySelectorAll("td")[0].innerText.trim().toLowerCase();
@@ -967,10 +979,10 @@ document.addEventListener("DOMContentLoaded", function() {
   rows.forEach(row => tbody.appendChild(row));
 });
 </script>
+
   
 </body>
 </html>
-
 
 
 
