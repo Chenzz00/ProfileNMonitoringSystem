@@ -1505,20 +1505,20 @@
         {% endif %}
 
         <div class="search-section">
-          <label for="status-select"><strong>Filter by Nutritional Status:</strong></label>
-          <select id="status-select" class="search-input">
-            <option value="All" {% if not filter_status or filter_status == 'All' %}selected{% endif %}>All</option>
-            <option value="Severely Wasted" {% if filter_status == 'Severely Wasted' %}selected{% endif %}>Severely Wasted</option>
-            <option value="Wasted" {% if filter_status == 'Wasted' %}selected{% endif %}>Wasted</option>
-            <option value="Normal" {% if filter_status == 'Normal' %}selected{% endif %}>Normal</option>
-            <option value="Risk of Overweight" {% if filter_status == 'Risk of Overweight' %}selected{% endif %}>Risk of Overweight</option>
-            <option value="Overweight" {% if filter_status == 'Overweight' %}selected{% endif %}>Overweight</option>
-            <option value="Obese" {% if filter_status == 'Obese' %}selected{% endif %}>Obese</option>
-          </select>
-
-          <input type="text" id="search-input" class="search-input" placeholder="Search by name...">
-          <button id="search-btn" class="btn">Search</button>
-        </div>
+  <label for="status-select"><strong>Filter by Nutritional Status:</strong></label>
+  <select id="status-select" class="search-input">
+    <option value="All" {% if not filter_status or filter_status == 'All' %}selected{% endif %}>All</option>
+    <option value="Severely Wasted" {% if filter_status == 'Severely Wasted' %}selected{% endif %}>Severely Wasted</option>
+    <option value="Wasted" {% if filter_status == 'Wasted' %}selected{% endif %}>Wasted</option>
+    <option value="Normal" {% if filter_status == 'Normal' %}selected{% endif %}>Normal</option>
+    <option value="Risk of Overweight" {% if filter_status == 'Risk of Overweight' %}selected{% endif %}>Risk of Overweight</option>
+    <option value="Overweight" {% if filter_status == 'Overweight' %}selected{% endif %}>Overweight</option>
+    <option value="Obese" {% if filter_status == 'Obese' %}selected{% endif %}>Obese</option>
+  </select>
+  <label for="search-input"><strong>Search by Name (All Pages):</strong></label>
+  <input type="text" id="search-input" class="search-input" placeholder="Search by name..." value="{{ search_query }}">
+  <button id="search-btn" class="btn">Search</button>
+</div>
         
         <!-- Enhanced Responsive Table -->
         <div class="table-responsive">
@@ -1546,7 +1546,7 @@
                 <td style="position: relative;">
                   {{ p.first_name }} {{ p.last_name }}
                 </td>
-                <td>{{ p.age_in_months|default_if_none:"N/A" }}</td>
+                <td>{{ p.age_display|default_if_none:"N/A" }}</td>
                 <td>{{ p.parent_id.full_name }}</td>
                 {% with p.bmi_records.0 as bmi %}
                 <td>{{ bmi.height|floatformat:2|default:"N/A" }}</td>
@@ -1567,18 +1567,20 @@
       </div>
 
       <div class="pagination-section">
-        {% if preschoolers.has_previous %}
-          <a href="?page={{ preschoolers.previous_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">Previous</a>
-        {% endif %}
-
-        <span>
-          Page {{ preschoolers.number }} of {{ preschoolers.paginator.num_pages }}
-        </span>
-
-        {% if preschoolers.has_next %}
-          <a href="?page={{ preschoolers.next_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">Next</a>
-        {% endif %}
-      </div>
+  {% if is_searching %}
+    <!-- Hide pagination when searching, show nothing -->
+  {% else %}
+    {% if preschoolers.has_previous %}
+      <a href="?page={{ preschoolers.previous_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">Previous</a>
+    {% endif %}
+    <span>
+      Page {{ preschoolers.number }} of {{ preschoolers.paginator.num_pages }}
+    </span>
+    {% if preschoolers.has_next %}
+      <a href="?page={{ preschoolers.next_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">Next</a>
+    {% endif %}
+  {% endif %}
+</div>
     </div>
   </div>
 
@@ -2524,6 +2526,57 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
+<script>
+// Search functionality with global search (backend + local filtering)
+document.getElementById("search-btn").addEventListener("click", () => {
+  const searchTerm = document.getElementById("search-input").value.trim();
+  const filterStatus = document.getElementById("status-select").value;
+
+  // If input is empty, go back to default (all preschoolers)
+  if (searchTerm === "") {
+    if (filterStatus === "All") {
+      window.location.href = window.location.pathname;
+    } else {
+      window.location.href = `${window.location.pathname}?status=${encodeURIComponent(filterStatus)}`;
+    }
+    return;
+  }
+
+  // Otherwise perform search across all data (backend search)
+  if (filterStatus === "All") {
+    window.location.href = `${window.location.pathname}?search=${encodeURIComponent(searchTerm)}`;
+  } else {
+    window.location.href = `${window.location.pathname}?search=${encodeURIComponent(searchTerm)}&status=${encodeURIComponent(filterStatus)}`;
+  }
+});
+
+// Enter key performs search
+document.getElementById("search-input").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    document.getElementById("search-btn").click();
+  }
+});
+
+// Status filter (backend filtering)
+document.getElementById("status-select").addEventListener("change", function() {
+  const selectedStatus = this.value;
+  const currentSearch = "{{ search_query }}";
+
+  if (selectedStatus === "All") {
+    if (currentSearch) {
+      window.location.href = `${window.location.pathname}?search=${encodeURIComponent(currentSearch)}`;
+    } else {
+      window.location.href = window.location.pathname;
+    }
+  } else {
+    if (currentSearch) {
+      window.location.href = `${window.location.pathname}?search=${encodeURIComponent(currentSearch)}&status=${encodeURIComponent(selectedStatus)}`;
+    } else {
+      window.location.href = `${window.location.pathname}?status=${encodeURIComponent(selectedStatus)}`;
+    }
+  }
+});
+</script>
 
 
   <!-- Mobile Bottom Sheet Menu -->
@@ -2558,7 +2611,6 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 </body>
 </html>
-
 
 
 
