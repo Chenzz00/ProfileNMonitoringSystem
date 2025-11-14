@@ -453,7 +453,7 @@
   </div>
 
   <!-- Main Content Area -->
-  <div class="main-content">
+   <div class="main-content">
     <!-- Top Bar -->
     <div class="topbar">
       <div style="display: flex; align-items: center; gap: 15px;">
@@ -468,11 +468,11 @@
             <span id="notifDot"></span>
           </button>
 
-          <div class="dropdown" id="notifMenu" style="max-height: 400px; overflow-y: auto; width: 320px; min-width: 280px;">
+          <div class="dropdown" id="notifMenu">
             {% if notifications %}
               {% for notif in notifications %}
                 {% if notif.type == 'account' %}
-                  <a href="/validate/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}" style="display: flex; flex-direction: column; gap: 2px;">
+                  <a href="/validate/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}">
                     <div style="display: flex; align-items: center;">
                       <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
                       <span class="notif-text">New {{ notif.user_role }} account named <strong>{{ notif.full_name }}</strong> requesting for validation.</span>
@@ -480,7 +480,7 @@
                     <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
                   </a>
                 {% elif notif.type == 'preschooler' %}
-                  <a href="/registered-preschoolers/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}" style="display: flex; flex-direction: column; gap: 2px;">
+                  <a href="/registered-preschoolers/" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="{{ notif.type }}">
                     <div style="display: flex; align-items: center;">
                       {% if notif.bhw_image %}
                         <img src="{{ notif.bhw_image }}" alt="BHW Profile" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
@@ -509,10 +509,20 @@
       <div class="page-container">
         <h2>Registered Parents</h2>
 
-        <div class="search-section">
-          <input type="text" id="search-input" class="search-input" placeholder="Search by parent name...">
-          <button id="search-btn" class="btn">Search</button>
-        </div>
+       <!-- Search Form -->
+      <form method="GET" action="{% url 'admin_registered_parents' %}" class="search-section" id="searchForm">
+        <input 
+          type="text" 
+          name="search" 
+          id="search-input" 
+          class="search-input" 
+          placeholder="Search by parent name, email, contact, or barangay..."
+          value="{{ search_query }}"
+        >
+        <button type="submit" id="search-btn" class="btn">Search</button>
+      </form>
+
+        
 
         <!-- Enhanced Responsive Table Container -->
         <div class="table-container">
@@ -536,7 +546,13 @@
                 <td>{{ parent.barangay.name }}</td>
               </tr>
               {% empty %}
-              <tr><td colspan="5" style="text-align:center; padding: 40px; color: #999;">No parents registered.</td></tr>
+              <tr><td colspan="5" class="no-results">
+                {% if search_query %}
+                  No parents found matching your search.
+                {% else %}
+                  No parents registered.
+                {% endif %}
+              </td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -544,7 +560,7 @@
 
         <div class="pagination-section">
           {% if parents.has_previous %}
-            <a href="?page={{ parents.previous_page_number }}" class="btn">Previous</a>
+            <a href="?page={{ parents.previous_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">Previous</a>
           {% endif %}
 
           {% if parents.paginator.num_pages > 1 %}
@@ -552,7 +568,7 @@
           {% endif %}
 
           {% if parents.has_next %}
-            <a href="?page={{ parents.next_page_number }}" class="btn">Next</a>
+            <a href="?page={{ parents.next_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">Next</a>
           {% endif %}
         </div>
       </div>
@@ -656,40 +672,6 @@
         if (onclick && onclick.includes(currentPath)) link.classList.add('active');
       });
 
-      // Original search functionality
-      document.getElementById("search-btn").addEventListener("click", () => {
-        performSearch();
-      });
-
-      // Enter key search
-      document.getElementById("search-input").addEventListener("keypress", (e) => {
-        if (e.key === "Enter") {
-          performSearch();
-        }
-      });
-
-      // Real-time search as user types
-      document.getElementById("search-input").addEventListener("input", (e) => {
-        performSearch();
-      });
-
-      function performSearch() {
-        const input = document.getElementById("search-input").value.toLowerCase();
-        
-        // Search in table rows
-        const rows = document.querySelectorAll(".parent-row");
-        rows.forEach(row => {
-          if (row.cells && row.cells.length >= 1) { // Skip empty message rows
-            const name = row.cells[0].textContent.toLowerCase();
-            const email = row.cells[2] ? row.cells[2].textContent.toLowerCase() : '';
-            const barangay = row.cells[4] ? row.cells[4].textContent.toLowerCase() : '';
-            
-            const matches = name.includes(input) || email.includes(input) || barangay.includes(input);
-            row.style.display = matches || input === '' ? "" : "none";
-          }
-        });
-      }
-
       // Add scroll hint visibility control for mobile
       function handleScrollHint() {
         const tableContainer = document.querySelector('.table-container');
@@ -718,80 +700,73 @@
       window.addEventListener('resize', handleScrollHint);
     });
 
-
     function updateValidationBadge() {
-    fetch("{% url 'pending-validation-count' %}")
+      fetch("{% url 'pending-validation-count' %}")
         .then(response => response.json())
         .then(data => {
-            const badge = document.getElementById("validation-badge");
-            if (data.pending_count > 0) {
-                badge.textContent = data.pending_count;
-                badge.style.display = "inline-block";
-            } else {
-                badge.style.display = "none";
-            }
+          const badge = document.getElementById("validation-badge");
+          if (data.pending_count > 0) {
+            badge.textContent = data.pending_count;
+            badge.style.display = "inline-block";
+          } else {
+            badge.style.display = "none";
+          }
         })
         .catch(error => console.error("Error fetching pending count:", error));
-}
+    }
 
-// Update every 5 seconds
-setInterval(updateValidationBadge, 5000);
+    // Update every 5 seconds
+    setInterval(updateValidationBadge, 5000);
 
-// Run immediately on load
-updateValidationBadge();
+    // Run immediately on load
+    updateValidationBadge();
   </script>
 
-<script>
-  // Generate Report Button with SweetAlert Modal
-const generateReportBtn = document.getElementById("generateReportBtn");
-if (generateReportBtn) {
-  generateReportBtn.addEventListener("click", function (e) {
-    e.preventDefault();
-    Swal.fire({
-      title: 'Select Month for Report',
-      input: 'month',
-      showCancelButton: true,
-      confirmButtonColor: '#3498db',
-      cancelButtonColor: '#95a5a6',
-      confirmButtonText: 'Generate Report',
-      cancelButtonText: 'Cancel',
-      inputValidator: (value) => {
-        if (!value) {
-          return 'Please select a month first!';
-        }
-      }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Show loading message briefly
+  <script>
+    // Generate Report Button with SweetAlert Modal
+    const generateReportBtn = document.getElementById("generateReportBtn");
+    if (generateReportBtn) {
+      generateReportBtn.addEventListener("click", function (e) {
+        e.preventDefault();
         Swal.fire({
-          title: 'Generating Report...',
-          text: 'Please wait while we prepare your report.',
-          icon: 'info',
-          allowOutsideClick: false,
-          showConfirmButton: false,
-          didOpen: () => {
-            Swal.showLoading();
+          title: 'Select Month for Report',
+          input: 'month',
+          showCancelButton: true,
+          confirmButtonColor: '#3498db',
+          cancelButtonColor: '#95a5a6',
+          confirmButtonText: 'Generate Report',
+          cancelButtonText: 'Cancel',
+          inputValidator: (value) => {
+            if (!value) {
+              return 'Please select a month first!';
+            }
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Show loading message briefly
+            Swal.fire({
+              title: 'Generating Report...',
+              text: 'Please wait while we prepare your report.',
+              icon: 'info',
+              allowOutsideClick: false,
+              showConfirmButton: false,
+              didOpen: () => {
+                Swal.showLoading();
+              }
+            });
+
+            const reportUrl = `/generate-admin-report/?month=${result.value}`;
+
+            // Open in a new browser tab
+            setTimeout(() => {
+              window.open(reportUrl, '_blank');
+              Swal.close();
+            }, 1000);
           }
         });
-
-        const reportUrl = `/generate-admin-report/?month=${result.value}`;
-
-        // Open in a new browser tab
-        setTimeout(() => {
-          window.open(reportUrl, '_blank');
-          Swal.close();
-        }, 1000);
-      }
-    });
-  });
-}
-
-
-
-
-</script>
+      });
+    }
+  </script>
 
 </body>
 </html>
-
-
