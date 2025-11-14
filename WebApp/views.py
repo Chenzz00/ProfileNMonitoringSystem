@@ -5515,7 +5515,7 @@ def registered_parents(request):
     raw_role = (account.user_role or '').strip().lower()
 
     print("=== REGISTERED PARENTS VIEW DEBUG ===")
-    print("User: {account.full_name} ({account.user_role})")
+    print(f"User: {account.full_name} ({account.user_role})")
 
     # ✅ Query parents
     if raw_role == 'admin':
@@ -5526,9 +5526,26 @@ def registered_parents(request):
             barangay=account.barangay
         ).order_by('-created_at')
         barangay_name = account.barangay.name if account.barangay else "No Barangay"
-        print("Showing parents for barangay: {barangay_name}")
+        print(f"Showing parents for barangay: {barangay_name}")
 
-    # ✅ Pagination
+    # ✅ GLOBAL SEARCH - Search by parent name ACROSS ALL DATA
+    search_query = request.GET.get('search', '').strip()
+    is_searching = False
+    
+    if search_query:
+        is_searching = True
+        search_lower = search_query.lower()
+        # Convert to list and filter by full name
+        parents_qs = [
+            p for p in parents_qs 
+            if search_lower in f"{p.first_name} {p.last_name}".lower()
+        ]
+        print(f"Search query: '{search_query}' - Found {len(parents_qs)} parents")
+    else:
+        # Convert to list for consistency
+        parents_qs = list(parents_qs)
+
+    # ✅ Pagination AFTER filtering and searching
     paginator = Paginator(parents_qs, 10)  # 10 parents per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -5545,17 +5562,19 @@ def registered_parents(request):
             if months < 0:
                 years -= 1
                 months += 12
-            child.age_display = f"{years} year(s) and {months} month(s)"
+            child.age_text = f"{years} year(s) and {months} month(s)"
         parent.children = preschoolers
 
     context = {
         'account': account,
         'parents': page_obj,
         'barangay_name': barangay_name,
-        'has_parents': parents_qs.exists(),  # ✅ para sa "No parents registered"
+        'has_parents': len(parents_qs) > 0,  
+        'search_query': search_query,  
+        'is_searching': is_searching,  
     }
 
-    print("Parents count: {parents_qs.count()}")
+    print(f"Parents count: {len(parents_qs)}")
     print("=== END REGISTERED PARENTS DEBUG ===")
 
     return render(request, 'HTML/registered_parent.html', context)
@@ -11037,6 +11056,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
