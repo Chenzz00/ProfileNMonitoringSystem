@@ -6634,16 +6634,26 @@ def admin_registered_parents(request):
     # Fetch all parents
     parents_qs = Parent.objects.select_related('barangay').order_by('-created_at')
 
-    paginator = Paginator(parents_qs, 10)  # Show 10 parents per page
+    # Handle search query
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        parents_qs = parents_qs.filter(
+            Q(full_name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(contact_number__icontains=search_query) |
+            Q(barangay__name__icontains=search_query)
+        )
+
+    paginator = Paginator(parents_qs, 10)  # Show 20 parents per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     return render(request, 'HTML/admin_registeredparents.html', {
         'parents': page_obj,
         'user_email': user_email,
-        'user_role': user_role
+        'user_role': user_role,
+        'search_query': search_query,
     })
-
 
 def verify_otp(request, user_id):
     user = get_object_or_404(User, id=user_id)
@@ -11010,6 +11020,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
