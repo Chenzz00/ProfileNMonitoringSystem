@@ -9737,18 +9737,20 @@ def healthcare_workers(request):
     from django.db.models import Q
     from datetime import timedelta
     from django.core.paginator import Paginator
+    from itertools import chain
     
     # Get all barangays for the filter dropdown
     barangays = Barangay.objects.all().order_by('name')
     
+    # Get filter parameters
+    worker_type = request.GET.get('type', 'all')  # Default to all
+    page_number = request.GET.get('page', 1)
     
     # ===== BHW DATA =====
     bhw_list = Account.objects.filter(
         Q(user_role__iexact='healthworker') | Q(user_role__iexact='BHW'),
         is_validated=True
     ).select_related('barangay')
-    
-  
     
     for bhw in bhw_list:
         try:
@@ -9760,36 +9762,19 @@ def healthcare_workers(request):
         # Activity status
         set_activity_status(bhw)
     
-    # ===== BNS DATA - COMPREHENSIVE APPROACH =====
-    print("\n=== BNS DEBUGGING - COMPREHENSIVE ===")
-    
-    # First, let's see what user_role values actually exist
-    all_user_roles = Account.objects.filter(
-        is_validated=True
-    ).values_list('user_role', flat=True).distinct()
-    print("All user roles in validated accounts:")
-    for role in all_user_roles:
-        print(f"  - '{role}'")
-    
-    # Try multiple query strategies
+    # ===== BNS DATA =====
     bns_queries = [
-        # Strategy 1: Exact matches
         Q(user_role__iexact='bns'),
         Q(user_role__iexact='BNS'),
         Q(user_role__iexact='Barangay Nutritional Scholar'),
-        
-        # Strategy 2: Contains/partial matches
         Q(user_role__icontains='BNS'),
         Q(user_role__icontains='Nutritional'),
         Q(user_role__icontains='Scholar'),
-        
-        # Strategy 3: Case-insensitive partial matches
         Q(user_role__icontains='bns'),
         Q(user_role__icontains='nutritional'),
         Q(user_role__icontains='scholar'),
     ]
     
-    # Combine all queries with OR
     combined_query = bns_queries[0]
     for query in bns_queries[1:]:
         combined_query |= query
@@ -9797,66 +9782,30 @@ def healthcare_workers(request):
     bns_list = Account.objects.filter(
         combined_query,
         is_validated=True
-    ).select_related('barangay').distinct()  # Use distinct to avoid duplicates
+    ).select_related('barangay').distinct()
     
-   
-    
-    # Debug: Show what we found
-    for bns in bns_list:
-        print(f"  - {bns.full_name} (role: '{bns.user_role}')")
-    
-    # If still no results, let's check if there are ANY BNS records in the BNS table
-    if bns_list.count() == 0:
-        print("\nNo BNS found in Account table. Checking BNS table directly...")
-        direct_bns = BNS.objects.all()
-     
-        for bns in direct_bns[:5]:  # Show first 5
-            print(f"  - {bns.full_name} | {bns.email}")
-            # Try to find corresponding Account
-            account = Account.objects.filter(
-                Q(email=bns.email) | Q(full_name__iexact=bns.full_name),
-                is_validated=True
-            ).first()
-            if account:
-                print(f"    -> Found Account: {account.user_role}")
-            else:
-                print(f"    -> No matching validated Account found")
-    
-    # Process BNS data
     for bns in bns_list:
         try:
-            # Try multiple ways to find BNS profile
             bns.bns_data = None
-            
-            # Method 1: By email
             try:
                 bns.bns_data = BNS.objects.get(email=bns.email)
-                print(f"Found BNS data by email for {bns.full_name}")
             except BNS.DoesNotExist:
-                # Method 2: By name
                 try:
                     bns.bns_data = BNS.objects.get(full_name__iexact=bns.full_name)
-                    print(f"Found BNS data by name for {bns.full_name}")
                 except BNS.DoesNotExist:
-                    # Method 3: Partial name match
                     bns.bns_data = BNS.objects.filter(
-                        Q(full_name__icontains=bns.full_name.split()[0]) |  # First name
-                        Q(full_name__icontains=bns.full_name.split()[-1])   # Last name
+                        Q(full_name__icontains=bns.full_name.split()[0]) |
+                        Q(full_name__icontains=bns.full_name.split()[-1])
                     ).first()
-                    if bns.bns_data:
-                        print(f"Found BNS data by partial name match for {bns.full_name}")
                 except BNS.MultipleObjectsReturned:
                     bns.bns_data = BNS.objects.filter(full_name__iexact=bns.full_name).first()
-                    print(f"Multiple BNS found by name for {bns.full_name}, using first")
             except BNS.MultipleObjectsReturned:
                 bns.bns_data = BNS.objects.filter(email=bns.email).first()
-                print(f"Multiple BNS found by email for {bns.full_name}, using first")
                 
         except Exception as e:
             print(f"Error processing BNS {bns.full_name}: {str(e)}")
             bns.bns_data = None
         
-        # Activity status
         set_activity_status(bns)
     
     # ===== MIDWIFE DATA =====
@@ -9864,8 +9813,6 @@ def healthcare_workers(request):
         Q(user_role__iexact='midwife') | Q(user_role__iexact='Midwife'),
         is_validated=True
     ).select_related('barangay')
-    
-
     
     for midwife in midwife_list:
         try:
@@ -9882,8 +9829,6 @@ def healthcare_workers(request):
         is_validated=True
     ).select_related('barangay')
     
-   
-    
     for nurse in nurse_list:
         try:
             nurse.nurse_data = Nurse.objects.filter(email=nurse.email).first()
@@ -9894,12 +9839,13 @@ def healthcare_workers(request):
         set_activity_status(nurse)
     
     # ===== PAGINATION - 10 rows per page =====
-    # Get the current page and worker type filter
-    page_number = request.GET.get('page', 1)
-    worker_type = request.GET.get('type', 'bhw')  # Default to BHW
-    
     # Select which list to paginate based on worker_type
-    if worker_type == 'bns':
+    if worker_type == 'all':
+        # Combine all lists for "All Roles"
+        worker_list = list(chain(bhw_list, bns_list, midwife_list, nurse_list))
+        # Sort by created_at or full_name
+        worker_list.sort(key=lambda x: x.full_name)
+    elif worker_type == 'bns':
         worker_list = bns_list
     elif worker_type == 'midwife':
         worker_list = midwife_list
@@ -9907,25 +9853,41 @@ def healthcare_workers(request):
         worker_list = nurse_list
     else:  # Default to BHW
         worker_list = bhw_list
-        worker_type = 'bhw'
     
     # Apply pagination
     paginator = Paginator(worker_list, 10)
     page_obj = paginator.get_page(page_number)
     
-    context = {
-        'barangays': barangays,
-        'bhws': page_obj if worker_type == 'bhw' else bhw_list,
-        'bnss': page_obj if worker_type == 'bns' else bns_list,
-        'midwives': page_obj if worker_type == 'midwife' else midwife_list,
-        'nurses': page_obj if worker_type == 'nurse' else nurse_list,
-        'page_obj': page_obj,
-        'worker_type': worker_type,
-        'all_bhws': bhw_list,  # Full list for count display
-        'all_bnss': bns_list,
-        'all_midwives': midwife_list,
-        'all_nurses': nurse_list,
-    }
+    # Pass the correct lists to template based on worker_type
+    if worker_type == 'all':
+        # For "All Roles", pass the paginated combined list to all
+        context = {
+            'barangays': barangays,
+            'bhws': page_obj,  # All workers in page
+            'bnss': page_obj,  # Same paginated data
+            'midwives': page_obj,  # Same paginated data
+            'nurses': page_obj,  # Same paginated data
+            'page_obj': page_obj,
+            'worker_type': worker_type,
+            'all_bhws': bhw_list,
+            'all_bnss': bns_list,
+            'all_midwives': midwife_list,
+            'all_nurses': nurse_list,
+        }
+    else:
+        context = {
+            'barangays': barangays,
+            'bhws': page_obj if worker_type == 'bhw' else [],
+            'bnss': page_obj if worker_type == 'bns' else [],
+            'midwives': page_obj if worker_type == 'midwife' else [],
+            'nurses': page_obj if worker_type == 'nurse' else [],
+            'page_obj': page_obj,
+            'worker_type': worker_type,
+            'all_bhws': bhw_list,
+            'all_bnss': bns_list,
+            'all_midwives': midwife_list,
+            'all_nurses': nurse_list,
+        }
     
     return render(request, 'HTML/healthcare_workers.html', context)
 
@@ -11214,6 +11176,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
