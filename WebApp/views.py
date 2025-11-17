@@ -2452,7 +2452,7 @@ def parent_dashboard(request):
                 z = bmi_zscore(p.sex, total_age_months, bmi_value)
                 bmi_status = classify_bmi_for_age(z)
             except Exception as e:
-                print("Error calculating BMI/Z-score for preschooler {p.id}: {e}")
+                print(f"Error calculating BMI/Z-score for preschooler {p.id}: {e}")
                 bmi_status = p.nutritional_status  # fallback
 
         preschoolers.append({
@@ -2481,14 +2481,25 @@ def parent_dashboard(request):
         
         clean_full_name = " ".join(clean_parts).strip()
         
-        messages.success(request, f" Welcome, {clean_full_name}!")
+        messages.success(request, f"Welcome, {clean_full_name}!")
         request.session['first_login_shown'] = True
 
-    # ✅ FIXED: Filter upcoming schedules - only show 'scheduled' status
-    upcoming_schedules = VaccinationSchedule.objects.filter(
+    # ✅ VACCINATION REMINDERS
+    upcoming_vaccination_schedules = VaccinationSchedule.objects.filter(
         preschooler__in=preschoolers_raw,
-        status='scheduled'
+        status__in=['scheduled', 'rescheduled']
     ).order_by('scheduled_date')
+
+    # ✅ NUTRITION SERVICE REMINDERS
+    from .models import NutritionService
+    upcoming_nutrition_services = NutritionService.objects.filter(
+        preschooler__in=preschoolers_raw,
+        status__in=['scheduled', 'rescheduled']
+    ).order_by('scheduled_date')
+
+    # ✅ COMBINE BOTH INTO SINGLE LIST (sorted by date)
+    upcoming_schedules = list(upcoming_vaccination_schedules) + list(upcoming_nutrition_services)
+    upcoming_schedules.sort(key=lambda x: x.scheduled_date if x.scheduled_date else date.max)
 
     # ✅ Fetch active announcements for parents
     try:
@@ -2500,12 +2511,13 @@ def parent_dashboard(request):
 
     return render(request, 'HTML/parent_dashboard.html', {
         'account': account,
-        'full_name': "{account.first_name} {account.last_name}".strip(),
+        'full_name': f"{account.first_name} {account.last_name}".strip(),
         'preschoolers': preschoolers,
-        'upcoming_schedules': upcoming_schedules,
+        'upcoming_schedules': upcoming_schedules,  # Combined vaccination & nutrition reminders
         'announcements': announcements,
         'today': today,
     })
+
 
 
 
@@ -2519,7 +2531,6 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
             try:
                 subject = f"[PPMS] Vaccination Scheduled for {preschooler.first_name}"
                 
-                # Prepare context for HTML email
                 email_context = {
                     'parent_name': parent.full_name,
                     'child_name': f"{preschooler.first_name} {preschooler.last_name}",
@@ -2530,7 +2541,6 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
                     'next_schedule': next_schedule
                 }
                 
-                # Generate HTML and plain text emails
                 html_message = render_vaccination_schedule_email_html(email_context)
                 plain_message = render_vaccination_schedule_email_text(email_context)
 
@@ -2566,6 +2576,7 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
                     "schedule_id": str(schedule.id)
                 }
 
+                # Send normal push
                 logger.info(f"[ASYNC] Sending push to {parent.email}")
                 PushNotificationService.send_push_notification(
                     token=account.fcm_token,
@@ -2573,6 +2584,23 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
                     body=notification_body,
                     data=notification_data
                 )
+
+                # === Instant reminder if scheduled for tomorrow ===
+                tomorrow = (datetime.today() + timedelta(days=1)).date()
+                schedule_date = datetime.strptime(immunization_date, "%Y-%m-%d").date() if isinstance(immunization_date, str) else immunization_date
+                if schedule_date == tomorrow:
+                    logger.info(f"[ASYNC] Schedule is for tomorrow, sending instant reminder to {parent.email}")
+                    PushNotificationService.send_push_notification(
+                        token=account.fcm_token,
+                        title=f"Reminder: {preschooler.first_name}'s vaccination is tomorrow",
+                        body=f"{vaccine_name} (Dose {dose_number}/{required_doses}) is scheduled for tomorrow.",
+                        data={
+                            "type": "vaccination_schedule",
+                            "preschooler_id": str(preschooler.preschooler_id),
+                            "schedule_id": str(schedule.id)
+                        }
+                    )
+
             except Exception as push_error:
                 logger.error(f"[ASYNC] Push failed for {parent.email}: {push_error}")
         else:
@@ -2580,7 +2608,7 @@ def send_notifications_async(parent, account, preschooler, vaccine_name, dose_nu
 
     except Exception as e:
         logger.error(f"[ASYNC] Notification error for {parent.email}: {e}")
-
+        
 
 def render_vaccination_schedule_email_html(context):
     """Generate HTML vaccination schedule email"""
@@ -2882,6 +2910,15 @@ def send_nutrition_notifications_async(parents, preschooler, service_type, dose_
     from .models import Account
     from .services import PushNotificationService
 
+    # Parse scheduled date
+    try:
+        scheduled_dt = service_date if isinstance(service_date, date) \
+            else datetime.strptime(str(service_date), "%Y-%m-%d").date()
+    except Exception:
+        scheduled_dt = None
+
+    tomorrow = datetime.today().date() + timedelta(days=1)
+
     for parent in parents:
         try:
             # === Email Notification ===
@@ -2914,6 +2951,7 @@ def send_nutrition_notifications_async(parents, preschooler, service_type, dose_
             try:
                 account = Account.objects.filter(email=parent.email).first()
                 if account and account.fcm_token:
+
                     service_emoji = "🍎" if service_type == "Vitamin A" else "💊"
                     title = f"{service_emoji} Nutrition Service Scheduled for {preschooler.first_name}"
                     body = f"{service_type} (Dose {dose_number}/{total_doses}) scheduled for {service_date}"
@@ -2937,6 +2975,33 @@ def send_nutrition_notifications_async(parents, preschooler, service_type, dose_
                         data=data
                     )
                     logger.info(f"[ASYNC] Nutrition push sent to {parent.email}")
+
+                    # === Instant reminder if scheduled date is tomorrow ===
+                    try:
+                        if scheduled_dt and scheduled_dt == tomorrow:
+                            instant_title = f"⏰ Reminder: {service_type} Tomorrow"
+                            instant_body = (
+                                f"{service_type} (Dose {dose_number}/{total_doses}) for "
+                                f"{preschooler.first_name} is scheduled for tomorrow."
+                            )
+
+                            instant_data = {
+                                "type": "nutrition_schedule",
+                                "preschooler_id": str(preschooler.preschooler_id),
+                                "schedule_id": str(schedule.id)
+                            }
+
+                            PushNotificationService.send_push_notification(
+                                token=account.fcm_token,
+                                title=instant_title,
+                                body=instant_body,
+                                data=instant_data
+                            )
+                            logger.info(f"[ASYNC] Instant nutrition reminder sent to {parent.email}")
+
+                    except Exception as instant_error:
+                        logger.error(f"[ASYNC] Error sending instant-tomorrow reminder: {instant_error}")
+
                 else:
                     logger.warning(f"[ASYNC] No FCM token for {parent.email}")
 
@@ -2945,6 +3010,7 @@ def send_nutrition_notifications_async(parents, preschooler, service_type, dose_
 
         except Exception as e:
             logger.error(f"[ASYNC] Error handling parent {parent.email}: {e}")
+
 
 
 
@@ -3185,7 +3251,7 @@ def update_nutrition_status(request, schedule_id):
 
 @login_required
 def reschedule_nutrition_service(request, schedule_id):
-    """Reschedule nutrition service with async push/email notification handling"""
+    """Reschedule nutrition service with async push/email notification handling + instant reminder"""
     logger.info(f"[DEBUG] Entered reschedule_nutrition_service view for schedule {schedule_id}")
 
     if request.method != "POST":
@@ -3194,122 +3260,149 @@ def reschedule_nutrition_service(request, schedule_id):
     try:
         from .models import NutritionService, Account
         import json, threading
-        
-        # Parse JSON data
-        data = json.loads(request.body)
-        new_date = data.get('new_date')
-        reschedule_reason = data.get('reschedule_reason', '')
-        enhanced_notifications = data.get('enhanced_notifications', False)
-        
-        logger.info(f"[DEBUG] Reschedule data: new_date={new_date}, reason={reschedule_reason}, enhanced={enhanced_notifications}")
 
-        # Get the nutrition service schedule
+        data = json.loads(request.body)
+        new_date = data.get("new_date")
+        reschedule_reason = data.get("reschedule_reason", "")
+        enhanced_notifications = data.get("enhanced_notifications", False)
+
+        logger.info(
+            f"[DEBUG] Reschedule data: new_date={new_date}, "
+            f"reason={reschedule_reason}, enhanced={enhanced_notifications}"
+        )
+
         schedule = get_object_or_404(NutritionService, pk=schedule_id)
         preschooler = schedule.preschooler
         old_date = schedule.scheduled_date
-        
-        # Validate required fields
+
+        # Validate
         if not new_date or not reschedule_reason.strip():
             return JsonResponse({
-                "success": False, 
+                "success": False,
                 "message": "Please provide both a new date and reason for rescheduling."
             })
 
-        # Update the schedule
-        schedule.scheduled_date = new_date
-        schedule.status = 'rescheduled'
-        reschedule_info = f"Rescheduled from {old_date} to {new_date}. Reason: {reschedule_reason}"
-        schedule.notes = f"{(schedule.notes + '; ') if schedule.notes else ''}{reschedule_info}"
+        # Convert new_date into a true date object
+        try:
+            if isinstance(new_date, str):
+                new_dt = datetime.strptime(new_date, "%Y-%m-%d").date()
+            else:
+                new_dt = new_date
+        except Exception as e:
+            logger.error(f"[ERROR] Invalid new_date format: {e}")
+            return JsonResponse({
+                "success": False,
+                "message": "Invalid date format. Expected YYYY-MM-DD."
+            })
+
+        # Update schedule
+        schedule.scheduled_date = new_dt
+        schedule.status = "rescheduled"
+        reschedule_info = f"Rescheduled from {old_date} to {new_dt}. Reason: {reschedule_reason}"
+        schedule.notes = f"{schedule.notes + '; ' if schedule.notes else ''}{reschedule_info}"
         schedule.save()
-        
+
         logger.info("[DEBUG] Schedule updated successfully")
 
-        # === Run notifications asynchronously ===
+        # ===========================
+        # ASYNC NOTIFICATIONS
+        # ===========================
         if enhanced_notifications:
+
             def send_notifications():
                 parents = preschooler.parents.all()
-                logger.info(f"[DEBUG] Found {parents.count()} parent(s) for reschedule notifications")
-                
-                for parent in parents:
-                    logger.info(f"[DEBUG] Processing notifications for parent: {parent.full_name} ({parent.email})")
+                logger.info(f"[DEBUG] Found {parents.count()} parent(s) for notifications")
 
-                    # --- EMAIL ---
+                tomorrow = timezone.localdate() + timedelta(days=1)
+
+                for parent in parents:
+                    logger.info(f"[DEBUG] Processing parent: {parent.full_name} ({parent.email})")
+
+                    # ===========================
+                    # EMAIL NOTIFICATION
+                    # ===========================
                     if parent.email:
                         try:
                             subject = f"[PPMS] Nutrition Service Rescheduled for {preschooler.first_name}"
                             message = (
                                 f"Dear {parent.full_name},\n\n"
-                                f"The nutrition service appointment for your child, "
-                                f"{preschooler.first_name} {preschooler.last_name}, has been rescheduled.\n\n"
+                                f"The nutrition service for your child, "
+                                f"{preschooler.first_name} {preschooler.last_name}, "
+                                f"has been rescheduled.\n\n"
                                 f"Service Type: {schedule.service_type}\n"
                                 f"Original Date: {old_date}\n"
-                                f"New Date: {new_date}\n"
-                                f"Reason: {reschedule_reason}\n"
-                                f"\nPlease bring your child on the new scheduled date.\n"
-                                f"You can view the updated schedule on your dashboard.\n\n"
-                                f"Thank you for your understanding,\nPPMS System"
+                                f"New Date: {new_dt}\n"
+                                f"Reason: {reschedule_reason}\n\n"
+                                f"Please bring your child on the new date.\n"
+                                f"Thank you,\nPPMS System"
                             )
-                            
-                            send_mail(
-                                subject, 
-                                message, 
-                                settings.DEFAULT_FROM_EMAIL,
-                                [parent.email], 
-                                fail_silently=False
-                            )
-                            logger.info(f"[DEBUG] Reschedule email sent to {parent.email}")
-                        except Exception as email_error:
-                            logger.error(f"[DEBUG] Reschedule email failed: {email_error}")
 
-                    # --- PUSH ---
+                            send_mail(
+                                subject,
+                                message,
+                                settings.DEFAULT_FROM_EMAIL,
+                                [parent.email],
+                                fail_silently=False,
+                            )
+                            logger.info(f"[DEBUG] Email sent to: {parent.email}")
+
+                        except Exception as email_error:
+                            logger.error(f"[DEBUG] Email error: {email_error}")
+
+                    # ===========================
+                    # PUSH NOTIFICATION
+                    # ===========================
                     try:
                         account = Account.objects.filter(email=parent.email).first()
-                        if account and account.fcm_token:
-                            service_emoji = "🍎" if schedule.service_type == "Vitamin A" else "💊"
-                            notification_title = f"{service_emoji} Nutrition Service Rescheduled"
-                            notification_body = (
-                                f"{schedule.service_type} for {preschooler.first_name} moved to {new_date}"
-                            )
-                            
-                            notification_data = {
+
+                        if not account or not account.fcm_token:
+                            logger.warning(f"[DEBUG] No FCM token for {parent.email}")
+                            continue
+
+                        service_emoji = "🍎" if schedule.service_type == "Vitamin A" else "💊"
+
+                        push_result = PushNotificationService.send_push_notification(
+                            token=account.fcm_token,
+                            title=f"{service_emoji} Nutrition Service Rescheduled",
+                            body=f"{schedule.service_type} for {preschooler.first_name} moved to {new_dt}",
+                            data={
                                 "type": "nutrition_service_reschedule",
                                 "preschooler_id": str(preschooler.preschooler_id),
-                                "preschooler_name": f"{preschooler.first_name} {preschooler.last_name}",
+                                "schedule_id": str(schedule.id),
                                 "service_type": schedule.service_type,
                                 "old_date": str(old_date),
-                                "new_date": str(new_date),
+                                "new_date": str(new_dt),
                                 "reschedule_reason": reschedule_reason,
-                                "schedule_id": str(schedule.id)
                             }
-                            
-                            push_result = PushNotificationService.send_push_notification(
-                                token=account.fcm_token,
-                                title=notification_title,
-                                body=notification_body,
-                                data=notification_data
-                            )
-                            logger.info(f"[DEBUG] Push notification result for {parent.email}: {push_result}")
-                        else:
-                            logger.warning(f"[DEBUG] No FCM token found for parent {parent.email}")
-                    except Exception as push_error:
-                        logger.error(f"[DEBUG] Push error for {parent.email}: {push_error}")
+                        )
+                        logger.info(f"[DEBUG] Push result: {push_result}")
 
-            # 🔹 Launch async thread for notifications
+                        # ===========================
+                        # INSTANT REMINDER IF TOMORROW
+                        # ===========================
+                        if new_dt == tomorrow:
+                            PushNotificationService.send_push_notification(
+                                token=account.fcm_token,
+                                title=f"⏰ Reminder: {schedule.service_type} Tomorrow",
+                                body=f"{schedule.service_type} for {preschooler.first_name} is scheduled tomorrow.",
+                                data={
+                                    "type": "nutrition_schedule",
+                                    "preschooler_id": str(preschooler.preschooler_id),
+                                    "schedule_id": str(schedule.id),
+                                }
+                            )
+                            logger.info(f"[DEBUG] Instant reminder sent to {parent.email}")
+
+                    except Exception as push_error:
+                        logger.error(f"[DEBUG] Push notification error: {push_error}")
+
             threading.Thread(target=send_notifications, daemon=True).start()
 
-        # Return response immediately
         return JsonResponse({
             "success": True,
-            "message": f"{schedule.service_type} successfully rescheduled to {new_date}",
-            "new_date": new_date,
+            "message": f"{schedule.service_type} successfully rescheduled to {new_dt}",
+            "new_date": str(new_dt),
             "reschedule_reason": reschedule_reason
-        })
-
-    except Exception as e:
-        logger.error(f"[ERROR] Failed to reschedule nutrition service: {e}")
-        return JsonResponse({
-            "success": False,
-            "message": f"Error rescheduling service: {str(e)}"
         })
 @login_required
 def add_nutrition_service(request, preschooler_id):
@@ -4312,14 +4405,14 @@ def get_enhanced_nutrition_status(preschooler, service_type, total_doses):
                 status='completed'
             )
             completed_count = completed_services.count()
-            latest_service = completed_services.order_by('-service_date').first() if completed_services.exists() else None
+            latest_service = completed_services.order_by('-completion_date').first() if completed_services.exists() else None
         except:
             completed_count = 0
             latest_service = None
     
-    # Get pending schedules
+    # Get pending schedules (scheduled or rescheduled)
     try:
-        pending_schedule = preschooler.nutrition_schedules.filter(
+        pending_schedule = preschooler.nutrition_services.filter(
             service_type=service_type,
             status__in=['scheduled', 'rescheduled']
         ).first()
@@ -4334,14 +4427,16 @@ def get_enhanced_nutrition_status(preschooler, service_type, total_doses):
         except:
             pending_schedule = None
     
-    # Determine current status
+    # Determine current status and service_date
     if pending_schedule:
         current_status = pending_schedule.status
-        service_date = getattr(pending_schedule, 'service_date', None)
+        # ✅ FIX: Use scheduled_date for pending schedules
+        service_date = pending_schedule.scheduled_date
         schedule_id = pending_schedule.id
     elif completed_count > 0:
         current_status = 'completed'
-        service_date = getattr(latest_service, 'completion_date', None) or getattr(latest_service, 'service_date', None)
+        # ✅ FIX: Use completion_date for completed services
+        service_date = latest_service.completion_date if latest_service else None
         schedule_id = None
     else:
         current_status = 'pending'
@@ -4350,13 +4445,20 @@ def get_enhanced_nutrition_status(preschooler, service_type, total_doses):
     
     # Get eligibility information
     eligibility = get_nutrition_eligibility(preschooler, service_type)
+
+    # ✅ Prevent scheduling once all doses are completed
+    if completed_count >= total_doses:
+        eligibility['can_schedule'] = False
+        eligibility['reason'] = f'All {service_type} doses completed.'
+        eligibility['description'] = 'All required doses completed.'
+        current_status = 'completed'
     
     # Enhanced status logic
     enhanced_status = {
         'status': current_status,
         'completed_doses': completed_count,
         'total_doses': total_doses,
-        'service_date': service_date,
+        'service_date': service_date,  # ✅ Now properly shows scheduled_date or completion_date
         'schedule_id': schedule_id,
         'eligibility': eligibility,
         'can_schedule': eligibility['can_schedule'],
@@ -4366,12 +4468,13 @@ def get_enhanced_nutrition_status(preschooler, service_type, total_doses):
     }
     
     # Debug logging
-    print("DEBUG: {service_type} Status:")
-    print("  - Completed doses: {completed_count}")
-    print("  - Current status: {current_status}")
-    print("  - Can schedule: {eligibility['can_schedule']}")
-    print("  - Eligibility reason: {eligibility['reason']}")
-    print("  - Age description: {eligibility['description']}")
+    print(f"DEBUG: {service_type} Status:")
+    print(f"  - Completed doses: {completed_count}")
+    print(f"  - Current status: {current_status}")
+    print(f"  - Service date: {service_date}")  # ✅ Added for debugging
+    print(f"  - Can schedule: {eligibility['can_schedule']}")
+    print(f"  - Eligibility reason: {eligibility['reason']}")
+    print(f"  - Age description: {eligibility['description']}")
     
     return enhanced_status
 
@@ -4671,7 +4774,6 @@ def send_reschedule_notifications_async(parent, account, preschooler, schedule, 
             try:
                 subject = f"[PPMS] Vaccination Rescheduled for {preschooler.first_name}"
                 
-                # Prepare context for HTML email
                 email_context = {
                     'parent_name': parent.full_name,
                     'child_name': f"{preschooler.first_name} {preschooler.last_name}",
@@ -4682,8 +4784,7 @@ def send_reschedule_notifications_async(parent, account, preschooler, schedule, 
                     'new_date': new_date.strftime('%B %d, %Y'),
                     'reschedule_reason': reschedule_reason
                 }
-                
-                # Generate HTML and plain text emails
+
                 html_message = render_reschedule_vaccination_email_html(email_context)
                 plain_message = render_reschedule_vaccination_email_text(email_context)
 
@@ -4696,6 +4797,7 @@ def send_reschedule_notifications_async(parent, account, preschooler, schedule, 
                     fail_silently=False
                 )
                 logger.info(f"[ASYNC] Reschedule email sent to {parent.email}")
+
             except Exception as email_error:
                 logger.error(f"[ASYNC] Reschedule email failed for {parent.email}: {email_error}")
 
@@ -4727,6 +4829,28 @@ def send_reschedule_notifications_async(parent, account, preschooler, schedule, 
                     data=notification_data
                 )
                 logger.info(f"[ASYNC] Reschedule push sent to {parent.email}")
+
+                # === Instant reminder if new schedule is for tomorrow ===
+                try:
+                    tomorrow = (datetime.today() + timedelta(days=1)).date()
+                    new_schedule_date = new_date if isinstance(new_date, date) else datetime.strptime(str(new_date), "%Y-%m-%d").date()
+
+                    if new_schedule_date == tomorrow:
+                        logger.info(f"[ASYNC] New rescheduled date is tomorrow, sending instant reminder to {parent.email}")
+                        
+                        PushNotificationService.send_push_notification(
+                            token=account.fcm_token,
+                            title=f"Reminder: {preschooler.first_name}'s vaccination is tomorrow",
+                            body=f"{schedule.vaccine_name} (Dose {schedule.doses}/{schedule.required_doses}) is scheduled for tomorrow.",
+                            data={
+                                "type": "vaccination_schedule",
+                                "preschooler_id": str(preschooler.preschooler_id),
+                                "schedule_id": str(schedule.id)
+                            }
+                        )
+                except Exception as instant_error:
+                    logger.error(f"[ASYNC] Error sending instant-tomorrow reminder: {instant_error}")
+
             except Exception as push_error:
                 logger.error(f"[ASYNC] Reschedule push failed for {parent.email}: {push_error}")
         else:
@@ -4734,6 +4858,7 @@ def send_reschedule_notifications_async(parent, account, preschooler, schedule, 
 
     except Exception as e:
         logger.error(f"[ASYNC] Error in reschedule notification for {parent.email}: {e}")
+        
 
 
 def render_reschedule_vaccination_email_html(context):
@@ -11055,6 +11180,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
