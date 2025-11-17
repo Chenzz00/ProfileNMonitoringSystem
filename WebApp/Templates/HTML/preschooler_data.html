@@ -1221,7 +1221,7 @@ textarea[readonly].archived-input {
     <tr>
       <td>{{ nutrition.name }}</td>
       <td>{{ nutrition.completed_doses }}/{{ nutrition.total_doses }}</td>
-      <td>{{ nutrition.service_date|default:"N/A" }}</td>
+      <td>{{ nutrition.service_date|date:"m/d/Y" }}</td>
       <td>
         <!-- Status logic: COMPLETE only when all doses done -->
         {% if nutrition.completed_doses >= nutrition.total_doses %}
@@ -3555,6 +3555,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
+
 
 
 
