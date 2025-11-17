@@ -798,31 +798,45 @@
 
       <!-- Vaccination Reminders Section (Bottom) -->
       <div class="announcements-sidebar">
-        <h3 class="announcements-title"> Vaccination Reminders</h3>
+        <h3 class="announcements-title">Vaccination Reminders</h3>
         
         {% if upcoming_schedules %}
           <div class="sticky-notes-wrapper">
             {% for schedule in upcoming_schedules %}
               <div class="sticky-note">
                 <p><strong>{{ schedule.preschooler.first_name }} {{ schedule.preschooler.last_name }}</strong></p>
-                <p>💉 {{ schedule.vaccine_name }}</p>
-                <p>📅 {{ schedule.scheduled_date|date:"M d, Y" }}</p>
-                {% if schedule.next_vaccine_schedule %}
-                  <p>📆 Next: {{ schedule.next_vaccine_schedule|date:"M d, Y" }}</p>
+                
+                <!-- Check if it's a vaccination or nutrition service -->
+                {% if schedule.vaccine_name %}
+                  <!-- Vaccination Schedule -->
+                  <p>💉 {{ schedule.vaccine_name }}</p>
+                  <p>📅 {{ schedule.scheduled_date|date:"M d, Y" }}</p>
+                  {% if schedule.next_vaccine_schedule %}
+                    <p>📆 Next: {{ schedule.next_vaccine_schedule|date:"M d, Y" }}</p>
+                  {% endif %}
+                {% else %}
+                  <!-- Nutrition Service -->
+                  <p>🥗 {{ schedule.service_type }}</p>
+                  <p>📅 {{ schedule.scheduled_date|date:"M d, Y" }}</p>
+                  {% if schedule.doses %}
+                    <p>📊 Dose: {{ schedule.doses }}/{{ schedule.required_doses }}</p>
+                  {% endif %}
                 {% endif %}
+                
                 {% if schedule.scheduled_date < today %}
                   <p class="overdue">⚠️ Missed Schedule</p>
                 {% endif %}
+                
                 <p style="font-size: 11px; color: #666; margin-top: 8px; font-style: italic;">
-                  * Please contact your BHW to confirm vaccination completion
+                  * Please contact your BHW to confirm completion
                 </p>
               </div>
             {% endfor %}
           </div>
         {% else %}
           <div class="no-announcements">
-            <h4> No Vaccination Reminders</h4>
-            <p>No upcoming vaccination schedules at the moment.</p>
+            <h4> No Health Reminders</h4>
+            <p>No upcoming vaccination or nutrition services at the moment.</p>
             <p style="font-size: 12px; margin-top: 10px; color: #999;">
               New schedules may take a few minutes to appear.
             </p>
