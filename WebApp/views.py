@@ -3404,9 +3404,17 @@ def reschedule_nutrition_service(request, schedule_id):
             "new_date": str(new_dt),
             "reschedule_reason": reschedule_reason
         })
+
+    except Exception as e:
+        logger.error(f"[ERROR] Reschedule failed: {e}")
+        return JsonResponse({
+            "success": False,
+            "message": f"Error: {str(e)}"
+        })
+
 @login_required
 def add_nutrition_service(request, preschooler_id):
-    """Add completed nutrition service with notifications"""
+    """Add completed nutrition service with notifications, including 1-day-before reminder"""
     logger.info(f"[DEBUG] Entered add_nutrition_service view for preschooler {preschooler_id}")
 
     try:
@@ -3427,7 +3435,6 @@ def add_nutrition_service(request, preschooler_id):
     completion_date = request.POST.get("completion_date")
     notes = request.POST.get("notes", "")
 
-    # Validate required fields
     if not service_type or not completion_date:
         logger.warning("[DEBUG] Missing required fields")
         messages.error(request, "Please fill in all required fields.")
@@ -3463,11 +3470,16 @@ def add_nutrition_service(request, preschooler_id):
         parents = preschooler.parents.all()
         logger.info(f"[DEBUG] Found {parents.count()} parent(s) for completion notification")
 
+        # Parse completion date
+        completion_dt = datetime.strptime(completion_date, "%Y-%m-%d").date() if isinstance(completion_date, str) else completion_date
+        tomorrow = datetime.today().date() + timedelta(days=1)
+        send_tomorrow_reminder = (completion_dt == tomorrow)
+
         for parent in parents:
             # Prepare optional notes text
             notes_line = f"Notes: {notes}\n" if notes else ""
 
-            # Send email
+            # === Completion Email ===
             if parent.email:
                 try:
                     subject = f"[PPMS] Nutrition Service Completed for {preschooler.first_name}"
@@ -3493,14 +3505,15 @@ def add_nutrition_service(request, preschooler_id):
                 except Exception as email_error:
                     logger.error(f"[DEBUG] Completion email sending failed: {email_error}")
 
-            # Send push notification
+            # === Push Notification ===
             try:
                 account = Account.objects.filter(email=parent.email).first()
                 if account and account.fcm_token:
                     nutrition_icon = "✅🍎" if service_type == "Vitamin A" else "✅💊"
+
+                    # Completion notification
                     notification_title = f"{nutrition_icon} Nutrition Service Completed"
                     notification_body = f"{service_type} completed for {preschooler.first_name}"
-
                     notification_data = {
                         "type": "nutrition_completed",
                         "preschooler_id": str(preschooler.preschooler_id),
@@ -3522,6 +3535,27 @@ def add_nutrition_service(request, preschooler_id):
                         logger.info(f"[DEBUG] Completion push notification sent to {parent.email}")
                     else:
                         logger.error(f"[DEBUG] Completion push notification failed for {parent.email}")
+
+                    # === 1-day-before Reminder ===
+                    if send_tomorrow_reminder:
+                        reminder_title = f"⏰ Reminder: {service_type} Service Tomorrow"
+                        reminder_body = f"{service_type} service is scheduled for your child {preschooler.first_name} tomorrow."
+                        reminder_data = {
+                            "type": "nutrition_reminder",
+                            "preschooler_id": str(preschooler.preschooler_id),
+                            "service_type": service_type,
+                            "dose_number": str(dose_number),
+                            "scheduled_date": str(completion_date)
+                        }
+
+                        PushNotificationService.send_push_notification(
+                            token=account.fcm_token,
+                            title=reminder_title,
+                            body=reminder_body,
+                            data=reminder_data
+                        )
+                        logger.info(f"[DEBUG] Tomorrow reminder push sent to {parent.email}")
+
                 else:
                     logger.warning(f"[DEBUG] No FCM token found for {parent.email}")
                         
@@ -3533,7 +3567,7 @@ def add_nutrition_service(request, preschooler_id):
         messages.error(request, f"Error: {str(e)}")
 
     return redirect(request.META.get("HTTP_REFERER", "/"))
-
+    
 @require_POST #may binago ako dito
 def confirm_schedule(request, schedule_id):
     if not request.user.is_authenticated:
@@ -11180,6 +11214,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
