@@ -2405,6 +2405,7 @@ def parent_dashboard(request):
         full_name = parent.full_name
     except Parent.DoesNotExist:
         full_name = account.full_name or "Unknown User"
+    
     preschoolers_raw = Preschooler.objects.filter(parent_id__email=account.email)
 
     # Compute age per preschooler
@@ -2506,7 +2507,7 @@ def parent_dashboard(request):
         announcements = Announcement.objects.filter(
             is_active=True
         ).order_by('-created_at')[:10]
-    except Exception as e:
+    except Exception as e:  # ✅ FIXED: Added except clause
         announcements = []
 
     return render(request, 'HTML/parent_dashboard.html', {
@@ -2517,7 +2518,6 @@ def parent_dashboard(request):
         'announcements': announcements,
         'today': today,
     })
-
 
 
 
@@ -11180,6 +11180,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
