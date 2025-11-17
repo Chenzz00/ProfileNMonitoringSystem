@@ -9572,277 +9572,203 @@ def registered_barangays(request):
     
 @admin_required 
 def healthcare_workers(request):
-    """Improved healthcare workers view with unified pagination"""
+    """Improved healthcare workers view with better BNS handling and pagination"""
     from django.utils import timezone
     from django.utils.timesince import timesince
     from django.db.models import Q
     from datetime import timedelta
-    
-    print("\n=== HEALTHCARE WORKERS VIEW DEBUG ===")
-    
-    # Get filter parameters from URL
-    role_filter = request.GET.get('role', 'all')
-    barangay_filter = request.GET.get('barangay', 'all')
-    page_number = request.GET.get('page', 1)
-    
-    print(f"Filters: role={role_filter}, barangay={barangay_filter}, page={page_number}")
+    from django.core.paginator import Paginator
     
     # Get all barangays for the filter dropdown
     barangays = Barangay.objects.all().order_by('name')
     
-    # ===== COLLECT ALL WORKERS =====
-    all_workers = []
     
     # ===== BHW DATA =====
-    print("\n--- Fetching BHW Data ---")
-    bhw_accounts = Account.objects.filter(
+    bhw_list = Account.objects.filter(
         Q(user_role__iexact='healthworker') | Q(user_role__iexact='BHW'),
         is_validated=True
     ).select_related('barangay')
     
-    print(f"Found {bhw_accounts.count()} BHW accounts")
+  
     
-    for bhw in bhw_accounts:
+    for bhw in bhw_list:
         try:
-            bhw_profile = BHW.objects.filter(email=bhw.email).first()
+            bhw.bhw_data = BHW.objects.filter(email=bhw.email).first()
         except Exception as e:
-            print(f"Error getting BHW profile for {bhw.email}: {str(e)}")
-            bhw_profile = None
+            print(f"Error getting BHW data for {bhw.full_name}: {str(e)}")
+            bhw.bhw_data = None
         
+        # Activity status
         set_activity_status(bhw)
-        
-        # Determine barangay
-        barangay_name = 'No Barangay'
-        barangay_lower = 'no barangay'
-        if bhw.barangay:
-            barangay_name = bhw.barangay.name
-            barangay_lower = bhw.barangay.name.lower()
-        elif bhw_profile and bhw_profile.barangay:
-            barangay_name = bhw_profile.barangay.name
-            barangay_lower = bhw_profile.barangay.name.lower()
-        
-        all_workers.append({
-            'type': 'bhw',
-            'full_name': bhw.full_name,
-            'role': 'Health Worker (BHW)',
-            'role_class': 'bhw',
-            'barangay': barangay_name,
-            'barangay_lower': barangay_lower,
-            'contact_number': bhw.contact_number or 'N/A',
-            'email': bhw.email,
-            'last_activity': bhw.last_activity_display,
-            'account_id': bhw.account_id,
-            'pk': bhw.pk,
-            'remove_url': 'remove_bhw',
-            'account': bhw,
-            'profile': bhw_profile
-        })
     
-    # ===== BNS DATA =====
-    print("\n--- Fetching BNS Data ---")
+    # ===== BNS DATA - COMPREHENSIVE APPROACH =====
+    print("\n=== BNS DEBUGGING - COMPREHENSIVE ===")
     
-    # Simplified BNS query - try all common variations
-    bns_accounts = Account.objects.filter(
-        Q(user_role__iexact='bns') |
-        Q(user_role__iexact='BNS') |
-        Q(user_role__icontains='nutritional') |
-        Q(user_role__icontains='Nutritional') |
-        Q(user_role__icontains='scholar') |
-        Q(user_role__icontains='Scholar'),
+    # First, let's see what user_role values actually exist
+    all_user_roles = Account.objects.filter(
         is_validated=True
-    ).select_related('barangay').distinct()
+    ).values_list('user_role', flat=True).distinct()
+    print("All user roles in validated accounts:")
+    for role in all_user_roles:
+        print(f"  - '{role}'")
     
-    print(f"Found {bns_accounts.count()} BNS accounts")
+    # Try multiple query strategies
+    bns_queries = [
+        # Strategy 1: Exact matches
+        Q(user_role__iexact='bns'),
+        Q(user_role__iexact='BNS'),
+        Q(user_role__iexact='Barangay Nutritional Scholar'),
+        
+        # Strategy 2: Contains/partial matches
+        Q(user_role__icontains='BNS'),
+        Q(user_role__icontains='Nutritional'),
+        Q(user_role__icontains='Scholar'),
+        
+        # Strategy 3: Case-insensitive partial matches
+        Q(user_role__icontains='bns'),
+        Q(user_role__icontains='nutritional'),
+        Q(user_role__icontains='scholar'),
+    ]
     
-    for bns in bns_accounts:
+    # Combine all queries with OR
+    combined_query = bns_queries[0]
+    for query in bns_queries[1:]:
+        combined_query |= query
+    
+    bns_list = Account.objects.filter(
+        combined_query,
+        is_validated=True
+    ).select_related('barangay').distinct()  # Use distinct to avoid duplicates
+    
+   
+    
+    # Debug: Show what we found
+    for bns in bns_list:
+        print(f"  - {bns.full_name} (role: '{bns.user_role}')")
+    
+    # If still no results, let's check if there are ANY BNS records in the BNS table
+    if bns_list.count() == 0:
+        print("\nNo BNS found in Account table. Checking BNS table directly...")
+        direct_bns = BNS.objects.all()
+     
+        for bns in direct_bns[:5]:  # Show first 5
+            print(f"  - {bns.full_name} | {bns.email}")
+            # Try to find corresponding Account
+            account = Account.objects.filter(
+                Q(email=bns.email) | Q(full_name__iexact=bns.full_name),
+                is_validated=True
+            ).first()
+            if account:
+                print(f"    -> Found Account: {account.user_role}")
+            else:
+                print(f"    -> No matching validated Account found")
+    
+    # Process BNS data
+    for bns in bns_list:
         try:
-            # Try to find BNS profile by email first, then by name
-            bns_profile = BNS.objects.filter(email=bns.email).first()
-            if not bns_profile:
-                bns_profile = BNS.objects.filter(full_name__iexact=bns.full_name).first()
+            # Try multiple ways to find BNS profile
+            bns.bns_data = None
+            
+            # Method 1: By email
+            try:
+                bns.bns_data = BNS.objects.get(email=bns.email)
+                print(f"Found BNS data by email for {bns.full_name}")
+            except BNS.DoesNotExist:
+                # Method 2: By name
+                try:
+                    bns.bns_data = BNS.objects.get(full_name__iexact=bns.full_name)
+                    print(f"Found BNS data by name for {bns.full_name}")
+                except BNS.DoesNotExist:
+                    # Method 3: Partial name match
+                    bns.bns_data = BNS.objects.filter(
+                        Q(full_name__icontains=bns.full_name.split()[0]) |  # First name
+                        Q(full_name__icontains=bns.full_name.split()[-1])   # Last name
+                    ).first()
+                    if bns.bns_data:
+                        print(f"Found BNS data by partial name match for {bns.full_name}")
+                except BNS.MultipleObjectsReturned:
+                    bns.bns_data = BNS.objects.filter(full_name__iexact=bns.full_name).first()
+                    print(f"Multiple BNS found by name for {bns.full_name}, using first")
+            except BNS.MultipleObjectsReturned:
+                bns.bns_data = BNS.objects.filter(email=bns.email).first()
+                print(f"Multiple BNS found by email for {bns.full_name}, using first")
+                
         except Exception as e:
-            print(f"Error getting BNS profile for {bns.email}: {str(e)}")
-            bns_profile = None
+            print(f"Error processing BNS {bns.full_name}: {str(e)}")
+            bns.bns_data = None
         
+        # Activity status
         set_activity_status(bns)
-        
-        # Determine barangay
-        barangay_name = 'No Barangay'
-        barangay_lower = 'no barangay'
-        if bns.barangay:
-            barangay_name = bns.barangay.name
-            barangay_lower = bns.barangay.name.lower()
-        elif bns_profile and bns_profile.barangay:
-            barangay_name = bns_profile.barangay.name
-            barangay_lower = bns_profile.barangay.name.lower()
-        
-        all_workers.append({
-            'type': 'bns',
-            'full_name': bns.full_name,
-            'role': 'BNS',
-            'role_class': 'bns',
-            'barangay': barangay_name,
-            'barangay_lower': barangay_lower,
-            'contact_number': bns.contact_number or 'N/A',
-            'email': bns.email,
-            'last_activity': bns.last_activity_display,
-            'account_id': bns.account_id,
-            'pk': bns.pk,
-            'remove_url': 'remove_bns',
-            'account': bns,
-            'profile': bns_profile
-        })
     
     # ===== MIDWIFE DATA =====
-    print("\n--- Fetching Midwife Data ---")
-    midwife_accounts = Account.objects.filter(
+    midwife_list = Account.objects.filter(
         Q(user_role__iexact='midwife') | Q(user_role__iexact='Midwife'),
         is_validated=True
     ).select_related('barangay')
     
-    print(f"Found {midwife_accounts.count()} Midwife accounts")
+
     
-    for midwife in midwife_accounts:
+    for midwife in midwife_list:
         try:
-            midwife_profile = Midwife.objects.filter(email=midwife.email).first()
+            midwife.midwife_data = Midwife.objects.filter(email=midwife.email).first()
         except Exception as e:
-            print(f"Error getting Midwife profile for {midwife.email}: {str(e)}")
-            midwife_profile = None
+            print(f"Error getting Midwife data for {midwife.full_name}: {str(e)}")
+            midwife.midwife_data = None
         
         set_activity_status(midwife)
-        
-        # Determine barangay
-        barangay_name = 'No Barangay'
-        barangay_lower = 'no barangay'
-        if midwife.barangay:
-            barangay_name = midwife.barangay.name
-            barangay_lower = midwife.barangay.name.lower()
-        elif midwife_profile and midwife_profile.barangay:
-            barangay_name = midwife_profile.barangay.name
-            barangay_lower = midwife_profile.barangay.name.lower()
-        
-        all_workers.append({
-            'type': 'midwife',
-            'full_name': midwife.full_name,
-            'role': 'Midwife',
-            'role_class': 'midwife',
-            'barangay': barangay_name,
-            'barangay_lower': barangay_lower,
-            'contact_number': midwife.contact_number or 'N/A',
-            'email': midwife.email,
-            'last_activity': midwife.last_activity_display,
-            'account_id': midwife.account_id,
-            'pk': midwife.pk,
-            'remove_url': 'remove_midwife',
-            'account': midwife,
-            'profile': midwife_profile
-        })
     
     # ===== NURSE DATA =====
-    print("\n--- Fetching Nurse Data ---")
-    nurse_accounts = Account.objects.filter(
+    nurse_list = Account.objects.filter(
         Q(user_role__iexact='nurse') | Q(user_role__iexact='Nurse'),
         is_validated=True
     ).select_related('barangay')
     
-    print(f"Found {nurse_accounts.count()} Nurse accounts")
+   
     
-    for nurse in nurse_accounts:
+    for nurse in nurse_list:
         try:
-            nurse_profile = Nurse.objects.filter(email=nurse.email).first()
+            nurse.nurse_data = Nurse.objects.filter(email=nurse.email).first()
         except Exception as e:
-            print(f"Error getting Nurse profile for {nurse.email}: {str(e)}")
-            nurse_profile = None
+            print(f"Error getting Nurse data for {nurse.full_name}: {str(e)}")
+            nurse.nurse_data = None
         
         set_activity_status(nurse)
-        
-        # Determine barangay
-        barangay_name = 'No Barangay'
-        barangay_lower = 'no barangay'
-        if nurse.barangay:
-            barangay_name = nurse.barangay.name
-            barangay_lower = nurse.barangay.name.lower()
-        elif nurse_profile and nurse_profile.barangay:
-            barangay_name = nurse_profile.barangay.name
-            barangay_lower = nurse_profile.barangay.name.lower()
-        
-        all_workers.append({
-            'type': 'nurse',
-            'full_name': nurse.full_name,
-            'role': 'Nurse',
-            'role_class': 'nurse',
-            'barangay': barangay_name,
-            'barangay_lower': barangay_lower,
-            'contact_number': nurse.contact_number or 'N/A',
-            'email': nurse.email,
-            'last_activity': nurse.last_activity_display,
-            'account_id': nurse.account_id,
-            'pk': nurse.pk,
-            'remove_url': 'remove_nurse',
-            'account': nurse,
-            'profile': nurse_profile
-        })
     
-    print(f"\nTotal workers collected: {len(all_workers)}")
+    # ===== PAGINATION - 10 rows per page =====
+    # Get the current page and worker type filter
+    page_number = request.GET.get('page', 1)
+    worker_type = request.GET.get('type', 'bhw')  # Default to BHW
     
-    # ===== APPLY FILTERS =====
-    filtered_workers = all_workers
+    # Select which list to paginate based on worker_type
+    if worker_type == 'bns':
+        worker_list = bns_list
+    elif worker_type == 'midwife':
+        worker_list = midwife_list
+    elif worker_type == 'nurse':
+        worker_list = nurse_list
+    else:  # Default to BHW
+        worker_list = bhw_list
+        worker_type = 'bhw'
     
-    # Role filter
-    if role_filter != 'all':
-        filtered_workers = [w for w in filtered_workers if w['type'] == role_filter]
-        print(f"After role filter '{role_filter}': {len(filtered_workers)} workers")
-    
-    # Barangay filter
-    if barangay_filter != 'all':
-        if barangay_filter == 'no barangay':
-            filtered_workers = [w for w in filtered_workers if w['barangay_lower'] == 'no barangay']
-        else:
-            filtered_workers = [w for w in filtered_workers if barangay_filter.lower() in w['barangay_lower']]
-        print(f"After barangay filter '{barangay_filter}': {len(filtered_workers)} workers")
-    
-    # ===== PAGINATION - 10 items per page =====
-    paginator = Paginator(filtered_workers, 10)
-    
-    try:
-        page_obj = paginator.page(page_number)
-    except PageNotAnInteger:
-        page_obj = paginator.page(1)
-    except EmptyPage:
-        page_obj = paginator.page(paginator.num_pages)
-    
-    print(f"Pagination: Page {page_obj.number} of {paginator.num_pages}")
-    print(f"Showing {len(page_obj.object_list)} workers on this page")
-    
-    # Count by role for filter badges
-    bhw_count = len([w for w in all_workers if w['type'] == 'bhw'])
-    bns_count = len([w for w in all_workers if w['type'] == 'bns'])
-    midwife_count = len([w for w in all_workers if w['type'] == 'midwife'])
-    nurse_count = len([w for w in all_workers if w['type'] == 'nurse'])
-    
-    print(f"\nCounts - BHW: {bhw_count}, BNS: {bns_count}, Midwife: {midwife_count}, Nurse: {nurse_count}")
+    # Apply pagination
+    paginator = Paginator(worker_list, 10)
+    page_obj = paginator.get_page(page_number)
     
     context = {
-        'page_obj': page_obj,
-        'workers': page_obj.object_list,
         'barangays': barangays,
-        'current_role': role_filter,
-        'current_barangay': barangay_filter,
-        'bhw_count': bhw_count,
-        'bns_count': bns_count,
-        'midwife_count': midwife_count,
-        'nurse_count': nurse_count,
-        'total_workers': len(all_workers),
-        # Legacy support - in case template still references these
-        'bhws': bhw_accounts,
-        'bnss': bns_accounts,
-        'midwives': midwife_accounts,
-        'nurses': nurse_accounts,
+        'bhws': page_obj if worker_type == 'bhw' else bhw_list,
+        'bnss': page_obj if worker_type == 'bns' else bns_list,
+        'midwives': page_obj if worker_type == 'midwife' else midwife_list,
+        'nurses': page_obj if worker_type == 'nurse' else nurse_list,
+        'page_obj': page_obj,
+        'worker_type': worker_type,
+        'all_bhws': bhw_list,  # Full list for count display
+        'all_bnss': bns_list,
+        'all_midwives': midwife_list,
+        'all_nurses': nurse_list,
     }
     
     return render(request, 'HTML/healthcare_workers.html', context)
-
-
 
 
 def set_activity_status(user):
@@ -11129,6 +11055,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
