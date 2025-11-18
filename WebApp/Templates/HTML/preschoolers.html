@@ -10,6 +10,8 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
   <link rel="icon" type="image/png" href="{% static 'media/PPMS-logo.png' %}">
   <style>
+    /* Complete CSS for Preschoolers Page - Replace the entire <style> section */
+
     * {
       margin: 0;
       padding: 0;
@@ -35,7 +37,6 @@
       width: 100%;
       height: 100%;
       z-index: -1;
-      background-image: url('{% static "media/loginbg.png" %}');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -255,7 +256,7 @@
       position: relative;
       display: inline-block;
     }
-    
+
     #notifMenu {
       display: none;
       position: absolute;
@@ -475,7 +476,9 @@
       background: white;
       border-radius: 8px;
       overflow: hidden;
-      min-width: 900px; /* Ensures table maintains minimum width for horizontal scroll */
+      min-width: 900px;
+      width: 100%;
+      border-collapse: collapse;
     }
 
     table th,
@@ -488,7 +491,7 @@
       font-weight: 400;
       vertical-align: middle;
       background-color: white;
-      white-space: nowrap; /* Prevents text wrapping */
+      white-space: nowrap;
     }
 
     table th {
@@ -520,7 +523,7 @@
     tbody .delivery-home:hover td {
       background-color: rgba(33, 150, 243, 0.4) !important;
     }
-    
+
     tbody .delivery-lying-in,
     tbody .delivery-lying-in td {
       background-color: rgba(244, 67, 54, 0.3) !important;
@@ -529,7 +532,7 @@
     tbody .delivery-lying-in:hover td {
       background-color: rgba(244, 67, 54, 0.4) !important;
     }
-    
+
     tbody .delivery-hospital,
     tbody .delivery-hospital td {
       background-color: rgba(76, 175, 80, 0.3) !important;
@@ -538,7 +541,7 @@
     tbody .delivery-hospital:hover td {
       background-color: rgba(76, 175, 80, 0.4) !important;
     }
-    
+
     tbody .delivery-others,
     tbody .delivery-others td {
       background-color: rgba(255, 152, 0, 0.3) !important;
@@ -547,7 +550,7 @@
     tbody .delivery-others:hover td {
       background-color: rgba(255, 152, 0, 0.4) !important;
     }
-    
+
     tbody .delivery-na,
     tbody .delivery-na td {
       background-color: rgba(158, 158, 158, 0.2) !important;
@@ -596,31 +599,97 @@
       box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
     }
 
+    /* UPDATED PAGINATION SECTION - Matching registered_parents.html */
     .pagination-section {
-      text-align: center;
-      margin-top: 20px;
-      color: #333;
-      font-size: 14px;
-      font-weight: 400;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 5px;
+      margin-bottom: 10px;
       font-family: 'Poppins', sans-serif;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 20px;
-      border-radius: 10px;
-      backdrop-filter: blur(10px);
-    }
-
-    .pagination-section span {
-      margin: 0 15px;
-      color: #666;
+      background: transparent;
+      padding: 0;
+      flex-wrap: wrap;
     }
 
     .pagination-section .btn {
-      margin: 0 5px;
-      padding: 12px 20px;
+      background: #5bdab3;
+      color: #1e1e2f;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
       font-size: 14px;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(91, 218, 179, 0.3);
     }
 
-    /* IMPROVED CUSTOM MENU STYLES */
+    .pagination-section .btn:hover:not(.disabled) {
+      background: #1565c0;
+      color: white;
+      border-color: transparent;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    }
+
+    .pagination-section .btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: #f5f5f5;
+      border-color: #e0e0e0;
+      color: #999;
+      box-shadow: none;
+    }
+
+    .pagination-section .page-number {
+      background: white;
+      color: #666;
+      padding: 10px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      border: 2px solid #e0e0e0;
+      cursor: pointer;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .pagination-section .page-number:hover {
+      background: #f8f9fa;
+      border-color: #5bdab3;
+      color: #5bdab3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(91, 218, 179, 0.2);
+    }
+
+    .pagination-section .page-number.active {
+      background: #5bdab3;
+      color: white;
+      border-color: transparent;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(91, 218, 179, 0.4);
+      cursor: default;
+    }
+
+    .pagination-section .page-number.active:hover {
+      transform: none;
+    }
+
+    /* CUSTOM MENU STYLES */
     .custom-menu {
       position: fixed;
       display: none;
@@ -677,7 +746,6 @@
       transform: scale(0.98);
     }
 
-    /* NEW ICON SYSTEM - Using actual icon elements instead of pseudo-elements */
     .menu-icon {
       width: 16px;
       height: 16px;
@@ -690,9 +758,24 @@
       opacity: 1;
     }
 
-    /* Hide menu items properly */
     .custom-menu li.hidden {
       display: none !important;
+    }
+
+    #customMenu {
+      position: fixed !important;
+      display: none;
+      z-index: 1000;
+      min-width: 200px;
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      animation: menuSlideIn 0.2s ease-out;
+    }
+
+    #customMenu.show {
+      display: block !important;
     }
 
     /* TEMPERATURE MODAL STYLES */
@@ -892,7 +975,6 @@
       box-shadow: 0 8px 25px rgba(244, 67, 54, 0.4);
     }
 
-    /* Loading state */
     .temperature-btn:disabled {
       opacity: 0.7;
       cursor: not-allowed;
@@ -923,7 +1005,6 @@
       100% { transform: translate(-50%, -50%) rotate(360deg); }
     }
 
-    /* Temperature icon decoration */
     .temperature-icon {
       display: flex;
       align-items: center;
@@ -940,6 +1021,120 @@
       width: 40px;
       height: 40px;
       fill: white;
+    }
+
+    /* MOBILE BOTTOM SHEET MENU */
+    .mobile-menu-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1500;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .mobile-menu-overlay.active {
+      display: block;
+    }
+
+    .mobile-menu-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: white;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+      z-index: 1501;
+      transform: translateY(100%);
+      transition: transform 0.3s ease-out;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .mobile-menu-overlay.active .mobile-menu-sheet {
+      transform: translateY(0);
+    }
+
+    .mobile-menu-header {
+      padding: 20px;
+      border-bottom: 1px solid #e6e6e6;
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 10;
+      border-radius: 20px 20px 0 0;
+    }
+
+    .mobile-menu-handle {
+      width: 40px;
+      height: 4px;
+      background: #ddd;
+      border-radius: 2px;
+      margin: 0 auto 15px auto;
+    }
+
+    .mobile-menu-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      text-align: center;
+      margin: 0;
+    }
+
+    .mobile-menu-content {
+      padding: 10px 0;
+    }
+
+    .mobile-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 18px 25px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-size: 15px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .mobile-menu-item:active {
+      background: rgba(91, 218, 179, 0.15);
+    }
+
+    .mobile-menu-item .menu-icon {
+      width: 22px;
+      height: 22px;
+      opacity: 0.8;
+    }
+
+    .mobile-menu-item.hidden {
+      display: none !important;
+    }
+
+    .mobile-menu-cancel {
+      margin: 10px 20px 20px 20px;
+      padding: 15px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      width: calc(100% - 40px);
+      transition: background-color 0.2s ease;
+    }
+
+    .mobile-menu-cancel:active {
+      background: #d32f2f;
     }
 
     /* Mobile Responsive Adjustments */
@@ -965,6 +1160,11 @@
     }
 
     @media (max-width: 768px) {
+      /* Hide desktop menu on mobile */
+      .custom-menu {
+        display: none !important;
+      }
+
       .sidebar {
         transform: translateX(-100%);
         width: 280px;
@@ -1033,16 +1233,23 @@
       }
 
       .pagination-section {
-        font-size: 13px;
-        padding: 15px;
+        padding: 15px 0;
+        gap: 6px;
       }
 
-      .pagination-section span {
-        font-size: 13px;
-        margin: 0 10px;
+      .pagination-section .btn {
+        font-size: 12px;
+        padding: 8px 12px;
+        min-width: 35px;
+        height: 35px;
       }
 
-      /* Mobile table adjustments */
+      .pagination-section .page-number {
+        min-width: 35px;
+        height: 35px;
+        font-size: 13px;
+      }
+
       table th,
       table td {
         padding: 8px 6px;
@@ -1050,10 +1257,9 @@
       }
 
       table {
-        min-width: 800px; /* Adjust minimum width for mobile */
+        min-width: 800px;
       }
 
-      /* Mobile custom menu adjustments */
       .custom-menu {
         min-width: 180px;
       }
@@ -1067,7 +1273,6 @@
         padding-left: 23px;
       }
 
-      /* Mobile modal adjustments */
       .temperature-modal-content {
         padding: 30px 25px;
         margin: 20px;
@@ -1088,7 +1293,6 @@
         padding: 15px;
       }
 
-      /* Notification dropdown adjustments */
       #notifMenu {
         right: -20px;
         left: auto;
@@ -1119,6 +1323,20 @@
 
       table {
         min-width: 700px;
+      }
+
+      .pagination-section .btn {
+        padding: 6px 10px;
+        min-width: 32px;
+        height: 32px;
+        font-size: 11px;
+      }
+
+      .pagination-section .page-number {
+        min-width: 32px;
+        height: 32px;
+        font-size: 12px;
+        padding: 6px;
       }
 
       .temperature-modal-content {
@@ -1182,143 +1400,6 @@
         padding: 15px;
       }
     }
-    /* MOBILE BOTTOM SHEET MENU */
-.mobile-menu-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1500;
-  animation: fadeIn 0.3s ease-out;
-}
-
-.mobile-menu-overlay.active {
-  display: block;
-}
-
-.mobile-menu-sheet {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: white;
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 1501;
-  transform: translateY(100%);
-  transition: transform 0.3s ease-out;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.mobile-menu-overlay.active .mobile-menu-sheet {
-  transform: translateY(0);
-}
-
-.mobile-menu-header {
-  padding: 20px;
-  border-bottom: 1px solid #e6e6e6;
-  position: sticky;
-  top: 0;
-  background: white;
-  z-index: 10;
-  border-radius: 20px 20px 0 0;
-}
-
-.mobile-menu-handle {
-  width: 40px;
-  height: 4px;
-  background: #ddd;
-  border-radius: 2px;
-  margin: 0 auto 15px auto;
-}
-
-.mobile-menu-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  text-align: center;
-  margin: 0;
-}
-
-.mobile-menu-content {
-  padding: 10px 0;
-}
-
-.mobile-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 18px 25px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  font-size: 15px;
-  font-weight: 500;
-  color: #333;
-}
-
-.mobile-menu-item:active {
-  background: rgba(91, 218, 179, 0.15);
-}
-
-.mobile-menu-item .menu-icon {
-  width: 22px;
-  height: 22px;
-  opacity: 0.8;
-}
-
-.mobile-menu-item.hidden {
-  display: none !important;
-}
-
-.mobile-menu-cancel {
-  margin: 10px 20px 20px 20px;
-  padding: 15px;
-  background: #f44336;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  width: calc(100% - 40px);
-  transition: background-color 0.2s ease;
-}
-
-.mobile-menu-cancel:active {
-  background: #d32f2f;
-}
-
-/* Hide desktop menu on mobile */
-@media (max-width: 768px) {
-  .custom-menu {
-    display: none !important;
-  }
-}
-
-
-#customMenu {
-  position: fixed !important;
-  display: none;
-  z-index: 1000;
-  min-width: 200px;
-  background: rgba(255, 255, 255, 0.98);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
-  animation: menuSlideIn 0.2s ease-out;
-}
-
-#customMenu.show {
-  display: block !important;
-}
   </style>
 </head>
 <body>
@@ -1566,16 +1647,70 @@
       </div>
 
       <div class="pagination-section">
-        {% if preschoolers.has_previous %}
-          <a href="?page={{ preschoolers.previous_page_number }}" class="btn">Previous</a>
-        {% endif %}
+        {% if is_searching %}
+          <!-- Hide pagination when searching -->
+        {% else %}
+          {% if preschoolers %}
+            <!-- First page button (<<) -->
+            {% if preschoolers.number > 1 %}
+              <a href="?page=1{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter and status_filter != 'All' %}&status={{ status_filter|urlencode }}{% endif %}" class="btn">&lt;&lt;</a>
+            {% else %}
+              <span class="btn disabled">&lt;&lt;</span>
+            {% endif %}
 
-        <span>
-          Page {{ preschoolers.number }} of {{ preschoolers.paginator.num_pages }}
-        </span>
+            <!-- Previous button -->
+            {% if preschoolers.has_previous %}
+              <a href="?page={{ preschoolers.previous_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter and status_filter != 'All' %}&status={{ status_filter|urlencode }}{% endif %}" class="btn">&lt;</a>
+            {% else %}
+              <span class="btn disabled">&lt;</span>
+            {% endif %}
 
-        {% if preschoolers.has_next %}
-          <a href="?page={{ preschoolers.next_page_number }}" class="btn">Next</a>
+            <!-- Page numbers logic -->
+            {% if preschoolers.paginator.num_pages > 1 %}
+              {% for num in preschoolers.paginator.page_range %}
+                {% comment %}
+                  Show page if:
+                  1. It's within first 10 pages AND current page <= 6
+                  2. OR it's within sliding window when current page > 6
+                {% endcomment %}
+                {% if preschoolers.number <= 6 %}
+                  {% comment %}Show pages 1-10 when on early pages{% endcomment %}
+                  {% if num <= 10 %}
+                    {% if num == preschoolers.number %}
+                      <span class="page-number active">{{ num }}</span>
+                    {% else %}
+                      <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter and status_filter != 'All' %}&status={{ status_filter|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
+                    {% endif %}
+                  {% endif %}
+                {% else %}
+                  {% comment %}Sliding window: show 10 pages centered around current{% endcomment %}
+                  {% with start=preschoolers.number|add:'-5' end=preschoolers.number|add:'4' %}
+                    {% if num >= start and num <= end %}
+                      {% if num == preschoolers.number %}
+                        <span class="page-number active">{{ num }}</span>
+                      {% else %}
+                        <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter and status_filter != 'All' %}&status={{ status_filter|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
+                      {% endif %}
+                    {% endif %}
+                  {% endwith %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+
+            <!-- Next button -->
+            {% if preschoolers.has_next %}
+              <a href="?page={{ preschoolers.next_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter and status_filter != 'All' %}&status={{ status_filter|urlencode }}{% endif %}" class="btn">&gt;</a>
+            {% else %}
+              <span class="btn disabled">&gt;</span>
+            {% endif %}
+
+            <!-- Last page button (>>) -->
+            {% if preschoolers.number < preschoolers.paginator.num_pages %}
+              <a href="?page={{ preschoolers.paginator.num_pages }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter and status_filter != 'All' %}&status={{ status_filter|urlencode }}{% endif %}" class="btn">&gt;&gt;</a>
+            {% else %}
+              <span class="btn disabled">&gt;&gt;</span>
+            {% endif %}
+          {% endif %}
         {% endif %}
       </div>
     </div>
@@ -2511,8 +2646,3 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 </body>
 </html>
-
-
-
-
-
