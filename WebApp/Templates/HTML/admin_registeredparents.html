@@ -654,23 +654,17 @@
 
           <!-- Page numbers (Show max 10 pages) -->
           {% if parents.paginator.num_pages > 1 %}
-            {% with ''|center:parents.number as current %}
-            {% with parents.number|add:'-5' as start_page %}
-            {% with parents.number|add:'4' as end_page %}
-              {% for num in parents.paginator.page_range %}
-                {% if num >= start_page and num <= end_page and num > 0 and num <= parents.paginator.num_pages %}
-                  {% if forloop.counter0 < 10 %}
-                    {% if num == parents.number %}
-                      <span class="page-number active">{{ num }}</span>
-                    {% else %}
-                      <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
-                    {% endif %}
+            {% for num in parents.paginator.page_range %}
+              {% if num <= 10 or num >= parents.number|add:'-4' and num <= parents.number|add:'5' %}
+                {% if num <= 10 or parents.number > 6 %}
+                  {% if num == parents.number %}
+                    <span class="page-number active">{{ num }}</span>
+                  {% else %}
+                    <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
                   {% endif %}
                 {% endif %}
-              {% endfor %}
-            {% endwith %}
-            {% endwith %}
-            {% endwith %}
+              {% endif %}
+            {% endfor %}
           {% endif %}
 
           <!-- Next button -->
