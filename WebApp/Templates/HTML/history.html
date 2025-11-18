@@ -7,7 +7,6 @@
   <title>Activity History</title>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Bootstrap CSS -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
   <link rel="icon" type="image/png" href="{% static 'media/PPMS-logo.png' %}">
 
@@ -325,7 +324,7 @@
       margin: 0 auto 30px auto;
       max-width: 1100px;
       align-items: center;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       background: rgba(255, 255, 255, 0.9);
       padding: 20px;
       border-radius: 12px;
@@ -344,6 +343,7 @@
       background-color: white;
       transition: all 0.3s ease;
       min-width: 200px;
+      flex: 1;
     }
 
     .filter-container input:focus {
@@ -363,6 +363,8 @@
       font-size: 14px;
       transition: all 0.3s ease;
       box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
+      flex-shrink: 0;
+      white-space: nowrap;
     }
 
     .filter-container button:hover {
@@ -440,7 +442,7 @@
       border-radius: 8px;
       overflow: hidden;
       font-size: 14px;
-      min-width: 700px; /* Ensures horizontal scroll on smaller screens */
+      min-width: 700px;
     }
 
     .table th,
@@ -451,7 +453,7 @@
       font-size: 14px;
       color: #333;
       font-weight: 400;
-      white-space: nowrap; /* Prevents text wrapping */
+      white-space: nowrap;
       vertical-align: middle;
     }
 
@@ -475,12 +477,13 @@
       font-style: italic;
     }
 
-    .pagination-wrapper {
-      text-align: center;
-      margin-top: 20px;
-      color: #333;
-      font-size: 14px;
-      font-weight: 400;
+    /* Updated Pagination Styles - Matching validated.html */
+    .pagination-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 30px;
       font-family: 'Poppins', sans-serif;
       background: rgba(255, 255, 255, 0.9);
       padding: 20px;
@@ -488,31 +491,80 @@
       backdrop-filter: blur(10px);
     }
 
-    .pagination-wrapper a {
-      background-color: #5bdab3;
+    .pagination-section .btn {
+      background: #5bdab3;
       color: #1e1e2f;
-      padding: 8px 16px;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(91, 218, 179, 0.3);
+    }
+
+    .pagination-section .btn:hover:not(.disabled) {
+      background: #1565c0;
+      color: white;
+      border-color: transparent;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.4);
+    }
+
+    .pagination-section .btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: #f5f5f5;
+      border-color: #e0e0e0;
+      color: #999;
+      box-shadow: none;
+    }
+
+    .pagination-section .page-number {
+      background: white;
+      color: #666;
+      padding: 10px;
       text-decoration: none;
       border-radius: 8px;
       font-weight: 500;
       font-size: 14px;
       transition: all 0.3s ease;
-      box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
-      margin: 0 5px;
-      display: inline-block;
+      border: 2px solid #e0e0e0;
+      cursor: pointer;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .pagination-wrapper a:hover {
-      background-color: #1565c0;
-      color: white;
+    .pagination-section .page-number:hover {
+      background: #f8f9fa;
+      border-color: #5bdab3;
+      color: #5bdab3;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+      box-shadow: 0 4px 8px rgba(91, 218, 179, 0.2);
     }
 
-    .pagination-wrapper span {
-      color: #333;
-      margin: 0 15px;
-      font-size: 14px;
+    .pagination-section .page-number.active {
+      background: #5bdab3;
+      color: white;
+      border-color: transparent;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(91, 218, 179, 0.4);
+      cursor: default;
+    }
+
+    .pagination-section .page-number.active:hover {
+      transform: none;
     }
 
     /* Mobile Responsive */
@@ -564,61 +616,18 @@
       }
 
       .filter-container {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        align-items: center;
         gap: 10px;
         margin-bottom: 20px;
+        flex-wrap: wrap;
       }
 
       .filter-container input[type="text"],
       .filter-container input[type="date"] {
-        width: 100%;
-        min-width: unset;
-        position: relative;
-      }
-
-      /* Enhanced mobile date input visibility */
-      .filter-container input[type="date"] {
-        -webkit-appearance: none;
-        -moz-appearance: textfield;
-        background: white url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3e%3c/rect%3e%3cline x1='16' y1='2' x2='16' y2='6'%3e%3c/line%3e%3cline x1='8' y1='2' x2='8' y2='6'%3e%3c/line%3e%3cline x1='3' y1='10' x2='21' y2='10'%3e%3c/line%3e%3c/svg%3e") no-repeat;
-        background-position: calc(100% - 15px) center;
-        background-size: 18px;
-        padding-right: 45px !important;
-        color: #333 !important;
-      }
-
-      .filter-container input[type="date"]::-webkit-datetime-edit {
-        color: #333 !important;
-        font-size: 14px !important;
-        font-weight: 400 !important;
-      }
-
-      .filter-container input[type="date"]::-webkit-datetime-edit-text {
-        color: #333 !important;
-        padding: 0 2px;
-      }
-
-      .filter-container input[type="date"]::-webkit-datetime-edit-month-field,
-      .filter-container input[type="date"]::-webkit-datetime-edit-day-field,
-      .filter-container input[type="date"]::-webkit-datetime-edit-year-field {
-        color: #333 !important;
-        font-size: 14px !important;
-        font-weight: 400 !important;
-        padding: 1px;
-        border: none;
-        outline: none;
-      }
-
-      .filter-container input[type="date"]::-webkit-calendar-picker-indicator {
-        position: absolute;
-        right: 15px;
-        width: 18px;
-        height: 18px;
-        opacity: 1;
-        color: #333;
-        cursor: pointer;
-        background: transparent;
+        width: auto;
+        min-width: 150px;
+        flex: 1 1 auto;
       }
 
       .history-container {
@@ -626,15 +635,9 @@
         margin-bottom: 20px;
       }
 
-      .history-container .section-title {
-        font-size: 16px;
-        margin-bottom: 20px;
-      }
-
-      /* Mobile table adjustments */
       .table {
         font-size: 13px;
-        min-width: 600px; /* Adjust minimum width for mobile */
+        min-width: 600px;
       }
 
       .table th,
@@ -643,38 +646,23 @@
         font-size: 13px;
       }
 
-      .pagination-wrapper {
+      .pagination-section {
         font-size: 13px;
         padding: 15px;
+        flex-wrap: wrap;
       }
 
-      .pagination-wrapper span {
+      .pagination-section .btn {
+        font-size: 12px;
+        padding: 8px 12px;
+        min-width: 35px;
+        height: 35px;
+      }
+
+      .pagination-section .page-number {
+        min-width: 35px;
+        height: 35px;
         font-size: 13px;
-        margin: 0 10px;
-      }
-
-      .pagination-wrapper a {
-        padding: 10px 14px;
-        font-size: 13px;
-      }
-
-      /* Add scroll hint for mobile */
-      .table-responsive {
-        position: relative;
-      }
-
-      .scroll-hint {
-        position: absolute;
-        bottom: -25px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 11px;
-        color: #999;
-        font-style: italic;
-        opacity: 0.8;
-        text-align: center;
-        pointer-events: none;
-        white-space: nowrap;
       }
 
       #notifMenu {
@@ -704,35 +692,6 @@
       .table td {
         padding: 8px 10px;
         font-size: 12px;
-      }
-    }
-
-    @media (max-width: 375px) {
-      .greeting {
-        font-size: 14px;
-      }
-      
-      .sidebar-title {
-        font-size: 16px;
-      }
-      
-      .nav-link {
-        padding: 14px 20px;
-        font-size: 13px;
-      }
-
-      .history-container {
-        padding: 12px;
-      }
-
-      .table {
-        min-width: 450px;
-      }
-
-      .table th,
-      .table td {
-        padding: 6px 8px;
-        font-size: 11px;
       }
     }
   </style>
@@ -889,8 +848,8 @@
       <!-- Filters -->
       <div class="filter-container">
         <input type="text" id="search-input" placeholder="Search name or activity..." class="form-control">
-        <input type="date" id="date-input" class="form-control">
         <button onclick="filterLogs()" class="btn">Search</button>
+        <input type="date" id="date-input" class="form-control">
       </div>
 
       <!-- Tables -->
@@ -923,21 +882,64 @@
             </table>
           </div>
           
-          <!-- Pagination for Parent Logs -->
-          <div class="pagination-wrapper">
-            {% if parent_logs.has_previous %}
-              <a href="?parent_page={{ parent_logs.previous_page_number }}{% if preschooler_logs.number %}&preschooler_page={{ preschooler_logs.number }}{% endif %}">Previous</a>
+          <!-- Updated Pagination for Parent Logs -->
+          {% if parent_logs %}
+          <div class="pagination-section">
+            <!-- First page button (<<) -->
+            {% if parent_logs.number > 1 %}
+              <a href="?parent_page=1{% if preschooler_logs.number %}&preschooler_page={{ preschooler_logs.number }}{% endif %}" class="btn">&lt;&lt;</a>
+            {% else %}
+              <span class="btn disabled">&lt;&lt;</span>
             {% endif %}
-            <span>Page {{ parent_logs.number }} of {{ parent_logs.paginator.num_pages }}</span>
+
+            <!-- Previous button -->
+            {% if parent_logs.has_previous %}
+              <a href="?parent_page={{ parent_logs.previous_page_number }}{% if preschooler_logs.number %}&preschooler_page={{ preschooler_logs.number }}{% endif %}" class="btn">&lt;</a>
+            {% else %}
+              <span class="btn disabled">&lt;</span>
+            {% endif %}
+
+            <!-- Page numbers logic -->
+            {% if parent_logs.paginator.num_pages > 1 %}
+              {% for num in parent_logs.paginator.page_range %}
+                {% if parent_logs.number <= 6 %}
+                  {% if num <= 10 %}
+                    {% if num == parent_logs.number %}
+                      <span class="page-number active">{{ num }}</span>
+                    {% else %}
+                      <a href="?parent_page={{ num }}{% if preschooler_logs.number %}&preschooler_page={{ preschooler_logs.number }}{% endif %}" class="page-number">{{ num }}</a>
+                    {% endif %}
+                  {% endif %}
+                {% else %}
+                  {% with start=parent_logs.number|add:'-5' end=parent_logs.number|add:'4' %}
+                    {% if num >= start and num <= end %}
+                      {% if num == parent_logs.number %}
+                        <span class="page-number active">{{ num }}</span>
+                      {% else %}
+                        <a href="?parent_page={{ num }}{% if preschooler_logs.number %}&preschooler_page={{ preschooler_logs.number }}{% endif %}" class="page-number">{{ num }}</a>
+                      {% endif %}
+                    {% endif %}
+                  {% endwith %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+
+            <!-- Next button -->
             {% if parent_logs.has_next %}
-              <a href="?parent_page={{ parent_logs.next_page_number }}{% if preschooler_logs.number %}&preschooler_page={{ preschooler_logs.number }}{% endif %}">Next</a>
+              <a href="?parent_page={{ parent_logs.next_page_number }}{% if preschooler_logs.number %}&preschooler_page={{ preschooler_logs.number }}{% endif %}" class="btn">&gt;</a>
+            {% else %}
+              <span class="btn disabled">&gt;</span>
+            {% endif %}
+
+            <!-- Last page button (>>) -->
+            {% if parent_logs.number < parent_logs.paginator.num_pages %}
+              <a href="?parent_page={{ parent_logs.paginator.num_pages }}{% if preschooler_logs.number %}&preschooler_page={{ preschooler_logs.number }}{% endif %}" class="btn">&gt;&gt;</a>
+            {% else %}
+              <span class="btn disabled">&gt;&gt;</span>
             {% endif %}
           </div>
+          {% endif %}
         </div>
-
-       
-          
-          
       </div>
     </div>
   </div>
@@ -1099,45 +1101,14 @@
       initializeMobileToggle();
       initializeNotifications();
       initializeEventListeners();
-
-      // Add scroll hint visibility control for mobile
-      function handleScrollHints() {
-        const tableContainers = document.querySelectorAll('.table-responsive');
-        
-        tableContainers.forEach(container => {
-          const scrollHint = container.querySelector('.scroll-hint');
-          
-          if (window.innerWidth <= 768 && scrollHint) {
-            const isScrollable = container.scrollWidth > container.clientWidth;
-            scrollHint.style.display = isScrollable ? 'block' : 'none';
-            
-            // Hide hint after user scrolls
-            let hasScrolled = false;
-            container.addEventListener('scroll', function() {
-              if (!hasScrolled) {
-                hasScrolled = true;
-                scrollHint.style.opacity = '0.3';
-                setTimeout(() => {
-                  scrollHint.style.display = 'none';
-                }, 2000);
-              }
-            });
-          }
-        });
-      }
-
-      // Call on load and resize
-      handleScrollHints();
-      window.addEventListener('resize', handleScrollHints);
     });
 
     function filterLogs() {
       const searchValue = document.getElementById('search-input').value.toLowerCase();
       const dateValue = document.getElementById('date-input').value;
       const parentRows = document.querySelectorAll("#parent-log-body tr");
-      const preschoolerRows = document.querySelectorAll("#preschooler-log-body tr");
 
-      function filterRow(row, isParent) {
+      function filterRow(row) {
         const cols = row.querySelectorAll("td");
         if (cols.length === 0) return;
 
@@ -1169,11 +1140,8 @@
         }
       }
 
-      parentRows.forEach(row => filterRow(row, true));
-      preschoolerRows.forEach(row => filterRow(row, false));
-
+      parentRows.forEach(row => filterRow(row));
       checkEmptyState(parentRows, 'parent-log-body', 3, 'No parent activity yet.');
-      checkEmptyState(preschoolerRows, 'preschooler-log-body', 4, 'No preschooler activity yet.');
     }
 
     // Enter key search functionality
@@ -1189,9 +1157,4 @@
   </script>
 
 </body>
-</html> 
-
-
-
-
-
+</html>
