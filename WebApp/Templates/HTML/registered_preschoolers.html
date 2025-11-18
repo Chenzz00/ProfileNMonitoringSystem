@@ -335,6 +335,7 @@
       gap: 8px;
       margin-top: 30px;
       font-family: 'Poppins', sans-serif;
+      flex-wrap: wrap;
     }
 
     .pagination-section .btn {
@@ -411,6 +412,13 @@
 
     .pagination-section .page-number.active:hover {
       transform: none;
+    }
+
+    /* Hide page numbers on mobile - controlled by JS */
+    @media (max-width: 768px) {
+      .pagination-section .page-number.hide-mobile {
+        display: none !important;
+      }
     }
 
     /* Mobile adjustments */
