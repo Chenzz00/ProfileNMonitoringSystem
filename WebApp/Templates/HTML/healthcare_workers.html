@@ -556,25 +556,107 @@
       transform: translateY(-2px);
     }
 
-    /* Pagination - Same as validate.html */
+    /* Pagination - Simple text with Next button */
     .pagination-section {
-      text-align: center;
-      margin-top: 20px;
-      color: #333;
-      font-size: 14px;
-      font-weight: 400;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 30px;
       font-family: 'Poppins', sans-serif;
     }
 
     .pagination-section span {
-      margin: 0 15px;
       color: #666;
+      font-size: 14px;
+      font-weight: 400;
     }
 
     .pagination-section .btn {
-      margin: 0 5px;
-      padding: 12px 20px;
+      background: white;
+      color: #5bdab3;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
       font-size: 14px;
+      transition: all 0.3s ease;
+      border: 2px solid #5bdab3;
+      cursor: pointer;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(91, 218, 179, 0.15);
+    }
+
+    .pagination-section .btn:hover:not(.disabled) {
+      background: linear-gradient(135deg, #5bdab3 0%, #1565c0 100%);
+      color: white;
+      border-color: #1565c0;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    }
+
+    .pagination-section .btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: #f5f5f5;
+      border-color: #e0e0e0;
+      color: #999;
+      box-shadow: none;
+    }
+    .pagination-section .page-number {
+      background: white;
+      color: #666;
+      padding: 10px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      border: 2px solid #e0e0e0;
+      cursor: pointer;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .pagination-section .page-number:hover {
+      background: #f8f9fa;
+      border-color: #5bdab3;
+      color: #5bdab3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(91, 218, 179, 0.2);
+    }
+
+    .pagination-section .page-number.active {
+      background: linear-gradient(135deg, #5bdab3 0%, #1565c0 100%);
+      color: white;
+      border-color: transparent;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(91, 218, 179, 0.4);
+      cursor: default;
+    }
+
+    .pagination-section .page-number.active:hover {
+      transform: none;
+    }
+
+    .pagination-section .btn:hover {
+      background-color: #1565c0;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    }
+
+    .pagination-section .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
     }
 
     /* Role badge styles */
@@ -1196,19 +1278,41 @@
           </table>
         </div>
 
-        <!-- Pagination - Same as validate.html -->
+        <!-- Pagination - Numbered buttons style -->
         {% if page_obj %}
         <div class="pagination-section">
-          <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-
+          <!-- Previous button -->
           {% if page_obj.has_previous %}
-            <a href="?page=1&type={{ worker_type }}" class="btn">&laquo; First</a>
-            <a href="?page={{ page_obj.previous_page_number }}&type={{ worker_type }}" class="btn">Previous</a>
+            <a href="?page={{ page_obj.previous_page_number }}&type={{ worker_type }}" class="btn">&lt;</a>
+          {% else %}
+            <span class="btn disabled">&lt;</span>
           {% endif %}
 
+          <!-- Page numbers -->
+          {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+              <span class="page-number active">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+              <a href="?page={{ num }}&type={{ worker_type }}" class="page-number">{{ num }}</a>
+            {% elif num == 1 or num == page_obj.paginator.num_pages %}
+              <a href="?page={{ num }}&type={{ worker_type }}" class="page-number">{{ num }}</a>
+            {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+              <span class="page-number" style="border: none; cursor: default;">...</span>
+            {% endif %}
+          {% endfor %}
+
+          <!-- Next button -->
           {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}&type={{ worker_type }}" class="btn">Next</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}&type={{ worker_type }}" class="btn">Last &raquo;</a>
+            <a href="?page={{ page_obj.next_page_number }}&type={{ worker_type }}" class="btn">&gt;</a>
+          {% else %}
+            <span class="btn disabled">&gt;</span>
+          {% endif %}
+
+          <!-- Last page button (>>) -->
+          {% if page_obj.number != page_obj.paginator.num_pages %}
+            <a href="?page={{ page_obj.paginator.num_pages }}&type={{ worker_type }}" class="btn">&gt;&gt;</a>
+          {% else %}
+            <span class="btn disabled">&gt;&gt;</span>
           {% endif %}
         </div>
         {% endif %}
