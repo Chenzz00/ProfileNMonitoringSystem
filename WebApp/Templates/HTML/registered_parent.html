@@ -24,13 +24,14 @@
       font-size: 14px;
       font-weight: 400;
       background: #f8f9fa;
+      max-width: 100vw;
     }
 
     .background-image {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
+      width: 100vw;
       height: 100%;
       z-index: -1;
       background-image: url('{% static "media/loginbg.png" %}');
@@ -178,6 +179,8 @@
       min-height: 100vh;
       transition: margin-left 0.3s ease;
       width: calc(100% - 280px);
+      max-width: calc(100vw - 280px);
+      overflow-x: hidden;
     }
 
     .topbar {
@@ -248,7 +251,7 @@
       position: relative;
       display: inline-block;
     }
-    
+
     #notifMenu {
       display: none;
       position: absolute;
@@ -334,13 +337,15 @@
       text-align: center;
     }
 
+    /* FIXED: Search section on one line */
     .search-section {
       display: flex;
+      flex-direction: row;
       justify-content: center;
       gap: 15px;
       margin-bottom: 25px;
       align-items: center;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
 
     .search-input {
@@ -352,6 +357,7 @@
       color: #333;
       background-color: white;
       width: 300px;
+      flex-shrink: 0;
       transition: all 0.3s ease;
     }
 
@@ -431,16 +437,18 @@
     .btn {
       background-color: #5bdab3;
       color: #1e1e2f;
-      padding: 8px 16px;
+      padding: 12px 20px;
       text-decoration: none;
       border-radius: 8px;
       font-weight: 500;
-      font-size: 12px;
+      font-size: 14px;
       transition: all 0.3s ease;
       border: none;
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
       display: inline-block;
+      flex-shrink: 0;
+      white-space: nowrap;
     }
 
     .btn:hover {
@@ -455,12 +463,12 @@
       justify-content: center;
       align-items: center;
       gap: 8px;
-      margin-top: 30px;
+      margin-top: 5px;
+      margin-bottom: 10px;
       font-family: 'Poppins', sans-serif;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 20px;
-      border-radius: 10px;
-      backdrop-filter: blur(10px);
+      background: transparent;
+      padding: 0;
+      flex-wrap: wrap;
     }
 
     .pagination-section .btn {
@@ -607,10 +615,13 @@
       to {opacity: 1;}
     }
 
+    /* Mobile Responsive */
     @media (max-width: 768px) {
       .sidebar {
         transform: translateX(-100%);
         width: 280px;
+        position: fixed;
+        z-index: 1001;
       }
 
       .sidebar.open {
@@ -620,6 +631,7 @@
       .main-content {
         margin-left: 0;
         width: 100%;
+        max-width: 100vw;
       }
 
       .mobile-toggle {
@@ -628,31 +640,42 @@
 
       .topbar {
         padding: 15px 20px;
+        width: 100%;
       }
 
       .greeting {
-        font-size: 18px;
+        font-size: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
       }
 
       .content-wrapper {
         padding: 20px 15px;
+        width: 100%;
       }
 
       .table-wrapper {
         padding: 20px;
+        width: 100%;
+        box-sizing: border-box;
       }
 
+      /* Keep search on one line on mobile too */
       .search-section {
-        flex-direction: column;
+        flex-direction: row;
         gap: 10px;
       }
       
       .search-input {
-        width: 100%;
+        width: 200px;
+        flex: 1;
+        min-width: 150px;
       }
 
       .pagination-section {
-        padding: 15px;
+        padding: 15px 0;
         gap: 6px;
       }
 
@@ -671,6 +694,43 @@
 
       table {
         min-width: 700px;
+      }
+      
+      .modal-content {
+        width: 95%;
+        margin: 10% auto;
+        padding: 20px;
+      }
+      
+      .preschooler-cards {
+        justify-content: center;
+      }
+      
+      .card {
+        width: 100%;
+        max-width: 250px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .greeting {
+        font-size: 14px;
+        max-width: 150px;
+      }
+      
+      .search-input {
+        min-width: 120px;
+      }
+      
+      .btn {
+        padding: 10px 15px;
+        font-size: 13px;
+      }
+      
+      table th,
+      table td {
+        font-size: 12px;
+        padding: 8px;
       }
     }
   </style>
@@ -806,7 +866,6 @@
         </div>
 
         <div class="search-section">
-          <label for="search-input"><strong>Search by Name:</strong></label>
           <input type="text" id="search-input" class="search-input" placeholder="Search by name..." value="{{ search_query }}">
           <button id="search-btn" class="btn">Search</button>
         </div>
