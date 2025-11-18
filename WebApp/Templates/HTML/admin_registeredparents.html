@@ -235,6 +235,7 @@
       gap: 8px;
       margin-top: 30px;
       font-family: 'Poppins', sans-serif;
+      flex-wrap: wrap;
     }
 
     .pagination-section .btn {
@@ -311,6 +312,13 @@
 
     .pagination-section .page-number.active:hover {
       transform: none;
+    }
+
+    /* Hide page numbers on mobile - controlled by JS */
+    @media (max-width: 768px) {
+      .pagination-section .page-number.hide-mobile {
+        display: none !important;
+      }
     }
 
     /* Mobile adjustments */
@@ -628,8 +636,15 @@
           </table>
         </div>
 
-        <!-- Updated Pagination with Page Numbers -->
+        <!-- Updated Pagination with Page Numbers (Limited to 10) -->
         <div class="pagination-section">
+          <!-- First page button (<<) -->
+          {% if parents.number > 1 %}
+            <a href="?page=1{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&lt;&lt;</a>
+          {% else %}
+            <span class="btn disabled">&lt;&lt;</span>
+          {% endif %}
+
           <!-- Previous button -->
           {% if parents.has_previous %}
             <a href="?page={{ parents.previous_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&lt;</a>
@@ -637,19 +652,25 @@
             <span class="btn disabled">&lt;</span>
           {% endif %}
 
-          <!-- Page numbers -->
+          <!-- Page numbers (Show max 10 pages) -->
           {% if parents.paginator.num_pages > 1 %}
-            {% for num in parents.paginator.page_range %}
-              {% if num == parents.number %}
-                <span class="page-number active">{{ num }}</span>
-              {% elif num > parents.number|add:'-3' and num < parents.number|add:'3' %}
-                <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
-              {% elif num == 1 or num == parents.paginator.num_pages %}
-                <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
-              {% elif num == parents.number|add:'-3' or num == parents.number|add:'3' %}
-                <span class="page-number" style="border: none; cursor: default;">...</span>
-              {% endif %}
-            {% endfor %}
+            {% with ''|center:parents.number as current %}
+            {% with parents.number|add:'-5' as start_page %}
+            {% with parents.number|add:'4' as end_page %}
+              {% for num in parents.paginator.page_range %}
+                {% if num >= start_page and num <= end_page and num > 0 and num <= parents.paginator.num_pages %}
+                  {% if forloop.counter0 < 10 %}
+                    {% if num == parents.number %}
+                      <span class="page-number active">{{ num }}</span>
+                    {% else %}
+                      <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
+                    {% endif %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+            {% endwith %}
+            {% endwith %}
+            {% endwith %}
           {% endif %}
 
           <!-- Next button -->
@@ -660,9 +681,9 @@
           {% endif %}
 
           <!-- Last page button (>>) -->
-          {% if parents.paginator.num_pages > 1 and parents.number != parents.paginator.num_pages %}
+          {% if parents.number < parents.paginator.num_pages %}
             <a href="?page={{ parents.paginator.num_pages }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&gt;&gt;</a>
-          {% elif parents.paginator.num_pages > 1 %}
+          {% else %}
             <span class="btn disabled">&gt;&gt;</span>
           {% endif %}
         </div>
