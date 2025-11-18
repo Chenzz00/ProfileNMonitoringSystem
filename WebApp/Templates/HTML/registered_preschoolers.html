@@ -335,6 +335,7 @@
       gap: 8px;
       margin-top: 30px;
       font-family: 'Poppins', sans-serif;
+      flex-wrap: wrap;
     }
 
     .pagination-section .btn {
@@ -411,6 +412,13 @@
 
     .pagination-section .page-number.active:hover {
       transform: none;
+    }
+
+    /* Hide page numbers on mobile - controlled by JS */
+    @media (max-width: 768px) {
+      .pagination-section .page-number.hide-mobile {
+        display: none !important;
+      }
     }
 
     /* Mobile adjustments */
@@ -765,7 +773,7 @@
           </table>
         </div>
 
-        <!-- Updated Pagination with Page Numbers (Limited to 10) -->
+        <!-- Updated Pagination with Page Numbers (Limited to 10 desktop, 3 mobile) -->
         <div class="pagination-section">
           {% if is_searching %}
             <!-- Hide pagination when searching -->
@@ -1064,6 +1072,44 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 
-  
+<!-- LIMIT PAGINATION ON MOBILE -->
+<script>
+  // Limit pagination to 3 pages on mobile
+  function limitPaginationOnMobile() {
+    const pageNumbers = document.querySelectorAll('.pagination-section .page-number');
+    const isMobile = window.innerWidth <= 768;
+    
+    if (isMobile) {
+      // Get current active page
+      const activePage = document.querySelector('.pagination-section .page-number.active');
+      if (!activePage) return;
+      
+      const activeIndex = parseInt(activePage.textContent);
+      
+      // Show only 3 pages total on mobile (1 before, current, 1 after)
+      pageNumbers.forEach(pageNum => {
+        if (!pageNum.classList.contains('active')) {
+          const pageIndex = parseInt(pageNum.textContent);
+          // Show only 1 page before and 1 page after current (total 3)
+          if (pageIndex < activeIndex - 1 || pageIndex > activeIndex + 1) {
+            pageNum.classList.add('hide-mobile');
+          } else {
+            pageNum.classList.remove('hide-mobile');
+          }
+        }
+      });
+    } else {
+      // Remove hide-mobile class on desktop
+      pageNumbers.forEach(pageNum => {
+        pageNum.classList.remove('hide-mobile');
+      });
+    }
+  }
+
+  // Call on load and resize
+  limitPaginationOnMobile();
+  window.addEventListener('resize', limitPaginationOnMobile);
+</script>
+
 </body>
 </html>
