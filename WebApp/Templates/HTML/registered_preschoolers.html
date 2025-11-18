@@ -774,6 +774,7 @@
         </div>
 
         <!-- Updated Pagination with Page Numbers (Limited to 10 desktop, 3 mobile) -->
+        <!-- Updated Pagination - Clean and Simple (Shows 1-10 initially, then sliding window) -->
         <div class="pagination-section">
           {% if is_searching %}
             <!-- Hide pagination when searching -->
@@ -792,25 +793,36 @@
               <span class="btn disabled">&lt;</span>
             {% endif %}
 
-            <!-- Page numbers (Show max 10 pages) -->
+            <!-- Page numbers logic -->
             {% if preschoolers.paginator.num_pages > 1 %}
-              {% with ''|center:preschoolers.number as current %}
-              {% with preschoolers.number|add:'-5' as start_page %}
-              {% with preschoolers.number|add:'4' as end_page %}
-                {% for num in preschoolers.paginator.page_range %}
-                  {% if num >= start_page and num <= end_page and num > 0 and num <= preschoolers.paginator.num_pages %}
-                    {% if forloop.counter0 < 10 %}
+              {% for num in preschoolers.paginator.page_range %}
+                {% comment %}
+                  Show page if:
+                  1. It's within first 10 pages AND current page <= 6
+                  2. OR it's within sliding window when current page > 6
+                {% endcomment %}
+                {% if preschoolers.number <= 6 %}
+                  {% comment %}Show pages 1-10 when on early pages{% endcomment %}
+                  {% if num <= 10 %}
+                    {% if num == preschoolers.number %}
+                      <span class="page-number active">{{ num }}</span>
+                    {% else %}
+                      <a href="?page={{ num }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="page-number">{{ num }}</a>
+                    {% endif %}
+                  {% endif %}
+                {% else %}
+                  {% comment %}Sliding window: show 10 pages centered around current{% endcomment %}
+                  {% with start=preschoolers.number|add:'-5' end=preschoolers.number|add:'4' %}
+                    {% if num >= start and num <= end %}
                       {% if num == preschoolers.number %}
                         <span class="page-number active">{{ num }}</span>
                       {% else %}
                         <a href="?page={{ num }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="page-number">{{ num }}</a>
                       {% endif %}
                     {% endif %}
-                  {% endif %}
-                {% endfor %}
-              {% endwith %}
-              {% endwith %}
-              {% endwith %}
+                  {% endwith %}
+                {% endif %}
+              {% endfor %}
             {% endif %}
 
             <!-- Next button -->
