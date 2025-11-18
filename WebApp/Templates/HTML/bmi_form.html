@@ -323,6 +323,8 @@
             font-size: 16px;
             font-weight: 500;
             cursor: pointer;
+            margin-right: 15px;
+            margin-bottom: 10px;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(91, 218, 179, 0.3);
         }
@@ -421,20 +423,6 @@
             animation: spin 1s linear infinite;
         }
 
-        .button-container {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: 100%;
-        }
-
-        .button-container button {
-            flex: 1;
-            min-width: 150px;
-            margin: 0;
-        }
-
         /* Mobile Responsive */
         @media (max-width: 768px) {
             body {
@@ -489,18 +477,15 @@
                 padding: 15px;
             }
 
+            button {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
             input[type="number"] {
                 padding: 12px 15px;
                 font-size: 16px;
-            }
-
-            .button-container {
-                flex-direction: column;
-            }
-
-            .button-container button {
-                width: 100%;
-                min-width: unset;
             }
         }
 
@@ -536,6 +521,54 @@
                 font-size: 14px;
             }
         }
+
+
+      .form-group:last-of-type {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.form-group:last-of-type button {
+    width: auto;
+    margin: 0;
+    flex: 1;
+    min-width: 150px;
+}
+
+/* Mobile View Only */
+/* Mobile View Only */
+@media (max-width: 768px) {
+    .form-group:last-of-type {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .form-group:last-of-type button {
+        width: 100%;
+        min-width: unset;
+        padding: 15px 30px;
+        margin: 0;
+        position: relative;
+        padding-left: 50px;
+    }
+
+    /* Hamburger lines */
+    .form-group:last-of-type button::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    width: 24px;
+    height: 2px;
+    background-color: white;
+    top: 50%;
+    transform: translateY(-12px);
+    box-shadow: 0 8px 0 white, 0 16px 0 white;
+}
+}
     </style>
 </head>
 <body>
@@ -612,16 +645,24 @@
                 </div>
 
                 <div class="button-container">
-                    <button type="button" id="refresh-data" class="refresh-btn button1" disabled>
-                        Check for ESP32 Data
-                    </button>
-                    <button type="button" id="clear-esp32-data" class="clear-btn button1" disabled>
-                        Clear ESP32 Data
-                    </button>
-                    <button type="submit" class="button1" disabled>
-                        Submit BMI & Temperature
-                    </button>
-                </div>
+
+    <div class="top-button-row">
+        <button type="button" id="refresh-data" class="refresh-btn button1" disabled>
+            Check for ESP32 Data
+        </button>
+    </div>
+
+    <div class="bottom-button-row">
+        <button type="button" id="clear-esp32-data" class="clear-btn button1" disabled>
+            Clear ESP32 Data
+        </button>
+
+        <button type="submit" class="button1" disabled>
+            Submit BMI & Temperature
+        </button>
+    </div>
+
+</div>
 
             </form>
         </div>
@@ -1029,15 +1070,16 @@
         console.log('Dynamic Multi-Device BMI Form script loaded');
     </script>
 
-    <script>
-        document.getElementById('temperature').addEventListener('input', function(e) {
-            let value = e.target.value;
-            // Allow only numbers and one decimal point
-            if (value.includes('.')) {
-                let parts = value.split('.');
-                e.target.value = parts[0] + '.' + parts[1].substring(0, 1);
-            }
-        });
-    </script>
+
+<script>
+    document.getElementById('temperature').addEventListener('input', function(e) {
+    let value = e.target.value;
+    // Allow only numbers and one decimal point
+    if (value.includes('.')) {
+        let parts = value.split('.');
+        e.target.value = parts[0] + '.' + parts[1].substring(0, 1);
+    }
+});
+</script>
 </body>
 </html>
