@@ -6498,93 +6498,134 @@ def registered_bns(request):
     })
 
 
-@admin_required
-def registered_preschoolers(request):
-    preschoolers_qs = (
-        Preschooler.objects.filter(is_archived=False)
-        .select_related('parent_id', 'barangay')
-        .prefetch_related(
-            Prefetch('bmi_set', queryset=BMI.objects.order_by('-date_recorded'), to_attr='bmi_records'),
-            Prefetch('temperature_set', queryset=Temperature.objects.order_by('-date_recorded'), to_attr='temp_records')
-        )
-        .order_by('first_name', 'last_name')
-    )
+def register_preschooler(request):
+    """Register preschooler with proper barangay filtering and global search"""
+    
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    # AUTO-ARCHIVE CHECK - Run before showing registration
+    auto_archived_count = auto_archive_aged_preschoolers()
+    if auto_archived_count > 0:
+        print(f"AUTO-ARCHIVED: {auto_archived_count} preschoolers during registration view")
 
-    today = date.today()
-
-    # --- Compute nutritional status and delivery class ---
-    for p in preschoolers_qs:
-        # Calculate nutritional status
-        latest_bmi = p.bmi_records[0] if hasattr(p, 'bmi_records') and p.bmi_records else None
-
-        if latest_bmi:
+    # Get user's barangay using consistent logic
+    user_barangay = get_user_barangay(request.user)
+    current_user_info = None
+    
+    if request.user.is_authenticated:
+        # Try each model to find the user and get their info
+        try:
+            account = Account.objects.select_related('barangay').get(email=request.user.email)
+            current_user_info = {
+                'model': 'Account',
+                'name': account.full_name,
+                'role': account.user_role,
+                'object': account
+            }
+        except Account.DoesNotExist:
             try:
-                birth_date = p.birth_date
-                age_years = today.year - birth_date.year
-                age_months = today.month - birth_date.month
-                if today.day < birth_date.day:
-                    age_months -= 1
-                if age_months < 0:
-                    age_years -= 1
-                    age_months += 12
-                total_age_months = age_years * 12 + age_months
+                bhw = BHW.objects.select_related('barangay').get(email=request.user.email)
+                current_user_info = {
+                    'model': 'BHW',
+                    'name': bhw.full_name,
+                    'role': 'BHW',
+                    'object': bhw
+                }
+            except BHW.DoesNotExist:
+                try:
+                    bns = BNS.objects.select_related('barangay').get(email=request.user.email)
+                    current_user_info = {
+                        'model': 'BNS',
+                        'name': bns.full_name,
+                        'role': 'BNS',
+                        'object': bns
+                    }
+                except BNS.DoesNotExist:
+                    try:
+                        midwife = Midwife.objects.select_related('barangay').get(email=request.user.email)
+                        current_user_info = {
+                            'model': 'Midwife',
+                            'name': midwife.full_name,
+                            'role': 'Midwife',
+                            'object': midwife
+                        }
+                    except Midwife.DoesNotExist:
+                        try:
+                            nurse = Nurse.objects.select_related('barangay').get(email=request.user.email)
+                            current_user_info = {
+                                'model': 'Nurse',
+                                'name': nurse.full_name,
+                                'role': 'Nurse',
+                                'object': nurse
+                            }
+                        except Nurse.DoesNotExist:
+                            print("DEBUG: User not found in any authorized user model")
 
-                bmi_value = calculate_bmi(latest_bmi.weight, latest_bmi.height)
-                z = bmi_zscore(p.sex, total_age_months, bmi_value)
-                p.nutritional_status = classify_bmi_for_age(z)
-            except Exception as e:
-                print(f"⚠️ BMI classification error for preschooler {p.id}: {e}")
-                p.nutritional_status = "N/A"
-        else:
-            p.nutritional_status = "N/A"
+    # Validate that user exists and has proper authorization
+    if not current_user_info:
+        messages.error(request, "You are not authorized to register preschoolers. Please contact the administrator.")
+        return redirect('dashboard')
 
-        # Set delivery class for row coloring
-        delivery_place = getattr(p, 'place_of_delivery', None)
-        if delivery_place == 'Center to Center':
-            p.delivery_class = 'delivery-center'
-        elif delivery_place == 'Private/Lying-in':
-            p.delivery_class = 'delivery-lying-in'
-        elif delivery_place == 'Public Hospital':
-            p.delivery_class = 'delivery-hospital'
-        elif delivery_place == 'Others':
-            p.delivery_class = 'delivery-others'
-        else:
-            p.delivery_class = 'delivery-na'
+    # Validate that user has a barangay assigned
+    if not user_barangay:
+        messages.error(request, f"No barangay assigned to your {current_user_info['role']} account. Please contact the administrator to assign a barangay before registering preschoolers.")
+        return redirect('dashboard')
 
-    # Convert to list for filtering
-    preschoolers_qs = list(preschoolers_qs)
+    # Validate user role permissions (only for Account model)
+    if current_user_info['model'] == 'Account':
+        user_role_lower = current_user_info['role'].lower()
+        is_authorized = (
+            'bhw' in user_role_lower or 
+            'health worker' in user_role_lower or
+            'bns' in user_role_lower or 
+            'nutritional' in user_role_lower or 
+            'nutrition' in user_role_lower or
+            'scholar' in user_role_lower or
+            'midwife' in user_role_lower or
+            'admin' in user_role_lower
+        )
+        
+        if not is_authorized:
+            messages.error(request, f"Your role '{current_user_info['role']}' is not authorized to register preschoolers. Only BHW, BNS, Midwife, or Admin roles can register preschoolers.")
+            return redirect('dashboard')
 
-    # ✅ FILTER BY NUTRITIONAL STATUS (if provided)
-    filter_status = request.GET.get('status', 'All')
-    if filter_status and filter_status != 'All':
-        preschoolers_qs = [p for p in preschoolers_qs if p.nutritional_status == filter_status]
+    # Get parents from the SAME barangay only - no cross-barangay registration
+    parents_qs = Parent.objects.filter(barangay=user_barangay).order_by('-created_at')
 
-    # ✅ GLOBAL SEARCH - Search by preschooler name ONLY
+    # ✅ GLOBAL SEARCH - Search by parent name ACROSS ALL DATA
     search_query = request.GET.get('search', '').strip()
     is_searching = False
     
     if search_query:
         is_searching = True
         search_lower = search_query.lower()
-        preschoolers_qs = [
-            p for p in preschoolers_qs 
-            if search_lower in f"{p.first_name} {p.last_name}".lower()
-        ]
+        parents_qs = parents_qs.filter(
+            Q(first_name__icontains=search_query) | 
+            Q(last_name__icontains=search_query) |
+            Q(full_name__icontains=search_query) |
+            Q(email__icontains=search_query)
+        )
 
-    # ✅ Pagination after filtering and sorting
-    paginator = Paginator(preschoolers_qs, 10)
+    # Debug: Show which parents were found
+    for parent in parents_qs[:5]:  # Show first 5 for debugging
+        print(f"DEBUG: Parent: {parent.full_name} ({parent.email}) - Barangay: {parent.barangay}")
+
+    # ✅ Pagination AFTER searching
+    paginator = Paginator(parents_qs, 10)  # Show 10 parents per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    barangays = Barangay.objects.all()
-
-    return render(request, 'HTML/registered_preschoolers.html', {
-        'preschoolers': page_obj,
-        'barangays': barangays,
-        'filter_status': filter_status,
+    context = {
+        'account': current_user_info['object'],
+        'parents': page_obj,
+        'user_barangay': user_barangay,
+        'current_user_info': current_user_info,
         'search_query': search_query,
         'is_searching': is_searching,
-    })
+    }
+
+    return render(request, 'HTML/register_preschooler.html', context)
 
 def reportTemplate(request):
     if not request.user.is_authenticated:
@@ -11193,6 +11234,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
