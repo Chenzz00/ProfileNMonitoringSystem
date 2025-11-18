@@ -3762,7 +3762,6 @@ def parents_mypreschooler(request, preschooler_id):
     if latest_bmi:
         sex = preschooler.sex.lower()
         try:
-            # Compute BMI value (if not stored directly in DB)
             bmi_value = latest_bmi.bmi_value if hasattr(latest_bmi, 'bmi_value') else calculate_bmi(latest_bmi.weight, latest_bmi.height)
 
             if sex in ['female', 'girl', 'f']:
@@ -3774,7 +3773,6 @@ def parents_mypreschooler(request, preschooler_id):
                 height_for_age_status = classify_height_for_age(total_age_months, latest_bmi.height, HEIGHT_REF_BOYS)
                 weight_for_height_status = classify_weight_for_height(latest_bmi.height, latest_bmi.weight, WFH_BOYS)
 
-            # Use z-score for nutritional status
             z = bmi_zscore(preschooler.sex, total_age_months, bmi_value)
             nutritional_status = classify_bmi_for_age(z)
 
@@ -3782,25 +3780,37 @@ def parents_mypreschooler(request, preschooler_id):
             print(f"⚠️ Error during BMI classification for preschooler {preschooler.id}: {e}")
             nutritional_status = preschooler.nutritional_status or "N/A"
 
-    # --- Immunization history ---
-    immunization_records = preschooler.vaccination_schedules.filter(
-        confirmed_by_parent=True,
+    # --- Immunization History (using VaccinationSchedule model) ---
+    from .models import VaccinationSchedule
+    
+    completed_vaccination_history = VaccinationSchedule.objects.filter(
+        preschooler=preschooler,
         status='completed'
-    ).order_by('vaccine_name', 'scheduled_date')
+    ).order_by('vaccine_name', 'completion_date')
 
+    # Transform for template display
     immunization_history = []
-    vaccine_dose_counter = defaultdict(int)
-
-    for record in immunization_records:
-        vaccine_dose_counter[record.vaccine_name] += 1
+    for record in completed_vaccination_history:
         immunization_history.append({
+            'id': record.id,
             'vaccine_name': record.vaccine_name,
-            'doses': f"{vaccine_dose_counter[record.vaccine_name]}/{record.required_doses}",
-            'given_date': record.scheduled_date,
+            'dose_number': getattr(record, 'dose_number', 1) or 1,
+            'required_doses': getattr(record, 'required_doses', 1) or 1,
+            'completion_date': record.completion_date or record.scheduled_date,
+            'scheduled_date': record.scheduled_date,
+            'medical_remarks': getattr(record, 'medical_remarks', '') or '',
+            'status': record.status,
+            'get_status_display': record.get_status_display(),
         })
 
+    # --- Pending schedules (for vaccine card modal) ---
+    pending_schedules = VaccinationSchedule.objects.filter(
+        preschooler=preschooler,
+        status__in=['scheduled', 'rescheduled', 'pending']
+    ).exclude(status='completed').order_by('scheduled_date')
+
     # --- Nutrition services ---
-    nutrition_services = preschooler.nutrition_services.all().order_by('-completion_date')
+    nutrition_services = preschooler.nutrition_services.all().order_by('-completion_date') if hasattr(preschooler, 'nutrition_services') else []
 
     # --- Parent account ---
     account = get_object_or_404(Account, email=request.user.email)
@@ -3811,17 +3821,18 @@ def parents_mypreschooler(request, preschooler_id):
         'age_years': age_years,
         'age_months': age_months,
         'age_days': age_days,
+        'total_age_months': total_age_months,
         'latest_bmi': latest_bmi,
         'bmi_value': bmi_value,
         'weight_for_age_status': weight_for_age_status,
         'height_for_age_status': height_for_age_status,
         'weight_for_height_status': weight_for_height_status,
         'nutritional_status': nutritional_status,
-        'immunization_history': immunization_history,
+        'immunization_history': immunization_history,  
+        'completed_vaccination_history': immunization_history,  
+        'pending_schedules': pending_schedules,  
         'nutrition_services': nutrition_services,
     })
-
-
 
 @login_required
 def add_vaccine(request, preschooler_id):
@@ -11182,6 +11193,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
