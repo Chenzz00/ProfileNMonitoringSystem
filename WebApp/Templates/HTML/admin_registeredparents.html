@@ -129,17 +129,17 @@
 
     .search-input:focus {
       outline: none;
-      border-color: #5bdab3;
-      box-shadow: 0 0 0 3px rgba(91, 218, 179, 0.15);
+      border-color: #3cb4ac;
+      box-shadow: 0 0 0 3px rgba(60, 180, 172, 0.15);
     }
 
     .search-input:hover {
-      border-color: #5bdab3;
+      border-color: #3cb4ac;
     }
 
     .btn {
-      background-color: #5bdab3;
-      color: #1e1e2f;
+      background-color: #3cb4ac;
+      color: white;
       padding: 12px 20px;
       text-decoration: none;
       border-radius: 8px;
@@ -148,15 +148,15 @@
       transition: all 0.3s ease;
       border: none;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
+      box-shadow: 0 2px 6px rgba(60, 180, 172, 0.3);
       display: inline-block;
     }
 
     .btn:hover {
-      background-color: #1565c0;
+      background-color: #2d9388;
       color: white;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+      box-shadow: 0 4px 12px rgba(45, 147, 136, 0.4);
     }
 
     /* Enhanced table container with horizontal scrolling */
@@ -167,7 +167,7 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
       -webkit-overflow-scrolling: touch;
       scrollbar-width: thin;
-      scrollbar-color: #5bdab3 #f0f0f0;
+      scrollbar-color: #3cb4ac #f0f0f0;
     }
 
     /* Custom scrollbar for webkit browsers */
@@ -181,12 +181,12 @@
     }
 
     .table-container::-webkit-scrollbar-thumb {
-      background: #5bdab3;
+      background: #3cb4ac;
       border-radius: 4px;
     }
 
     .table-container::-webkit-scrollbar-thumb:hover {
-      background: #1565c0;
+      background: #2d9388;
     }
 
     table {
@@ -224,32 +224,93 @@
     }
 
     .parent-row:hover td {
-      background-color: rgba(91, 218, 179, 0.1);
+      background-color: rgba(60, 180, 172, 0.1);
     }
 
-    /* Pagination */
+    /* Pagination - Enhanced styled buttons */
     .pagination-section {
-      text-align: center;
-      margin-top: 20px;
-      color: #333;
-      font-size: 14px;
-      font-weight: 400;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 30px;
       font-family: 'Poppins', sans-serif;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 20px;
-      border-radius: 10px;
-      backdrop-filter: blur(10px);
-    }
-
-    .pagination-section span {
-      margin: 0 15px;
-      color: #666;
     }
 
     .pagination-section .btn {
-      margin: 0 5px;
-      padding: 12px 20px;
+      background: #3cb4ac;
+      color: white;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
       font-size: 14px;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(60, 180, 172, 0.3);
+    }
+
+    .pagination-section .btn:hover:not(.disabled) {
+      background: #2d9388;
+      color: white;
+      border-color: transparent;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(45, 147, 136, 0.4);
+    }
+
+    .pagination-section .btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: #f5f5f5;
+      border-color: #e0e0e0;
+      color: #999;
+      box-shadow: none;
+    }
+
+    .pagination-section .page-number {
+      background: white;
+      color: #666;
+      padding: 10px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      border: 2px solid #e0e0e0;
+      cursor: pointer;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .pagination-section .page-number:hover {
+      background: #f8f9fa;
+      border-color: #3cb4ac;
+      color: #3cb4ac;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(60, 180, 172, 0.2);
+    }
+
+    .pagination-section .page-number.active {
+      background: #3cb4ac;
+      color: white;
+      border-color: transparent;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(60, 180, 172, 0.4);
+      cursor: default;
+    }
+
+    .pagination-section .page-number.active:hover {
+      transform: none;
     }
 
     /* Mobile adjustments */
@@ -292,9 +353,17 @@
         padding: 15px;
       }
 
-      .pagination-section span {
+      .pagination-section .btn {
+        font-size: 12px;
+        padding: 8px 12px;
+        min-width: 35px;
+        height: 35px;
+      }
+
+      .pagination-section .page-number {
+        min-width: 35px;
+        height: 35px;
         font-size: 13px;
-        margin: 0 10px;
       }
     }
 
@@ -368,7 +437,8 @@
       <div class="nav-item">
         <button class="nav-link" onclick="location.href='/registered-barangays/'">
           <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
           </svg>
           Barangay List
         </button>
@@ -558,17 +628,42 @@
           </table>
         </div>
 
+        <!-- Updated Pagination with Page Numbers -->
         <div class="pagination-section">
+          <!-- Previous button -->
           {% if parents.has_previous %}
-            <a href="?page={{ parents.previous_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">Previous</a>
+            <a href="?page={{ parents.previous_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&lt;</a>
+          {% else %}
+            <span class="btn disabled">&lt;</span>
           {% endif %}
 
+          <!-- Page numbers -->
           {% if parents.paginator.num_pages > 1 %}
-            <span>Page {{ parents.number }} of {{ parents.paginator.num_pages }}</span>
+            {% for num in parents.paginator.page_range %}
+              {% if num == parents.number %}
+                <span class="page-number active">{{ num }}</span>
+              {% elif num > parents.number|add:'-3' and num < parents.number|add:'3' %}
+                <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
+              {% elif num == 1 or num == parents.paginator.num_pages %}
+                <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
+              {% elif num == parents.number|add:'-3' or num == parents.number|add:'3' %}
+                <span class="page-number" style="border: none; cursor: default;">...</span>
+              {% endif %}
+            {% endfor %}
           {% endif %}
 
+          <!-- Next button -->
           {% if parents.has_next %}
-            <a href="?page={{ parents.next_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">Next</a>
+            <a href="?page={{ parents.next_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&gt;</a>
+          {% else %}
+            <span class="btn disabled">&gt;</span>
+          {% endif %}
+
+          <!-- Last page button (>>) -->
+          {% if parents.paginator.num_pages > 1 and parents.number != parents.paginator.num_pages %}
+            <a href="?page={{ parents.paginator.num_pages }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&gt;&gt;</a>
+          {% elif parents.paginator.num_pages > 1 %}
+            <span class="btn disabled">&gt;&gt;</span>
           {% endif %}
         </div>
       </div>
