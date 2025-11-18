@@ -866,67 +866,49 @@
       window.addEventListener('resize', handleScrollHints);
     });
 
-    function filterLogs() {
-      const searchValue = document.getElementById('search-input').value.toLowerCase();
-      const dateValue = document.getElementById('date-input').value;
-      const parentRows = document.querySelectorAll("#parent-log-body tr");
-      const preschoolerRows = document.querySelectorAll("#preschooler-log-body tr");
+   function filterLogs() {
+  const searchValue = document.getElementById('search-input').value.toLowerCase();
+  const dateValue = document.getElementById('date-input').value;
+  const parentRows = document.querySelectorAll("#parent-log-body tr");
+  const preschoolerRows = document.querySelectorAll("#preschooler-log-body tr");
 
-      function filterRow(row) {
-        const cols = row.querySelectorAll("td");
-        if (cols.length === 0) return;
+  function filterRow(row) {
+    const cols = row.querySelectorAll("td");
+    if (cols.length === 0) return;
+    const name = cols[0].innerText.toLowerCase();
+    const activity = cols[1].innerText.toLowerCase();
+    const dateText = cols[cols.length - 1].innerText;
+    const matchesSearch = name.includes(searchValue) || activity.includes(searchValue);
+    const matchesDate = !dateValue || dateText.includes(new Date(dateValue).toLocaleDateString('en-US', {
+      month: 'long', day: '2-digit', year: 'numeric'
+    }));
+    row.style.display = matchesSearch && matchesDate ? '' : 'none';
+  }
 
-        const name = cols[0].innerText.toLowerCase();
-        const activity = cols[1].innerText.toLowerCase();
-        const dateText = cols[cols.length - 1].innerText;
+  // Remove existing "no data" rows first
+  document.querySelectorAll('.no-data')?.forEach(el => el.parentElement.remove());
 
-        const matchesSearch = name.includes(searchValue) || activity.includes(searchValue);
-        const matchesDate = !dateValue || dateText.includes(new Date(dateValue).toLocaleDateString('en-US', {
-          month: 'long', day: '2-digit', year: 'numeric'
-        }));
+  parentRows.forEach(filterRow);
+  preschoolerRows.forEach(filterRow);
+}
 
-        row.style.display = matchesSearch && matchesDate ? '' : 'none';
+function updateValidationBadge() {
+  fetch("{% url 'pending-validation-count' %}")
+    .then(response => response.json())
+    .then(data => {
+      const badge = document.getElementById("validation-badge");
+      if (data.pending_count > 0) {
+        badge.textContent = data.pending_count;
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
       }
-
-      function checkNoData(rows, tableId, colspan, message) {
-        const visible = Array.from(rows).filter(r => r.style.display !== 'none');
-        const tableBody = document.getElementById(tableId);
-        const existing = tableBody.querySelector('.no-data');
-
-        if (visible.length === 0 && !existing) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td colspan="${colspan}" class="no-data">${message}</td>`;
-          tableBody.appendChild(tr);
-        } else if (visible.length > 0 && existing) {
-          existing.parentElement.remove();
-        }
-      }
-
-      parentRows.forEach(filterRow);
-      preschoolerRows.forEach(filterRow);
-
-      checkNoData(parentRows, 'parent-log-body', 4, 'No parent activity yet.');
-      checkNoData(preschoolerRows, 'preschooler-log-body', 5, 'No preschooler activity yet.');
-    }
-
-    function updateValidationBadge() {
-    fetch("{% url 'pending-validation-count' %}")
-        .then(response => response.json())
-        .then(data => {
-            const badge = document.getElementById("validation-badge");
-            if (data.pending_count > 0) {
-                badge.textContent = data.pending_count;
-                badge.style.display = "inline-block";
-            } else {
-                badge.style.display = "none";
-            }
-        })
-        .catch(error => console.error("Error fetching pending count:", error));
+    })
+    .catch(error => console.error("Error fetching pending count:", error));
 }
 
 // Update every 5 seconds
 setInterval(updateValidationBadge, 5000);
-
 // Run immediately on load
 updateValidationBadge();
   </script>
@@ -979,3 +961,4 @@ if (generateReportBtn) {
 
 </body>
 </html>
+
