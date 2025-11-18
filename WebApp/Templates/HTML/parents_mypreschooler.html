@@ -1197,44 +1197,63 @@
       
 
       <!-- RESPONSIVE VACCINE TABLE with Bootstrap -->
-    <div class="table-responsive">
-      <table class="vaccine-table table table-bordered table-hover">
-        <thead>
-          <tr>
-            <th style="min-width: 150px;">Vaccine</th>
-            <th style="min-width: 80px;">Doses</th>
-            <th style="min-width: 120px;">Date of Vaccination<br><small style="font-weight: normal;">MM/DD/YY</small></th>
-            <th style="min-width: 100px;">Status</th>
-            <th style="min-width: 150px;">Remarks</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Completed vaccinations from Immunization model -->
-          {% for record in completed_vaccination_history %}
-          <tr>
-            <td>{{ record.vaccine_name }}</td>
-            <td>Dose {{ record.dose_number }} of {{ record.required_doses|default:"?" }}</td>
-            <td>{{ record.date_administered|date:"m/d/Y" }}</td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="5" class="text-center fst-italic text-muted">
-              No completed vaccinations recorded yet
-            </td>
-          </tr>
-          {% endfor %}
-          
-          <!-- Pending/Upcoming from VaccinationSchedule -->
-          {% if vaccination_schedules %}
-          <tr>
-            <td colspan="5" style="background: #f0f8ff; padding: 10px;" class="text-center fst-italic text-primary">
-              Additional scheduled vaccinations: {{ vaccination_schedules|length }} appointment(s) pending
-            </td>
-          </tr>
-          {% endif %}
-        </tbody>
-      </table>
-    </div>
+   <div class="table-responsive">
+  <table class="vaccine-table table table-bordered table-hover">
+    <thead>
+      <tr>
+        <th style="min-width: 150px;">Vaccine</th>
+        <th style="min-width: 80px;">Doses</th>
+        <th style="min-width: 120px;">Date of Vaccination<br><small style="font-weight: normal;">MM/DD/YY</small></th>
+        <th style="min-width: 100px;">Status</th>
+        <th style="min-width: 150px;">Remarks</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Only show COMPLETED immunizations, not scheduled ones -->
+      {% for h in immunization_history %}
+        {% if h.status == 'completed' %}
+        <tr>
+          <td class="vaccine-name">{{ h.vaccine_name }}</td>
+          <td><span class="dose-badge">{{ h.dose_number }}</span> / {{ h.required_doses }}</td>
+          <td>
+            <input type="date" 
+                  value="{{ h.completion_date|date:'Y-m-d' }}" 
+                  readonly 
+                  style="pointer-events: none; background: transparent; border: none;">
+          </td>
+          <td>
+            <input type="text" 
+                  value="Completed" 
+                  readonly 
+                  style="pointer-events: none; background: transparent; border: none;">
+          </td>
+          <td>
+            <input type="text" 
+                  value="{{ h.medical_remarks }}" 
+                  readonly 
+                  style="pointer-events: none; background: transparent; border: none;">
+          </td>
+        </tr>
+        {% endif %}
+      {% empty %}
+      <tr>
+        <td colspan="5" style="text-align: center; font-style: italic; color: #666;">
+          No completed vaccinations recorded yet
+        </td>
+      </tr>
+      {% endfor %}
+      
+      <!-- Show pending schedules if any -->
+      {% if pending_schedules %}
+      <tr>
+        <td colspan="5" style="background: #f0f8ff; padding: 10px; text-align: center; font-style: italic; color: #1565c0;">
+          Additional scheduled vaccinations: {{ pending_schedules|length }} appointment(s) pending
+        </td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
 
     <p class="modal-note">
       This is a read-only view of the child's immunization record. All completed vaccinations are displayed above.
@@ -1260,7 +1279,7 @@
           <tr>
             <td>{{ record.vaccine_name }}</td>
             <td>Dose {{ record.dose_number }} of {{ record.required_doses|default:"?" }}</td>
-            <td>{{ record.date_administered|date:"m/d/Y" }}</td>
+            <td>{{ record.completion_date|date:"m/d/Y" }}</td>
           </tr>
           {% empty %}
           <tr>
