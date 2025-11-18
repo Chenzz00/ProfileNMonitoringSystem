@@ -521,6 +521,21 @@
                 font-size: 14px;
             }
         }
+
+
+        .form-group:last-of-type {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.form-group:last-of-type button {
+    width: auto;
+    margin: 0;
+    flex: 1;
+    min-width: 150px;
+}
     </style>
 </head>
 <body>
@@ -596,9 +611,13 @@
                     <span id="temp-source" class="data-source" style="display: none;">ESP32</span>
                 </div>
 
-                <button type="button" id="refresh-data" class="refresh-btn button1" disabled>Check for ESP32 Data</button>
-                <button type="button" id="clear-esp32-data" class="clear-btn button1" disabled>Clear ESP32 Data</button>
-                <button type="submit" class="button1" disabled>Submit BMI & Temperature</button>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+    <button type="button" id="refresh-data" class="refresh-btn button1" disabled>Check for ESP32 Data</button>
+    <div style="display: flex; gap: 15px; flex: 1;">
+        <button type="button" id="clear-esp32-data" class="clear-btn button1" disabled>Clear ESP32 Data</button>
+        <button type="submit" class="button1" disabled>Submit BMI & Temperature</button>
+    </div>
+</div>
             </form>
         </div>
     </div>
@@ -1005,7 +1024,8 @@
         console.log('Dynamic Multi-Device BMI Form script loaded');
     </script>
 
-    <script>
+
+<script>
     document.getElementById('temperature').addEventListener('input', function(e) {
     let value = e.target.value;
     // Allow only numbers and one decimal point
@@ -1017,6 +1037,3 @@
 </script>
 </body>
 </html>
-
-
-
