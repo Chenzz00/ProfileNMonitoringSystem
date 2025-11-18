@@ -1032,12 +1032,29 @@
     <script>
         document.getElementById('temperature').addEventListener('input', function(e) {
             let value = e.target.value;
-            // Allow only numbers and one decimal point
+            
+            // Remove any non-numeric characters except decimal point
+            value = value.replace(/[^0-9.]/g, '');
+            
+            // Ensure only one decimal point
             if (value.includes('.')) {
                 let parts = value.split('.');
-                e.target.value = parts[0] + '.' + parts[1].substring(0, 1);
+                value = parts[0] + '.' + parts[1].substring(0, 1);
+            }
+            
+            e.target.value = value;
+        });
+
+        // Before form submission, ensure temperature is rounded to 1 decimal
+        document.getElementById('bmi-form').addEventListener('submit', function(e) {
+            const tempInput = document.getElementById('temperature');
+            if (tempInput.value) {
+                // Round to 1 decimal place
+                let temp = parseFloat(tempInput.value);
+                tempInput.value = temp.toFixed(1);
             }
         });
     </script>
 </body>
 </html>
+
