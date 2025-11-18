@@ -743,12 +743,7 @@
         }
 
 
-        function formatTemperature(value) {
-            if (!value) return '';
-            let temp = parseFloat(value);
-            if (isNaN(temp)) return '';
-            return temp.toFixed(1);
-        }
+        
         function checkForESP32Data() {
             if (!selectedDeviceId) {
                 console.log('CHECK: No device selected');
@@ -764,10 +759,12 @@
                     const statusIndicator = document.getElementById('status-indicator');
                     
                     if (data.status === 'success' && data.data) {
+                        // Update form inputs with ESP32 data
                         const weightInput = document.getElementById('weight');
                         const heightInput = document.getElementById('height');
                         const tempInput = document.getElementById('temperature');
                         
+                        // Set values only if they exist and form inputs are empty
                         if (data.data.weight && !weightInput.value) {
                             weightInput.value = data.data.weight;
                             weightInput.classList.add('esp32-data');
@@ -778,13 +775,13 @@
                             heightInput.classList.add('esp32-data');
                             document.getElementById('height-source').style.display = 'block';
                         }
-                        // FORMAT TEMPERATURE TO 1 DECIMAL FROM ESP32
                         if (data.data.temperature && !tempInput.value) {
-                            tempInput.value = formatTemperature(data.data.temperature);
+                            tempInput.value = data.data.temperature;
                             tempInput.classList.add('esp32-data');
                             document.getElementById('temp-source').style.display = 'block';
                         }
                         
+                        // Update status based on completeness
                         if (data.is_complete) {
                             statusIndicator.className = 'status-indicator status-complete';
                             statusIndicator.innerHTML = `
@@ -793,10 +790,13 @@
                             `;
                             hasReceivedCompleteData = true;
                             
+                            // Stop auto-refresh since we have complete data
                             if (autoRefreshInterval) {
                                 clearInterval(autoRefreshInterval);
                             }
+                            
                         } else {
+                            // Partial data received
                             statusIndicator.className = 'status-indicator status-partial';
                             let receivedData = [];
                             if (data.has_bmi_data) receivedData.push('BMI');
@@ -807,6 +807,7 @@
                                 <small>Still waiting for: ${data.waiting_for.join(', ')}</small>
                             `;
                         }
+                        
                     } else if (data.status === 'no_data') {
                         statusIndicator.className = 'status-indicator status-waiting';
                         statusIndicator.textContent = `Waiting for data from ${data.device_name || selectedDeviceId}... Make sure the device is connected and sending data.`;
@@ -1032,34 +1033,13 @@
 
     <script>
         document.getElementById('temperature').addEventListener('input', function(e) {
-    let value = e.target.value;
-    
-    // Remove any non-numeric characters except decimal point
-    value = value.replace(/[^0-9.]/g, '');
-    
-    // Handle multiple decimal points - keep only first one
-    let parts = value.split('.');
-    if (parts.length > 2) {
-        value = parts[0] + '.' + parts[1];
-    }
-    
-    // Limit to 1 decimal place after the dot
-    if (value.includes('.')) {
-        let [wholePart, decimalPart] = value.split('.');
-        value = wholePart + '.' + decimalPart.substring(0, 1);
-    }
-    
-    e.target.value = value;
-});
-
-// Before form submission, ensure ALL temperatures are exactly 1 decimal
-document.getElementById('bmi-form').addEventListener('submit', function(e) {
-    const tempInput = document.getElementById('temperature');
-    if (tempInput.value) {
-        // Format to exactly 1 decimal place
-        tempInput.value = formatTemperature(tempInput.value);
-    }
-});
+            let value = e.target.value;
+            // Allow only numbers and one decimal point
+            if (value.includes('.')) {
+                let parts = value.split('.');
+                e.target.value = parts[0] + '.' + parts[1].substring(0, 1);
+            }
+        });
     </script>
 </body>
 </html>
