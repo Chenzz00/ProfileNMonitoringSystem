@@ -809,17 +809,17 @@
                 <!-- Check if it's a vaccination or nutrition service -->
                 {% if schedule.vaccine_name %}
                   <!-- Vaccination Schedule -->
-                  <p>💉 {{ schedule.vaccine_name }}</p>
-                  <p>📅 {{ schedule.scheduled_date|date:"M d, Y" }}</p>
+                  <p> • {{ schedule.vaccine_name }}</p>
+                  <p> • {{ schedule.scheduled_date|date:"M d, Y" }}</p>
                   {% if schedule.next_vaccine_schedule %}
-                    <p>📆 Next: {{ schedule.next_vaccine_schedule|date:"M d, Y" }}</p>
+                    <p> • Next: {{ schedule.next_vaccine_schedule|date:"M d, Y" }}</p>
                   {% endif %}
                 {% else %}
                   <!-- Nutrition Service -->
-                  <p>🥗 {{ schedule.service_type }}</p>
-                  <p>📅 {{ schedule.scheduled_date|date:"M d, Y" }}</p>
+                  <p> • {{ schedule.service_type }}</p>
+                  <p> • {{ schedule.scheduled_date|date:"M d, Y" }}</p>
                   {% if schedule.doses %}
-                    <p>📊 Dose: {{ schedule.doses }}/{{ schedule.required_doses }}</p>
+                    <p> • Dose: {{ schedule.doses }}/{{ schedule.required_doses }}</p>
                   {% endif %}
                 {% endif %}
                 
@@ -1073,6 +1073,7 @@
       });
     {% endif %}
   </script>
+
 
 
 
