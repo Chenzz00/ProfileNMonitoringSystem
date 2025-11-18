@@ -667,10 +667,11 @@
           </div>
 
           <!-- Updated Parent Pagination with Page Numbers -->
+          <!-- Pagination - Clean and Simple (Shows 1-10 initially, then sliding window) -->
           {% if parent_logs %}
           <div class="pagination-section">
             <!-- First page button (<<) -->
-            {% if parent_logs.number != 1 %}
+            {% if parent_logs.number > 1 %}
               <a href="?parent_page=1" class="btn">&lt;&lt;</a>
             {% else %}
               <span class="btn disabled">&lt;&lt;</span>
@@ -683,17 +684,34 @@
               <span class="btn disabled">&lt;</span>
             {% endif %}
 
-            <!-- Page numbers -->
+            <!-- Page numbers logic -->
             {% if parent_logs.paginator.num_pages > 1 %}
               {% for num in parent_logs.paginator.page_range %}
-                {% if num == parent_logs.number %}
-                  <span class="page-number active">{{ num }}</span>
-                {% elif num > parent_logs.number|add:'-3' and num < parent_logs.number|add:'3' %}
-                  <a href="?parent_page={{ num }}" class="page-number">{{ num }}</a>
-                {% elif num == 1 or num == parent_logs.paginator.num_pages %}
-                  <a href="?parent_page={{ num }}" class="page-number">{{ num }}</a>
-                {% elif num == parent_logs.number|add:'-3' or num == parent_logs.number|add:'3' %}
-                  <span class="page-number" style="border: none; cursor: default;">...</span>
+                {% comment %}
+                  Show page if:
+                  1. It's within first 10 pages AND current page <= 6
+                  2. OR it's within sliding window when current page > 6
+                {% endcomment %}
+                {% if parent_logs.number <= 6 %}
+                  {% comment %}Show pages 1-10 when on early pages{% endcomment %}
+                  {% if num <= 10 %}
+                    {% if num == parent_logs.number %}
+                      <span class="page-number active">{{ num }}</span>
+                    {% else %}
+                      <a href="?parent_page={{ num }}" class="page-number">{{ num }}</a>
+                    {% endif %}
+                  {% endif %}
+                {% else %}
+                  {% comment %}Sliding window: show 10 pages centered around current{% endcomment %}
+                  {% with start=parent_logs.number|add:'-5' end=parent_logs.number|add:'4' %}
+                    {% if num >= start and num <= end %}
+                      {% if num == parent_logs.number %}
+                        <span class="page-number active">{{ num }}</span>
+                      {% else %}
+                        <a href="?parent_page={{ num }}" class="page-number">{{ num }}</a>
+                      {% endif %}
+                    {% endif %}
+                  {% endwith %}
                 {% endif %}
               {% endfor %}
             {% endif %}
@@ -706,7 +724,7 @@
             {% endif %}
 
             <!-- Last page button (>>) -->
-            {% if parent_logs.number != parent_logs.paginator.num_pages %}
+            {% if parent_logs.number < parent_logs.paginator.num_pages %}
               <a href="?parent_page={{ parent_logs.paginator.num_pages }}" class="btn">&gt;&gt;</a>
             {% else %}
               <span class="btn disabled">&gt;&gt;</span>
