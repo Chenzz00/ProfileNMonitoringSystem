@@ -1333,291 +1333,236 @@
   </div>
 
   <script>
-    // Mobile sidebar toggle
-    function initializeMobileToggle() {
-      const mobileToggle = document.getElementById("mobileToggle");
-      const sidebar = document.getElementById("sidebar");
-      const sidebarOverlay = document.getElementById("sidebarOverlay");
+  // ==================== HELPER FUNCTIONS ====================
+  function initializeMobileToggle() {
+    const mobileToggle = document.getElementById("mobileToggle");
+    const sidebar = document.getElementById("sidebar");
+    const sidebarOverlay = document.getElementById("sidebarOverlay");
 
-      if (mobileToggle) {
-        mobileToggle.addEventListener("click", () => {
-          sidebar.classList.toggle("open");
-          sidebarOverlay.classList.toggle("active");
-        });
-
-        sidebarOverlay.addEventListener("click", () => {
-          sidebar.classList.remove("open");
-          sidebarOverlay.classList.remove("active");
-        });
-      }
-    }
-
-    // Initialize Notifications
-    function initializeNotifications() {
-      const notifBtn = document.getElementById("notifBtn");
-      const notifMenu = document.getElementById("notifMenu");
-      const notifDot = document.getElementById("notifDot");
-
-      const latestNotifTimestampStr = "{{ latest_notif_timestamp|default:'' }}";
-      const latestNotifTimestamp = latestNotifTimestampStr ? new Date(latestNotifTimestampStr) : null;
-      const lastReadStr = localStorage.getItem("lastReadNotifTimestamp");
-      const lastRead = lastReadStr ? new Date(lastReadStr) : null;
-
-      if (latestNotifTimestamp && (!lastRead || latestNotifTimestamp > lastRead)) {
-        notifDot.style.display = "inline-block";
-      }
-
-      if (notifBtn && notifMenu) {
-        notifBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          notifMenu.style.display = notifMenu.style.display === "block" ? "none" : "block";
-          notifDot.style.display = "none";
-          if (latestNotifTimestamp) {
-            localStorage.setItem('lastReadNotifTimestamp', latestNotifTimestamp.toISOString());
-          }
-        });
-
-        document.addEventListener("click", (e) => {
-          if (!e.target.closest(".notif-dropdown")) {
-            notifMenu.style.display = "none";
-          }
-        });
-      }
-    }
-
-    // Initialize Event Listeners
-    function initializeEventListeners() {
-      // Logout confirmation
-      document.getElementById("logoutLink")?.addEventListener("click", function(e) {
-        e.preventDefault();
-        Swal.fire({
-          title: 'Are you sure you want to logout?',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#d33',
-          cancelButtonColor: '#3085d6',
-          confirmButtonText: 'Yes, logout',
-          cancelButtonText: 'Cancel'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            window.location.href = "/logout/";
-          }
-        });
+    if (mobileToggle) {
+      mobileToggle.addEventListener("click", () => {
+        sidebar.classList.toggle("open");
+        sidebarOverlay.classList.toggle("active");
       });
 
-      // Nutrition Report
-      document.getElementById("nutritionReportBtn")?.addEventListener("click", function(e) {
-        e.preventDefault();
-        Swal.fire({
-          title: 'Select Month for Nutrition Report',
-          input: 'month',
-          showCancelButton: true,
-          confirmButtonColor: '#3498db',
-          cancelButtonColor: '#aaa',
-          confirmButtonText: 'Download Excel',
-          cancelButtonText: 'Cancel',
-          inputValidator: (value) => {
-            if (!value) {
-              return 'Please select a month first!';
-            }
+      sidebarOverlay.addEventListener("click", () => {
+        sidebar.classList.remove("open");
+        sidebarOverlay.classList.remove("active");
+      });
+    }
+  }
+
+  function initializeNotifications() {
+    const notifBtn = document.getElementById("notifBtn");
+    const notifMenu = document.getElementById("notifMenu");
+    const notifDot = document.getElementById("notifDot");
+
+    const latestNotifTimestampStr = "{{ latest_notif_timestamp|default:'' }}";
+    const latestNotifTimestamp = latestNotifTimestampStr ? new Date(latestNotifTimestampStr) : null;
+    const lastReadStr = localStorage.getItem("lastReadNotifTimestamp");
+    const lastRead = lastReadStr ? new Date(lastReadStr) : null;
+
+    if (latestNotifTimestamp && (!lastRead || latestNotifTimestamp > lastRead)) {
+      notifDot.style.display = "inline-block";
+    }
+
+    if (notifBtn && notifMenu) {
+      notifBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        notifMenu.style.display = notifMenu.style.display === "block" ? "none" : "block";
+        notifDot.style.display = "none";
+        if (latestNotifTimestamp) {
+          localStorage.setItem('lastReadNotifTimestamp', latestNotifTimestamp.toISOString());
+        }
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".notif-dropdown")) {
+          notifMenu.style.display = "none";
+        }
+      });
+    }
+  }
+
+  function initializeEventListeners() {
+    document.getElementById("logoutLink")?.addEventListener("click", function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Are you sure you want to logout?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, logout',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "/logout/";
+        }
+      });
+    });
+
+    document.getElementById("nutritionReportBtn")?.addEventListener("click", function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Select Month for Nutrition Report',
+        input: 'month',
+        showCancelButton: true,
+        confirmButtonColor: '#3498db',
+        cancelButtonColor: '#aaa',
+        confirmButtonText: 'Download Excel',
+        cancelButtonText: 'Cancel',
+        inputValidator: (value) => {
+          if (!value) {
+            return 'Please select a month first!';
           }
-        }).then((result) => {
-          if (result.isConfirmed) {
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          Swal.fire({
+            title: 'Generating Report...',
+            text: 'Please wait while we prepare your Excel file.',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+
+          const downloadUrl = "/generate-nutrition-excel/?month=" + result.value;
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = 'nutrition-report.xlsx';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          setTimeout(() => {
             Swal.fire({
-              title: 'Generating Report...',
-              text: 'Please wait while we prepare your Excel file.',
-              icon: 'info',
-              allowOutsideClick: false,
-              showConfirmButton: false,
-              didOpen: () => {
-                Swal.showLoading();
-              }
+              title: 'Download Started!',
+              text: 'Your nutrition report Excel file is being downloaded.',
+              icon: 'success',
+              timer: 3000,
+              showConfirmButton: false
             });
-
-            const downloadUrl = "/generate-nutrition-excel/?month=" + result.value;
-            
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.download = 'nutrition-report.xlsx';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            setTimeout(() => {
-              Swal.fire({
-                title: 'Download Started!',
-                text: 'Your nutrition report Excel file is being downloaded.',
-                icon: 'success',
-                timer: 3000,
-                showConfirmButton: false
-              });
-            }, 2000);
-          }
-        });
+          }, 2000);
+        }
       });
+    });
 
-      // Immunization Report
-      document.getElementById("immunizationReportBtn")?.addEventListener("click", function(e) {
-        e.preventDefault();
-        Swal.fire({
-          title: 'Select Month for Immunization Report',
-          input: 'month',
-          showCancelButton: true,
-          confirmButtonColor: '#e74c3c',
-          cancelButtonColor: '#aaa',
-          confirmButtonText: 'Generate Report',
-          cancelButtonText: 'Cancel',
-          inputValidator: (value) => {
-            if (!value) {
-              return 'Please select a month first!';
-            }
+    document.getElementById("immunizationReportBtn")?.addEventListener("click", function(e) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Select Month for Immunization Report',
+        input: 'month',
+        showCancelButton: true,
+        confirmButtonColor: '#e74c3c',
+        cancelButtonColor: '#aaa',
+        confirmButtonText: 'Generate Report',
+        cancelButtonText: 'Cancel',
+        inputValidator: (value) => {
+          if (!value) {
+            return 'Please select a month first!';
           }
-        }).then((result) => {
-          if (result.isConfirmed) {
-            const url = "{% url 'generate_immunization_report' %}?month=" + result.value;
-            window.open(url, "_blank");
-          }
-        });
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const url = "{% url 'generate_immunization_report' %}?month=" + result.value;
+          window.open(url, "_blank");
+        }
       });
+    });
+  }
+
+  // ==================== MAIN INITIALIZATION ====================
+  document.addEventListener("DOMContentLoaded", function () {
+    initializeMobileToggle();
+    initializeNotifications();
+    initializeEventListeners();
+
+    // ==================== MODAL SETUP ====================
+    const modal = document.getElementById("registerModal");
+    const closeButton = document.querySelector(".close-button");
+    const modalParentName = document.getElementById("modalParentName");
+    const hiddenParentInput = document.getElementById("hidden_parent_name");
+    const hiddenParentIdInput = document.getElementById("hidden_parent_id");
+    const form = document.getElementById("registerForm");
+    const birthdateInput = document.getElementById("child_birthdate");
+
+    // Calculate date constraints for 0-59 months age range
+    const maxBirthDate = new Date();
+    const minBirthDate = new Date();
+    minBirthDate.setMonth(minBirthDate.getMonth() - 59);
+    
+    birthdateInput.min = minBirthDate.toISOString().split("T")[0];
+    birthdateInput.max = maxBirthDate.toISOString().split("T")[0];
+
+    // Function to calculate age in months
+    function calculateAgeInMonths(birthDate, referenceDate = new Date()) {
+      let ageInMonths = (referenceDate.getFullYear() - birthDate.getFullYear()) * 12 + 
+                        (referenceDate.getMonth() - birthDate.getMonth());
+      
+      if (referenceDate.getDate() < birthDate.getDate()) {
+        ageInMonths -= 1;
+      }
+      return ageInMonths;
     }
 
-    // Main functionality
-    document.addEventListener("DOMContentLoaded", function () {
-      initializeMobileToggle();
-      initializeNotifications();
-      initializeEventListeners();
-
-      const modal = document.getElementById("registerModal");
-      const closeButton = document.querySelector(".close-button");
-      const modalParentName = document.getElementById("modalParentName");
-      const hiddenParentInput = document.getElementById("hidden_parent_name");
-      const hiddenParentIdInput = document.getElementById("hidden_parent_id");
-      const form = document.getElementById("registerForm");
-      const birthdateInput = document.getElementById("child_birthdate");
-      const searchInput = document.getElementById("parentSearch");
-      const clearButton = document.getElementById("clearSearch");
-      const searchButton = document.getElementById("searchBtn");
-      const noResults = document.getElementById("noResults");
-
-      // Calculate date constraints for 0-59 months age range
-      const today = new Date();
+    // Real-time birthdate validation
+    birthdateInput.addEventListener('change', function() {
+      const selectedDate = new Date(this.value);
+      const ageInMonths = calculateAgeInMonths(selectedDate);
       
-      // Maximum date is today
-      const maxBirthDate = new Date();
-      
-      // Minimum date is 59 months ago
-      const minBirthDate = new Date();
-      minBirthDate.setMonth(minBirthDate.getMonth() - 59);
-      
-      // Set date constraints
-      birthdateInput.min = minBirthDate.toISOString().split("T")[0];
-      birthdateInput.max = maxBirthDate.toISOString().split("T")[0];
-
-      // Function to calculate age in months
-      function calculateAgeInMonths(birthDate, referenceDate = new Date()) {
-        let ageInMonths = (referenceDate.getFullYear() - birthDate.getFullYear()) * 12 + 
-                          (referenceDate.getMonth() - birthDate.getMonth());
-        
-        if (referenceDate.getDate() < birthDate.getDate()) {
-          ageInMonths -= 1;
-        }
-        return ageInMonths;
-      }
-
-      // Real-time birthdate validation
-      birthdateInput.addEventListener('change', function() {
-        const selectedDate = new Date(this.value);
-        const ageInMonths = calculateAgeInMonths(selectedDate);
-        
-        if (ageInMonths < 0) {
-          Swal.fire({
-            title: 'Invalid Birthdate',
-            text: 'Birthdate cannot be in the future.',
-            icon: 'warning'
-          });
-          this.value = '';
-          return;
-        }
-        
-        if (ageInMonths > 59) {
-          const years = Math.floor(ageInMonths / 12);
-          const months = ageInMonths % 12;
-          Swal.fire({
-            title: 'Child Too Old',
-            text: `This child is ${ageInMonths} months old (${years} years, ${months} months). Only children aged 0-59 months (0-4 years, 11 months) can be registered as preschoolers.`,
-            icon: 'warning'
-          });
-          this.value = '';
-          return;
-        }
-      });
-
-      let selectedRow = null;
-      let selectedParentName = "";
-      let selectedParentId = "";
-
-      // Real-time search functionality
-      function performSearch() {
-        const keyword = searchInput.value.trim().toLowerCase();
-        let hasVisibleResults = false;
-
-        // Search table rows
-        document.querySelectorAll(".parent-row").forEach(row => {
-          if (row.querySelector('td')) { // Skip empty message rows
-            const name = row.getAttribute("data-parent").toLowerCase();
-            const address = row.cells[4].textContent.toLowerCase(); // Also search address
-            const matches = name.includes(keyword) || address.includes(keyword);
-            
-            if (matches || keyword === '') {
-              row.classList.remove('hidden');
-              row.style.display = '';
-              hasVisibleResults = true;
-            } else {
-              row.classList.add('hidden');
-              row.style.display = 'none';
-            }
-          }
+      if (ageInMonths < 0) {
+        Swal.fire({
+          title: 'Invalid Birthdate',
+          text: 'Birthdate cannot be in the future.',
+          icon: 'warning'
         });
-
-        // Show/hide no results message
-        if (keyword && !hasVisibleResults) {
-          noResults.style.display = 'block';
-        } else {
-          noResults.style.display = 'none';
-        }
-
-        // Show/hide clear button
-        if (keyword) {
-          clearButton.classList.add('show');
-        } else {
-          clearButton.classList.remove('show');
-        }
+        this.value = '';
+        return;
       }
-
-      // Real-time search as user types
-      searchInput.addEventListener('input', performSearch);
       
-      // Clear search functionality
-      clearButton.addEventListener('click', function() {
-        searchInput.value = '';
-        performSearch();
-        searchInput.focus();
-      });
+      if (ageInMonths > 59) {
+        const years = Math.floor(ageInMonths / 12);
+        const months = ageInMonths % 12;
+        Swal.fire({
+          title: 'Child Too Old',
+          text: `This child is ${ageInMonths} months old (${years} years, ${months} months). Only children aged 0-59 months (0-4 years, 11 months) can be registered as preschoolers.`,
+          icon: 'warning'
+        });
+        this.value = '';
+        return;
+      }
+    });
 
-      // Allow clearing search with Escape key
-      searchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-          searchInput.value = '';
-          performSearch();
-        }
-      });
+    let selectedRow = null;
+    let selectedParentName = "";
+    let selectedParentId = "";
 
-      // Search button functionality
-      searchButton.addEventListener("click", function () {
-        performSearch();
-      });
+    // ==================== MODAL OPEN/CLOSE ====================
+    function openModal() {
+      modalParentName.textContent = selectedParentName;
+      hiddenParentInput.value = selectedParentName;
+      hiddenParentIdInput.value = selectedParentId;
+      modal.classList.add("show");
+    }
 
-      // Table row selection
+    closeButton.onclick = () => {
+      modal.classList.remove("show");
+      form.reset();
+    };
+
+    window.onclick = (e) => {
+      if (e.target === modal) {
+        modal.classList.remove("show");
+        form.reset();
+      }
+    };
+
+    // ==================== TABLE ROW CLICK HANDLERS ====================
+    function attachRowClickHandlers() {
       document.querySelectorAll(".parent-row").forEach((row) => {
         row.addEventListener("click", function (e) {
           e.preventDefault();
@@ -1629,63 +1574,103 @@
           selectedParentName = this.getAttribute("data-parent");
           selectedParentId = this.getAttribute("data-id");
 
+          console.log("Parent selected:", {
+            name: selectedParentName,
+            id: selectedParentId
+          });
+
           openModal();
         });
       });
+    }
 
-     function openModal() {
-  modalParentName.textContent = selectedParentName;
-  hiddenParentInput.value = selectedParentName;
-  hiddenParentIdInput.value = selectedParentId;
-  modal.classList.add("show");  // Only this—CSS handles display: flex and opacity
-}
+    attachRowClickHandlers();
 
-closeButton.onclick = () => {
-  modal.classList.remove("show");  // CSS handles fade-out and revert to display: none
-};
+    // ==================== GLOBAL SEARCH ====================
+    const searchInput = document.getElementById("search-input");
+    const searchBtn = document.getElementById("search-btn");
 
-window.onclick = (e) => {
-  if (e.target === modal) {
-    modal.classList.remove("show");
-  }
-};
+    searchBtn.addEventListener("click", function () {
+      const searchTerm = searchInput.value.trim();
+      let url = window.location.pathname;
+      const params = new URLSearchParams();
 
-// Helper function to capitalize first letter of each word
-function capitalizeFirstLetter(str) {
-  if (!str) return str;
-  return str
-    .split(/\s+/)
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
-}
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
 
-// Validate name input - letters, ñ, Ñ, and spaces only
-function validateNameInput(inputElement) {
-  inputElement.addEventListener("input", function () {
-    let value = this.value.replace(/[^A-Za-zñÑ\s]/g, "").replace(/\s+/g, " ").trimStart();
-    // Auto-capitalize in real-time
-    this.value = capitalizeFirstLetter(value);
-  });
-}
+      if (params.toString()) {
+        window.location.href = url + '?' + params.toString();
+      } else {
+        window.location.href = url;
+      }
+    });
 
-// Validate text input - letters, numbers, ñ, Ñ, spaces, commas, periods, and hyphens
-function validateTextInput(inputElement) {
-  inputElement.addEventListener("input", function () {
-    let value = this.value.replace(/[^A-Za-z0-9ñÑ\s,.-]/g, "").replace(/\s+/g, " ").trimStart();
-    // Auto-capitalize in real-time
-    this.value = capitalizeFirstLetter(value);
-  });
-}
+    searchInput.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") searchBtn.click();
+    });
 
-// Apply validation to modal form fields
-validateNameInput(document.getElementById("child_first_name"));
-validateNameInput(document.getElementById("child_middle_name"));
-validateNameInput(document.getElementById("child_last_name"));
-validateNameInput(document.getElementById("child_suffix"));
-validateTextInput(document.getElementById("place_of_birth"));
+    // ==================== UPDATE PAGINATION LINKS ====================
+    function updatePaginationLinks() {
+      const searchQuery = "{{ search_query }}";
+      const paginationLinks = document.querySelectorAll('.pagination-section a');
 
-form.addEventListener("submit", async function (e) {
-  e.preventDefault();
+      paginationLinks.forEach(link => {
+        let href = link.getAttribute('href');
+        href = href.split('?')[0];
+
+        const pageMatch = link.textContent.match(/\d+/);
+        if (pageMatch && link.classList.contains('page-number')) {
+          href += '?page=' + pageMatch[0];
+        } else if (link.href.includes('page=')) {
+          const pageNum = new URLSearchParams(link.search).get('page');
+          if (pageNum) {
+            href += '?page=' + pageNum;
+          }
+        }
+
+        if (searchQuery) {
+          href += '&search=' + encodeURIComponent(searchQuery);
+        }
+
+        link.setAttribute('href', href);
+      });
+    }
+
+    updatePaginationLinks();
+
+    // ==================== FORM INPUT VALIDATION ====================
+    function capitalizeFirstLetter(str) {
+      if (!str) return str;
+      return str
+        .split(/\s+/)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    }
+
+    function validateNameInput(inputElement) {
+      inputElement.addEventListener("input", function () {
+        let value = this.value.replace(/[^A-Za-zñÑ\s]/g, "").replace(/\s+/g, " ").trimStart();
+        this.value = capitalizeFirstLetter(value);
+      });
+    }
+
+    function validateTextInput(inputElement) {
+      inputElement.addEventListener("input", function () {
+        let value = this.value.replace(/[^A-Za-z0-9ñÑ\s,.-]/g, "").replace(/\s+/g, " ").trimStart();
+        this.value = capitalizeFirstLetter(value);
+      });
+    }
+
+    validateNameInput(document.getElementById("child_first_name"));
+    validateNameInput(document.getElementById("child_middle_name"));
+    validateNameInput(document.getElementById("child_last_name"));
+    validateNameInput(document.getElementById("child_suffix"));
+    validateTextInput(document.getElementById("place_of_birth"));
+
+    // ==================== FORM SUBMISSION ====================
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
 
       const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
       const firstName = document.getElementById("child_first_name").value.trim();
@@ -1734,7 +1719,6 @@ form.addEventListener("submit", async function (e) {
         return Swal.fire('Missing Place of Delivery', 'Please select the place of delivery.', 'warning');
       }
 
-      // Additional age validation before submission
       const selectedBirthDate = new Date(birthdate);
       const ageInMonths = calculateAgeInMonths(selectedBirthDate);
 
@@ -1752,7 +1736,6 @@ form.addEventListener("submit", async function (e) {
         });
       }
 
-      // Validate numerical values
       if (parseFloat(birthWeight) <= 0) {
         return Swal.fire('Invalid Birth Weight', 'Birth weight must be greater than 0.', 'warning');
       }
@@ -1790,9 +1773,6 @@ form.addEventListener("submit", async function (e) {
         if (result.status === "success") {
           form.reset();
           modal.classList.remove("show");
-          setTimeout(() => {
-            modal.style.display = "none";
-          }, 100);
 
           const ageMonths = result.data.age_months || 0;
           const years = Math.floor(ageMonths / 12);
@@ -1814,73 +1794,7 @@ form.addEventListener("submit", async function (e) {
       }
     });
   });
-  </script>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-  // ✅ GLOBAL SEARCH AND FILTERING
-  const searchInput = document.getElementById("search-input");
-  const searchBtn = document.getElementById("search-btn");
-
-  // Search button → redirects (search whole DB or clear if empty)
-  searchBtn.addEventListener("click", function () {
-    const searchTerm = searchInput.value.trim();
-
-    // Build URL with search parameters
-    let url = window.location.pathname;
-    const params = new URLSearchParams();
-
-    if (searchTerm) {
-      params.append('search', searchTerm);
-    }
-
-    // Redirect with parameters
-    if (params.toString()) {
-      window.location.href = url + '?' + params.toString();
-    } else {
-      window.location.href = url;
-    }
-  });
-
-  // Enter key performs search
-  searchInput.addEventListener("keypress", function (e) {
-    if (e.key === "Enter") searchBtn.click();
-  });
-
-  // ✅ UPDATE PAGINATION LINKS TO PRESERVE SEARCH
-  function updatePaginationLinks() {
-    const searchQuery = "{{ search_query }}";
-    const paginationLinks = document.querySelectorAll('.pagination-section a');
-
-    paginationLinks.forEach(link => {
-      let href = link.getAttribute('href');
-      
-      // Remove existing search parameters
-      href = href.split('?')[0];
-
-      // Add page number if exists
-      const pageMatch = link.textContent.match(/\d+/);
-      if (pageMatch && link.classList.contains('page-number')) {
-        href += '?page=' + pageMatch[0];
-      } else if (link.href.includes('page=')) {
-        const pageNum = new URLSearchParams(link.search).get('page');
-        if (pageNum) {
-          href += '?page=' + pageNum;
-        }
-      }
-
-      // Re-add search parameters
-      if (searchQuery) {
-        href += '&search=' + encodeURIComponent(searchQuery);
-      }
-
-      link.setAttribute('href', href);
-    });
-  }
-
-  updatePaginationLinks();
-});
-  </script>
+</script>
 
 </body>
 </html>
