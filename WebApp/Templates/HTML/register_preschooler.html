@@ -1097,16 +1097,41 @@
 
     <!-- Content Wrapper -->
     <div class="content-wrapper container-fluid">
-      <div class="page-content">
+    <div class="page-content">
+
         <div class="header-bar d-flex flex-wrap justify-content-between align-items-center mb-3">
-          <h2>Register Preschooler</h2>
-          <div class="search-bar d-flex flex-wrap align-items-center">
-            <div class="search-icon">🔍</div>
-            <input type="text" id="parentSearch" class="form-control" placeholder="Search parent name..." />
-            <button type="button" class="clear-search" id="clearSearch" title="Clear search">×</button>
-            <button id="searchBtn" type="button" class="btn btn-primary ms-2">Search</button>
-          </div>
+            <h2>Register Preschooler</h2>
+
+            <!-- 🔍 NEW SEARCH SECTION HERE -->
+            <div class="search-section" style="display: flex; justify-content: center; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 0;">
+              
+              <div class="search-group" style="display: flex; align-items: center; gap: 10px;">
+                <label for="search-input" style="font-weight: 500; color: #333; font-size: 14px; white-space: nowrap;">
+                  <strong>Search by Parent Name (All Pages):</strong>
+                </label>
+
+                <input 
+                  type="text" 
+                  id="search-input" 
+                  class="search-input" 
+                  placeholder="Search by parent name..."
+                  style="padding: 12px 15px; border-radius: 8px; border: 1px solid #e6e6e6; 
+                         font-size: 14px; font-family: 'Poppins', sans-serif; color: #333;
+                         background-color: white; transition: all 0.3s ease; min-width: 250px;">
+              </div>
+
+              <button 
+                id="search-btn" 
+                class="btn btn-primary" 
+                style="padding: 12px 20px; font-size: 14px;">
+                Search
+              </button>
+
+            </div>
+            <!-- END NEW SEARCH SECTION -->
+
         </div>
+
 
         <!-- Table Container -->
          <div class="table-responsive table-container">
@@ -1143,13 +1168,64 @@
         </div>
 
       <!-- Pagination Section -->
-       <div class="pagination-section text-center mt-3">
-        {% if parents.has_previous %}
-          <a href="?page={{ parents.previous_page_number }}" class="btn btn-secondary">Previous</a>
-        {% endif %}
-        <span>Page {{ parents.number }} of {{ parents.paginator.num_pages }}</span>
-        {% if parents.has_next %}
-          <a href="?page={{ parents.next_page_number }}" class="btn btn-secondary">Next</a>
+      <div class="pagination-section text-center mt-3">
+        {% if is_searching %}
+          <!-- Hide pagination when searching -->
+        {% else %}
+          {% if parents %}
+            <!-- First page button (<<) -->
+            {% if parents.number > 1 %}
+              <a href="?page=1{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&lt;&lt;</a>
+            {% else %}
+              <span class="btn disabled">&lt;&lt;</span>
+            {% endif %}
+
+            <!-- Previous button -->
+            {% if parents.has_previous %}
+              <a href="?page={{ parents.previous_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&lt;</a>
+            {% else %}
+              <span class="btn disabled">&lt;</span>
+            {% endif %}
+
+            <!-- Page numbers -->
+            {% if parents.paginator.num_pages > 1 %}
+              {% for num in parents.paginator.page_range %}
+                {% if parents.number <= 6 %}
+                  {% if num <= 10 %}
+                    {% if num == parents.number %}
+                      <span class="page-number active">{{ num }}</span>
+                    {% else %}
+                      <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
+                    {% endif %}
+                  {% endif %}
+                {% else %}
+                  {% with start=parents.number|add:'-5' end=parents.number|add:'4' %}
+                    {% if num >= start and num <= end %}
+                      {% if num == parents.number %}
+                        <span class="page-number active">{{ num }}</span>
+                      {% else %}
+                        <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
+                      {% endif %}
+                    {% endif %}
+                  {% endwith %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+
+            <!-- Next button -->
+            {% if parents.has_next %}
+              <a href="?page={{ parents.next_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&gt;</a>
+            {% else %}
+              <span class="btn disabled">&gt;</span>
+            {% endif %}
+
+            <!-- Last page button (>>) -->
+            {% if parents.number < parents.paginator.num_pages %}
+              <a href="?page={{ parents.paginator.num_pages }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&gt;&gt;</a>
+            {% else %}
+              <span class="btn disabled">&gt;&gt;</span>
+            {% endif %}
+          {% endif %}
         {% endif %}
       </div>
     </div>
@@ -1738,6 +1814,72 @@ form.addEventListener("submit", async function (e) {
       }
     });
   });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+  // ✅ GLOBAL SEARCH AND FILTERING
+  const searchInput = document.getElementById("search-input");
+  const searchBtn = document.getElementById("search-btn");
+
+  // Search button → redirects (search whole DB or clear if empty)
+  searchBtn.addEventListener("click", function () {
+    const searchTerm = searchInput.value.trim();
+
+    // Build URL with search parameters
+    let url = window.location.pathname;
+    const params = new URLSearchParams();
+
+    if (searchTerm) {
+      params.append('search', searchTerm);
+    }
+
+    // Redirect with parameters
+    if (params.toString()) {
+      window.location.href = url + '?' + params.toString();
+    } else {
+      window.location.href = url;
+    }
+  });
+
+  // Enter key performs search
+  searchInput.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") searchBtn.click();
+  });
+
+  // ✅ UPDATE PAGINATION LINKS TO PRESERVE SEARCH
+  function updatePaginationLinks() {
+    const searchQuery = "{{ search_query }}";
+    const paginationLinks = document.querySelectorAll('.pagination-section a');
+
+    paginationLinks.forEach(link => {
+      let href = link.getAttribute('href');
+      
+      // Remove existing search parameters
+      href = href.split('?')[0];
+
+      // Add page number if exists
+      const pageMatch = link.textContent.match(/\d+/);
+      if (pageMatch && link.classList.contains('page-number')) {
+        href += '?page=' + pageMatch[0];
+      } else if (link.href.includes('page=')) {
+        const pageNum = new URLSearchParams(link.search).get('page');
+        if (pageNum) {
+          href += '?page=' + pageNum;
+        }
+      }
+
+      // Re-add search parameters
+      if (searchQuery) {
+        href += '&search=' + encodeURIComponent(searchQuery);
+      }
+
+      link.setAttribute('href', href);
+    });
+  }
+
+  updatePaginationLinks();
+});
   </script>
 
 </body>
