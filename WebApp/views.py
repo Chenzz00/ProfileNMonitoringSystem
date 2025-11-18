@@ -9549,7 +9549,7 @@ def add_announcement(request):
     if request.method == 'POST':
         title = request.POST.get('title')
         content = request.POST.get('content')
-        is_active = request.POST.get('is_active') == 'on'
+        is_active = True
         image = request.FILES.get('image', None)
         
         if title and content:
@@ -9602,7 +9602,7 @@ def edit_announcement(request, announcement_id):
     if request.method == 'POST':
         announcement.title = request.POST.get('title')
         announcement.content = request.POST.get('content')
-        announcement.is_active = request.POST.get('is_active') == 'on'
+        announcement.is_active = True
         announcement.updated_at = timezone.now()
         
         # Handle image replacement - only if a new image is uploaded
@@ -11182,6 +11182,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
