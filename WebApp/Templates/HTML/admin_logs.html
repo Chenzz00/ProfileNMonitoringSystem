@@ -265,47 +265,90 @@
       font-style: italic;
     }
 
-    /* Pagination */
+    /* Pagination - Enhanced styled buttons */
     .pagination-section {
-      text-align: center;
-      margin-top: 20px;
-      color: #333;
-      font-size: 14px;
-      font-weight: 400;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 30px;
       font-family: 'Poppins', sans-serif;
     }
 
-    .pagination-section span {
-      margin: 0 15px;
-      color: #666;
-    }
-
     .pagination-section .btn {
-      margin: 0 5px;
-      padding: 12px 20px;
-      font-size: 14px;
-    }
-
-    .btn {
-      background-color: #5bdab3;
+      background: #5bdab3;
       color: #1e1e2f;
-      padding: 8px 16px;
+      padding: 10px 16px;
       text-decoration: none;
       border-radius: 8px;
-      font-weight: 500;
-      font-size: 12px;
+      font-weight: 600;
+      font-size: 14px;
       transition: all 0.3s ease;
       border: none;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
-      display: inline-block;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(91, 218, 179, 0.3);
     }
 
-    .btn:hover {
-      background-color: #1565c0;
+    .pagination-section .btn:hover:not(.disabled) {
+      background: #1565c0;
       color: white;
+      border-color: transparent;
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    }
+
+    .pagination-section .btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: #f5f5f5;
+      border-color: #e0e0e0;
+      color: #999;
+      box-shadow: none;
+    }
+
+    .pagination-section .page-number {
+      background: white;
+      color: #666;
+      padding: 10px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      border: 2px solid #e0e0e0;
+      cursor: pointer;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .pagination-section .page-number:hover {
+      background: #f8f9fa;
+      border-color: #5bdab3;
+      color: #5bdab3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(91, 218, 179, 0.2);
+    }
+
+    .pagination-section .page-number.active {
+      background: #5bdab3;
+      color: white;
+      border-color: transparent;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(91, 218, 179, 0.4);
+      cursor: default;
+    }
+
+    .pagination-section .page-number.active:hover {
+      transform: none;
     }
 
     /* Mobile adjustments */
@@ -355,13 +398,17 @@
         font-size: 13px;
       }
 
-      .pagination-section {
-        font-size: 13px;
+      .pagination-section .btn {
+        font-size: 12px;
+        padding: 8px 12px;
+        min-width: 35px;
+        height: 35px;
       }
 
-      .pagination-section span {
+      .pagination-section .page-number {
+        min-width: 35px;
+        height: 35px;
         font-size: 13px;
-        margin: 0 10px;
       }
     }
 
@@ -619,18 +666,53 @@
             </table>
           </div>
 
-          <!-- Parent Pagination -->
+          <!-- Updated Parent Pagination with Page Numbers -->
+          {% if parent_logs %}
           <div class="pagination-section">
-            {% if parent_logs.has_previous %}
-              <a href="?parent_page={{ parent_logs.previous_page_number }}" class="btn">Previous</a>
+            <!-- First page button (<<) -->
+            {% if parent_logs.number != 1 %}
+              <a href="?parent_page=1" class="btn">&lt;&lt;</a>
+            {% else %}
+              <span class="btn disabled">&lt;&lt;</span>
             {% endif %}
 
-            <span>Page {{ parent_logs.number }} of {{ parent_logs.paginator.num_pages }}</span>
+            <!-- Previous button -->
+            {% if parent_logs.has_previous %}
+              <a href="?parent_page={{ parent_logs.previous_page_number }}" class="btn">&lt;</a>
+            {% else %}
+              <span class="btn disabled">&lt;</span>
+            {% endif %}
 
+            <!-- Page numbers -->
+            {% if parent_logs.paginator.num_pages > 1 %}
+              {% for num in parent_logs.paginator.page_range %}
+                {% if num == parent_logs.number %}
+                  <span class="page-number active">{{ num }}</span>
+                {% elif num > parent_logs.number|add:'-3' and num < parent_logs.number|add:'3' %}
+                  <a href="?parent_page={{ num }}" class="page-number">{{ num }}</a>
+                {% elif num == 1 or num == parent_logs.paginator.num_pages %}
+                  <a href="?parent_page={{ num }}" class="page-number">{{ num }}</a>
+                {% elif num == parent_logs.number|add:'-3' or num == parent_logs.number|add:'3' %}
+                  <span class="page-number" style="border: none; cursor: default;">...</span>
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+
+            <!-- Next button -->
             {% if parent_logs.has_next %}
-              <a href="?parent_page={{ parent_logs.next_page_number }}" class="btn">Next</a>
+              <a href="?parent_page={{ parent_logs.next_page_number }}" class="btn">&gt;</a>
+            {% else %}
+              <span class="btn disabled">&gt;</span>
+            {% endif %}
+
+            <!-- Last page button (>>) -->
+            {% if parent_logs.number != parent_logs.paginator.num_pages %}
+              <a href="?parent_page={{ parent_logs.paginator.num_pages }}" class="btn">&gt;&gt;</a>
+            {% else %}
+              <span class="btn disabled">&gt;&gt;</span>
             {% endif %}
           </div>
+          {% endif %}
         </div>
 
         
@@ -875,15 +957,7 @@ if (generateReportBtn) {
     });
   });
 }
-
-
-
-
 </script>
 
 </body>
 </html>
-
-
-
-
