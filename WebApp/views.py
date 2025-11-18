@@ -6194,7 +6194,94 @@ This is an automated message. Please do not reply.
     # GET request - show registration form
     return render(request, 'HTML/register.html', {'barangays': Barangay.objects.all()})
 
+@admin_required
+def registered_preschoolers(request):
+    preschoolers_qs = (
+        Preschooler.objects.filter(is_archived=False)
+        .select_related('parent_id', 'barangay')
+        .prefetch_related(
+            Prefetch('bmi_set', queryset=BMI.objects.order_by('-date_recorded'), to_attr='bmi_records'),
+            Prefetch('temperature_set', queryset=Temperature.objects.order_by('-date_recorded'), to_attr='temp_records')
+        )
+        .order_by('first_name', 'last_name')
+    )
 
+    today = date.today()
+
+    # --- Compute nutritional status and delivery class ---
+    for p in preschoolers_qs:
+        # Calculate nutritional status
+        latest_bmi = p.bmi_records[0] if hasattr(p, 'bmi_records') and p.bmi_records else None
+
+        if latest_bmi:
+            try:
+                birth_date = p.birth_date
+                age_years = today.year - birth_date.year
+                age_months = today.month - birth_date.month
+                if today.day < birth_date.day:
+                    age_months -= 1
+                if age_months < 0:
+                    age_years -= 1
+                    age_months += 12
+                total_age_months = age_years * 12 + age_months
+
+                bmi_value = calculate_bmi(latest_bmi.weight, latest_bmi.height)
+                z = bmi_zscore(p.sex, total_age_months, bmi_value)
+                p.nutritional_status = classify_bmi_for_age(z)
+            except Exception as e:
+                print(f"⚠️ BMI classification error for preschooler {p.id}: {e}")
+                p.nutritional_status = "N/A"
+        else:
+            p.nutritional_status = "N/A"
+
+        # Set delivery class for row coloring
+        delivery_place = getattr(p, 'place_of_delivery', None)
+        if delivery_place == 'Center to Center':
+            p.delivery_class = 'delivery-center'
+        elif delivery_place == 'Private/Lying-in':
+            p.delivery_class = 'delivery-lying-in'
+        elif delivery_place == 'Public Hospital':
+            p.delivery_class = 'delivery-hospital'
+        elif delivery_place == 'Others':
+            p.delivery_class = 'delivery-others'
+        else:
+            p.delivery_class = 'delivery-na'
+
+    # Convert to list for filtering
+    preschoolers_qs = list(preschoolers_qs)
+
+    # ✅ FILTER BY NUTRITIONAL STATUS (if provided)
+    filter_status = request.GET.get('status', 'All')
+    if filter_status and filter_status != 'All':
+        preschoolers_qs = [p for p in preschoolers_qs if p.nutritional_status == filter_status]
+
+    # ✅ GLOBAL SEARCH - Search by preschooler name ONLY
+    search_query = request.GET.get('search', '').strip()
+    is_searching = False
+    
+    if search_query:
+        is_searching = True
+        search_lower = search_query.lower()
+        preschoolers_qs = [
+            p for p in preschoolers_qs 
+            if search_lower in f"{p.first_name} {p.last_name}".lower()
+        ]
+
+    # ✅ Pagination after filtering and sorting
+    paginator = Paginator(preschoolers_qs, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    barangays = Barangay.objects.all()
+
+    return render(request, 'HTML/registered_preschoolers.html', {
+        'preschoolers': page_obj,
+        'barangays': barangays,
+        'filter_status': filter_status,
+        'search_query': search_query,
+        'is_searching': is_searching,
+    })
+    
 def register_preschooler(request):
     """Register preschooler with proper barangay filtering - only allows registration in user's barangay"""
     
@@ -11234,6 +11321,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
