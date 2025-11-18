@@ -1403,6 +1403,10 @@
         padding: 15px;
       }
     }
+
+
+
+   
   </style>
 </head>
 <body>
@@ -1589,19 +1593,25 @@
         {% endif %}
 
         <div class="search-section">
-          <label for="status-select"><strong>Filter by Nutritional Status:</strong></label>
-          <select id="status-select" class="search-input">
-            <option value="All">All</option>
-            <option value="Severely Wasted">Severely Wasted</option>
-            <option value="Wasted">Wasted</option>
-            <option value="Normal">Normal</option>
-            <option value="Risk of Overweight">Risk of Overweight</option>
-            <option value="Overweight">Overweight</option>
-            <option value="Obese">Obese</option>
-          </select>
-          <input type="text" id="search-input" class="search-input" placeholder="Search by name...">
+          <div class="search-group">
+            <label for="status-select"><strong>Filter by Nutritional Status:</strong></label>
+            <select id="status-select" class="search-input">
+              <option value="All" {% if filter_status == 'All' %}selected{% endif %}>All</option>
+              <option value="Severely Wasted" {% if filter_status == 'Severely Wasted' %}selected{% endif %}>Severely Wasted</option>
+              <option value="Wasted" {% if filter_status == 'Wasted' %}selected{% endif %}>Wasted</option>
+              <option value="Normal" {% if filter_status == 'Normal' %}selected{% endif %}>Normal</option>
+              <option value="Risk of Overweight" {% if filter_status == 'Risk of Overweight' %}selected{% endif %}>Risk of Overweight</option>
+              <option value="Overweight" {% if filter_status == 'Overweight' %}selected{% endif %}>Overweight</option>
+              <option value="Obese" {% if filter_status == 'Obese' %}selected{% endif %}>Obese</option>
+            </select>
+          </div>
+          <div class="search-group">
+            <label for="search-input">Search by Name (All Pages):</label>
+            <input type="text" id="search-input" class="search-input" placeholder="Search by name..." value="{{ search_query }}">
+          </div>
           <button id="search-btn" class="btn">Search</button>
         </div>
+
         
         <!-- Enhanced Responsive Table -->
         <div class="table-responsive">
@@ -1650,72 +1660,72 @@
       </div>
 
       <div class="pagination-section">
-        {% if is_searching %}
-          <!-- Hide pagination when searching -->
-        {% else %}
-          {% if preschoolers %}
-            <!-- First page button (<<) -->
-            {% if preschoolers.number > 1 %}
-              <a href="?page=1{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter and status_filter != 'All' %}&status={{ status_filter|urlencode }}{% endif %}" class="btn">&lt;&lt;</a>
-            {% else %}
-              <span class="btn disabled">&lt;&lt;</span>
-            {% endif %}
+  {% if is_searching %}
+    <!-- Hide pagination when searching -->
+  {% else %}
+    {% if preschoolers %}
+      <!-- First page button (<<) -->
+      {% if preschoolers.number > 1 %}
+        <a href="?page=1{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if filter_status and filter_status != 'All' %}&status={{ filter_status|urlencode }}{% endif %}" class="btn">&lt;&lt;</a>
+      {% else %}
+        <span class="btn disabled">&lt;&lt;</span>
+      {% endif %}
 
-            <!-- Previous button -->
-            {% if preschoolers.has_previous %}
-              <a href="?page={{ preschoolers.previous_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter and status_filter != 'All' %}&status={{ status_filter|urlencode }}{% endif %}" class="btn">&lt;</a>
-            {% else %}
-              <span class="btn disabled">&lt;</span>
-            {% endif %}
+      <!-- Previous button -->
+      {% if preschoolers.has_previous %}
+        <a href="?page={{ preschoolers.previous_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if filter_status and filter_status != 'All' %}&status={{ filter_status|urlencode }}{% endif %}" class="btn">&lt;</a>
+      {% else %}
+        <span class="btn disabled">&lt;</span>
+      {% endif %}
 
-            <!-- Page numbers logic -->
-            {% if preschoolers.paginator.num_pages > 1 %}
-              {% for num in preschoolers.paginator.page_range %}
-                {% comment %}
-                  Show page if:
-                  1. It's within first 10 pages AND current page <= 6
-                  2. OR it's within sliding window when current page > 6
-                {% endcomment %}
-                {% if preschoolers.number <= 6 %}
-                  {% comment %}Show pages 1-10 when on early pages{% endcomment %}
-                  {% if num <= 10 %}
-                    {% if num == preschoolers.number %}
-                      <span class="page-number active">{{ num }}</span>
-                    {% else %}
-                      <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter and status_filter != 'All' %}&status={{ status_filter|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
-                    {% endif %}
-                  {% endif %}
+      <!-- Page numbers logic -->
+      {% if preschoolers.paginator.num_pages > 1 %}
+        {% for num in preschoolers.paginator.page_range %}
+          {% comment %}
+            Show page if:
+            1. It's within first 10 pages AND current page <= 6
+            2. OR it's within sliding window when current page > 6
+          {% endcomment %}
+          {% if preschoolers.number <= 6 %}
+            {% comment %}Show pages 1-10 when on early pages{% endcomment %}
+            {% if num <= 10 %}
+              {% if num == preschoolers.number %}
+                <span class="page-number active">{{ num }}</span>
+              {% else %}
+                <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if filter_status and filter_status != 'All' %}&status={{ filter_status|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
+              {% endif %}
+            {% endif %}
+          {% else %}
+            {% comment %}Sliding window: show 10 pages centered around current{% endcomment %}
+            {% with start=preschoolers.number|add:'-5' end=preschoolers.number|add:'4' %}
+              {% if num >= start and num <= end %}
+                {% if num == preschoolers.number %}
+                  <span class="page-number active">{{ num }}</span>
                 {% else %}
-                  {% comment %}Sliding window: show 10 pages centered around current{% endcomment %}
-                  {% with start=preschoolers.number|add:'-5' end=preschoolers.number|add:'4' %}
-                    {% if num >= start and num <= end %}
-                      {% if num == preschoolers.number %}
-                        <span class="page-number active">{{ num }}</span>
-                      {% else %}
-                        <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter and status_filter != 'All' %}&status={{ status_filter|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
-                      {% endif %}
-                    {% endif %}
-                  {% endwith %}
+                  <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if filter_status and filter_status != 'All' %}&status={{ filter_status|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
                 {% endif %}
-              {% endfor %}
-            {% endif %}
-
-            <!-- Next button -->
-            {% if preschoolers.has_next %}
-              <a href="?page={{ preschoolers.next_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter and status_filter != 'All' %}&status={{ status_filter|urlencode }}{% endif %}" class="btn">&gt;</a>
-            {% else %}
-              <span class="btn disabled">&gt;</span>
-            {% endif %}
-
-            <!-- Last page button (>>) -->
-            {% if preschoolers.number < preschoolers.paginator.num_pages %}
-              <a href="?page={{ preschoolers.paginator.num_pages }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if status_filter and status_filter != 'All' %}&status={{ status_filter|urlencode }}{% endif %}" class="btn">&gt;&gt;</a>
-            {% else %}
-              <span class="btn disabled">&gt;&gt;</span>
-            {% endif %}
+              {% endif %}
+            {% endwith %}
           {% endif %}
-        {% endif %}
-      </div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- Next button -->
+      {% if preschoolers.has_next %}
+        <a href="?page={{ preschoolers.next_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if filter_status and filter_status != 'All' %}&status={{ filter_status|urlencode }}{% endif %}" class="btn">&gt;</a>
+      {% else %}
+        <span class="btn disabled">&gt;</span>
+      {% endif %}
+
+      <!-- Last page button (>>) -->
+      {% if preschoolers.number < preschoolers.paginator.num_pages %}
+        <a href="?page={{ preschoolers.paginator.num_pages }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if filter_status and filter_status != 'All' %}&status={{ filter_status|urlencode }}{% endif %}" class="btn">&gt;&gt;</a>
+      {% else %}
+        <span class="btn disabled">&gt;&gt;</span>
+      {% endif %}
+    {% endif %}
+  {% endif %}
+</div>
     </div>
   </div>
 
@@ -2642,6 +2652,107 @@ document.addEventListener("DOMContentLoaded", function() {
 
   tbody.innerHTML = "";
   rows.forEach(row => tbody.appendChild(row));
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // ✅ GLOBAL SEARCH AND FILTERING
+  const searchInput = document.getElementById("search-input");
+  const statusSelect = document.getElementById("status-select");
+  const searchBtn = document.getElementById("search-btn");
+
+  // Search button → redirects (search whole DB or clear if empty)
+  searchBtn.addEventListener("click", function () {
+    const searchTerm = searchInput.value.trim();
+    const statusFilter = statusSelect.value;
+
+    // Build URL with search and status parameters
+    let url = window.location.pathname;
+    const params = new URLSearchParams();
+
+    if (searchTerm) {
+      params.append('search', searchTerm);
+    }
+
+    if (statusFilter && statusFilter !== 'All') {
+      params.append('status', statusFilter);
+    }
+
+    // Redirect with parameters
+    if (params.toString()) {
+      window.location.href = url + '?' + params.toString();
+    } else {
+      window.location.href = url;
+    }
+  });
+
+  // Enter key performs search
+  searchInput.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") searchBtn.click();
+  });
+
+  // Status filter changes
+  statusSelect.addEventListener("change", function () {
+    const selectedStatus = this.value;
+    const currentSearch = "{{ search_query }}";
+    const url = window.location.pathname;
+    const params = new URLSearchParams();
+
+    if (currentSearch) {
+      params.append('search', currentSearch);
+    }
+
+    if (selectedStatus && selectedStatus !== 'All') {
+      params.append('status', selectedStatus);
+    }
+
+    // Redirect with updated parameters
+    if (params.toString()) {
+      window.location.href = url + '?' + params.toString();
+    } else {
+      window.location.href = url;
+    }
+  });
+
+  // ✅ UPDATE PAGINATION LINKS TO PRESERVE SEARCH AND FILTER
+  function updatePaginationLinks() {
+    const searchQuery = "{{ search_query }}";
+    const filterStatus = "{{ filter_status }}";
+    const paginationLinks = document.querySelectorAll('.pagination-section a');
+
+    paginationLinks.forEach(link => {
+      let href = link.getAttribute('href');
+      
+      // Remove existing search and status parameters
+      href = href.split('?')[0];
+
+      // Add page number if exists
+      const pageMatch = link.textContent.match(/\d+/);
+      if (pageMatch && link.classList.contains('page-number')) {
+        href += '?page=' + pageMatch[0];
+      } else if (link.href.includes('page=')) {
+        const pageNum = new URLSearchParams(link.search).get('page');
+        if (pageNum) {
+          href += '?page=' + pageNum;
+        }
+      }
+
+      // Re-add search and filter parameters
+      if (searchQuery) {
+        href += '&search=' + encodeURIComponent(searchQuery);
+      }
+
+      if (filterStatus && filterStatus !== 'All') {
+        href += '&status=' + encodeURIComponent(filterStatus);
+      }
+
+      link.setAttribute('href', href);
+    });
+  }
+
+  updatePaginationLinks();
 });
 </script>
 
