@@ -1282,8 +1282,16 @@
         </div>
 
         <!-- Pagination - Numbered buttons style -->
+        <!-- Pagination - Clean and Simple (Shows 1-10 initially, then sliding window) -->
         {% if page_obj %}
         <div class="pagination-section">
+          <!-- First page button (<<) -->
+          {% if page_obj.number > 1 %}
+            <a href="?page=1&type={{ worker_type }}" class="btn">&lt;&lt;</a>
+          {% else %}
+            <span class="btn disabled">&lt;&lt;</span>
+          {% endif %}
+
           <!-- Previous button -->
           {% if page_obj.has_previous %}
             <a href="?page={{ page_obj.previous_page_number }}&type={{ worker_type }}" class="btn">&lt;</a>
@@ -1291,18 +1299,37 @@
             <span class="btn disabled">&lt;</span>
           {% endif %}
 
-          <!-- Page numbers -->
-          {% for num in page_obj.paginator.page_range %}
-            {% if num == page_obj.number %}
-              <span class="page-number active">{{ num }}</span>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-              <a href="?page={{ num }}&type={{ worker_type }}" class="page-number">{{ num }}</a>
-            {% elif num == 1 or num == page_obj.paginator.num_pages %}
-              <a href="?page={{ num }}&type={{ worker_type }}" class="page-number">{{ num }}</a>
-            {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
-              <span class="page-number" style="border: none; cursor: default;">...</span>
-            {% endif %}
-          {% endfor %}
+          <!-- Page numbers logic -->
+          {% if page_obj.paginator.num_pages > 1 %}
+            {% for num in page_obj.paginator.page_range %}
+              {% comment %}
+                Show page if:
+                1. It's within first 10 pages AND current page <= 6
+                2. OR it's within sliding window when current page > 6
+              {% endcomment %}
+              {% if page_obj.number <= 6 %}
+                {% comment %}Show pages 1-10 when on early pages{% endcomment %}
+                {% if num <= 10 %}
+                  {% if num == page_obj.number %}
+                    <span class="page-number active">{{ num }}</span>
+                  {% else %}
+                    <a href="?page={{ num }}&type={{ worker_type }}" class="page-number">{{ num }}</a>
+                  {% endif %}
+                {% endif %}
+              {% else %}
+                {% comment %}Sliding window: show 10 pages centered around current{% endcomment %}
+                {% with start=page_obj.number|add:'-5' end=page_obj.number|add:'4' %}
+                  {% if num >= start and num <= end %}
+                    {% if num == page_obj.number %}
+                      <span class="page-number active">{{ num }}</span>
+                    {% else %}
+                      <a href="?page={{ num }}&type={{ worker_type }}" class="page-number">{{ num }}</a>
+                    {% endif %}
+                  {% endif %}
+                {% endwith %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
 
           <!-- Next button -->
           {% if page_obj.has_next %}
@@ -1312,7 +1339,7 @@
           {% endif %}
 
           <!-- Last page button (>>) -->
-          {% if page_obj.number != page_obj.paginator.num_pages %}
+          {% if page_obj.number < page_obj.paginator.num_pages %}
             <a href="?page={{ page_obj.paginator.num_pages }}&type={{ worker_type }}" class="btn">&gt;&gt;</a>
           {% else %}
             <span class="btn disabled">&gt;&gt;</span>
