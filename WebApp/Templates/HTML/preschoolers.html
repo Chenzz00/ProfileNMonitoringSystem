@@ -2512,28 +2512,106 @@
     }
 
     // Search functionality
+    // Replace the search functionality section in your existing script with this updated version
+
+    // Search functionality with "No results" message
     document.getElementById("search-btn").addEventListener("click", () => {
       const input = document.getElementById("search-input").value.toLowerCase();
       const filterStatus = document.getElementById("status-select").value;
       
       const rows = document.querySelectorAll("#preschooler-table .preschooler-row");
+      let visibleCount = 0;
+      
       rows.forEach(row => {
         const name = row.cells[0].textContent.toLowerCase();
         const status = row.cells[6].textContent.trim();
         const nameMatch = name.includes(input);
         const statusMatch = (filterStatus === "All" || status === filterStatus);
-        row.style.display = (nameMatch && statusMatch) ? "" : "none";
+        
+        if (nameMatch && statusMatch) {
+          row.style.display = "";
+          visibleCount++;
+        } else {
+          row.style.display = "none";
+        }
       });
+      
+      // Check if we need to show/hide the "no results" message
+      let noResultsRow = document.getElementById("no-results-row");
+      
+      if (visibleCount === 0) {
+        // Create "no results" row if it doesn't exist
+        if (!noResultsRow) {
+          noResultsRow = document.createElement("tr");
+          noResultsRow.id = "no-results-row";
+          noResultsRow.innerHTML = `
+            <td colspan="8" style="text-align:center; padding:40px; color: #999;">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                <svg style="width: 64px; height: 64px; opacity: 0.3;" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+                </svg>
+                <p style="margin: 0; font-size: 16px; font-weight: 500;">No preschoolers found</p>
+                <p style="margin: 0; font-size: 14px; color: #666;">
+                  ${input ? `No results for "${input}"` : ''}
+                  ${input && filterStatus !== "All" ? ' with ' : ''}
+                  ${filterStatus !== "All" ? `nutritional status: "${filterStatus}"` : ''}
+                </p>
+                <button onclick="clearSearch()" style="margin-top: 10px; padding: 8px 16px; background: #5bdab3; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
+                  Clear Filters
+                </button>
+              </div>
+            </td>
+          `;
+          document.getElementById("preschooler-table").appendChild(noResultsRow);
+        } else {
+          noResultsRow.style.display = "";
+          // Update the message
+          const messageP = noResultsRow.querySelector('p:nth-child(3)');
+          if (messageP) {
+            messageP.innerHTML = `
+              ${input ? `No results for "${input}"` : ''}
+              ${input && filterStatus !== "All" ? ' with ' : ''}
+              ${filterStatus !== "All" ? `nutritional status: "${filterStatus}"` : ''}
+            `;
+          }
+        }
+      } else {
+        // Hide "no results" row if it exists
+        if (noResultsRow) {
+          noResultsRow.style.display = "none";
+        }
+      }
     });
 
+    // Function to clear search and filters
+    window.clearSearch = function() {
+      document.getElementById("search-input").value = "";
+      document.getElementById("status-select").value = "All";
+      
+      // Show all rows
+      const rows = document.querySelectorAll("#preschooler-table .preschooler-row");
+      rows.forEach(row => {
+        row.style.display = "";
+      });
+      
+      // Hide "no results" message
+      const noResultsRow = document.getElementById("no-results-row");
+      if (noResultsRow) {
+        noResultsRow.style.display = "none";
+      }
+    };
+
+    // Handle Enter key on search input
     document.getElementById("search-input").addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
         document.getElementById("search-btn").click();
       }
     });
-  }
 
-  console.log('=== SCRIPT DEBUG END ===');
+    // Also trigger search when status filter changes
+    document.getElementById("status-select").addEventListener("change", () => {
+      document.getElementById("search-btn").click();
+    });
 </script>
 
 <script>
