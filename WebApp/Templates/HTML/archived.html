@@ -9,6 +9,8 @@
   <link rel="icon" type="image/png" href="{% static 'media/PPMS-logo.png' %}">
   
   <style>
+    /* Complete CSS for Archived Preschoolers Page - Replace entire <style> section */
+
     * {
       margin: 0;
       padding: 0;
@@ -34,7 +36,6 @@
       width: 100%;
       height: 100%;
       z-index: -1;
-      background-image: url('{% static "media/loginbg.png" %}');
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -254,7 +255,7 @@
       position: relative;
       display: inline-block;
     }
-    
+
     #notifMenu {
       display: none;
       position: absolute;
@@ -378,7 +379,7 @@
       background: white;
       border-radius: 8px;
       overflow: hidden;
-      min-width: 600px; /* Ensures horizontal scroll on smaller screens */
+      min-width: 600px;
     }
 
     table th,
@@ -389,7 +390,7 @@
       font-size: 14px;
       color: #333;
       font-weight: 400;
-      white-space: nowrap; /* Prevents text wrapping */
+      white-space: nowrap;
     }
 
     table th {
@@ -436,28 +437,96 @@
       box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
     }
 
+    /* UPDATED PAGINATION SECTION - Matching registered_parents.html */
     .pagination-section {
-      text-align: center;
-      margin-top: 20px;
-      color: #333;
-      font-size: 14px;
-      font-weight: 400;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 25px;
+      margin-bottom: 25px;
       font-family: 'Poppins', sans-serif;
       background: rgba(255, 255, 255, 0.9);
       padding: 20px;
       border-radius: 10px;
       backdrop-filter: blur(10px);
-    }
-
-    .pagination-section span {
-      margin: 0 15px;
-      color: #666;
+      flex-wrap: wrap;
     }
 
     .pagination-section .btn {
-      margin: 0 5px;
+      background: #5bdab3;
+      color: #1e1e2f;
       padding: 12px 20px;
-      font-size: 14px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      min-width: 50px;
+      height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(91, 218, 179, 0.3);
+    }
+
+    .pagination-section .btn:hover:not(.disabled) {
+      background: #1565c0;
+      color: white;
+      border-color: transparent;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    }
+
+    .pagination-section .btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: #f5f5f5;
+      border-color: #e0e0e0;
+      color: #999;
+      box-shadow: none;
+    }
+
+    .pagination-section .page-number {
+      background: white;
+      color: #666;
+      padding: 12px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      border: 2px solid #e0e0e0;
+      cursor: pointer;
+      min-width: 50px;
+      height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .pagination-section .page-number:hover {
+      background: #f8f9fa;
+      border-color: #5bdab3;
+      color: #5bdab3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(91, 218, 179, 0.2);
+    }
+
+    .pagination-section .page-number.active {
+      background: #5bdab3;
+      color: white;
+      border-color: transparent;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(91, 218, 179, 0.4);
+      cursor: default;
+    }
+
+    .pagination-section .page-number.active:hover {
+      transform: none;
     }
 
     .modal {
@@ -586,7 +655,6 @@
       transform: scale(0.98);
     }
 
-    /* Add icons to menu items */
     .custom-menu li::before {
       content: '';
       width: 16px;
@@ -655,6 +723,10 @@
         font-size: 18px;
       }
       
+      .content-wrapper {
+        padding: 20px 15px;
+      }
+
       .table-wrapper {
         padding: 20px;
         margin: 0;
@@ -666,13 +738,21 @@
       }
 
       .pagination-section {
-        font-size: 13px;
         padding: 15px;
+        gap: 6px;
       }
 
-      .pagination-section span {
+      .pagination-section .btn {
+        font-size: 12px;
+        padding: 8px 12px;
+        min-width: 35px;
+        height: 35px;
+      }
+
+      .pagination-section .page-number {
+        min-width: 35px;
+        height: 35px;
         font-size: 13px;
-        margin: 0 10px;
       }
 
       .modal-content {
@@ -685,7 +765,6 @@
         font-size: 16px;
       }
 
-      /* Mobile table adjustments */
       table th,
       table td {
         padding: 10px 12px;
@@ -693,10 +772,9 @@
       }
 
       table {
-        min-width: 500px; /* Adjust minimum width for mobile */
+        min-width: 500px;
       }
 
-      /* Mobile custom menu adjustments */
       .custom-menu {
         min-width: 160px;
       }
@@ -710,7 +788,6 @@
         padding-left: 23px;
       }
 
-      /* Notification dropdown adjustments */
       #notifMenu {
         right: -20px;
         left: auto;
@@ -740,6 +817,20 @@
       .btn {
         font-size: 12px;
         padding: 8px 12px;
+      }
+
+      .pagination-section .btn {
+        padding: 6px 10px;
+        min-width: 32px;
+        height: 32px;
+        font-size: 11px;
+      }
+
+      .pagination-section .page-number {
+        min-width: 32px;
+        height: 32px;
+        font-size: 12px;
+        padding: 6px;
       }
 
       .modal-content {
@@ -978,16 +1069,70 @@
       </div>
 
       <div class="pagination-section">
-        {% if archived_page.has_previous %}
-          <a href="?page={{ archived_page.previous_page_number }}" class="btn">Previous</a>
-        {% endif %}
+        {% if is_searching %}
+          <!-- Hide pagination when searching -->
+        {% else %}
+          {% if archived_page %}
+            <!-- First page button (<<) -->
+            {% if archived_page.number > 1 %}
+              <a href="?page=1{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&lt;&lt;</a>
+            {% else %}
+              <span class="btn disabled">&lt;&lt;</span>
+            {% endif %}
 
-        <span>
-          Page {{ archived_page.number }} of {{ archived_page.paginator.num_pages }}
-        </span>
+            <!-- Previous button -->
+            {% if archived_page.has_previous %}
+              <a href="?page={{ archived_page.previous_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&lt;</a>
+            {% else %}
+              <span class="btn disabled">&lt;</span>
+            {% endif %}
 
-        {% if archived_page.has_next %}
-          <a href="?page={{ archived_page.next_page_number }}" class="btn">Next</a>
+            <!-- Page numbers logic -->
+            {% if archived_page.paginator.num_pages > 1 %}
+              {% for num in archived_page.paginator.page_range %}
+                {% comment %}
+                  Show page if:
+                  1. It's within first 10 pages AND current page <= 6
+                  2. OR it's within sliding window when current page > 6
+                {% endcomment %}
+                {% if archived_page.number <= 6 %}
+                  {% comment %}Show pages 1-10 when on early pages{% endcomment %}
+                  {% if num <= 10 %}
+                    {% if num == archived_page.number %}
+                      <span class="page-number active">{{ num }}</span>
+                    {% else %}
+                      <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
+                    {% endif %}
+                  {% endif %}
+                {% else %}
+                  {% comment %}Sliding window: show 10 pages centered around current{% endcomment %}
+                  {% with start=archived_page.number|add:'-5' end=archived_page.number|add:'4' %}
+                    {% if num >= start and num <= end %}
+                      {% if num == archived_page.number %}
+                        <span class="page-number active">{{ num }}</span>
+                      {% else %}
+                        <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
+                      {% endif %}
+                    {% endif %}
+                  {% endwith %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+
+            <!-- Next button -->
+            {% if archived_page.has_next %}
+              <a href="?page={{ archived_page.next_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&gt;</a>
+            {% else %}
+              <span class="btn disabled">&gt;</span>
+            {% endif %}
+
+            <!-- Last page button (>>) -->
+            {% if archived_page.number < archived_page.paginator.num_pages %}
+              <a href="?page={{ archived_page.paginator.num_pages }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&gt;&gt;</a>
+            {% else %}
+              <span class="btn disabled">&gt;&gt;</span>
+            {% endif %}
+          {% endif %}
         {% endif %}
       </div>
     </div>
