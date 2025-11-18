@@ -1221,9 +1221,16 @@ textarea[readonly].archived-input {
     <tr>
       <td>{{ nutrition.name }}</td>
       <td>{{ nutrition.completed_doses }}/{{ nutrition.total_doses }}</td>
-      <td>{{ nutrition.service_date|date:"m/d/Y" }}</td>
+      <!-- FIX: Show N/A if no date, otherwise format date -->
       <td>
-        <!-- Status logic: COMPLETE only when all doses done -->
+        {% if nutrition.service_date %}
+          {{ nutrition.service_date|date:"m/d/Y" }}
+        {% else %}
+          N/A
+        {% endif %}
+      </td>
+
+      <td>
         {% if nutrition.completed_doses >= nutrition.total_doses %}
           <span class="status-badge status-completed">COMPLETE</span>
         {% elif nutrition.status == 'scheduled' %}
@@ -1237,40 +1244,38 @@ textarea[readonly].archived-input {
         {% endif %}
       </td>
       <td>
-        <!-- Actions logic: COMPLETE only when all doses done -->
         {% if nutrition.completed_doses >= nutrition.total_doses %}
           <span class="text-success">✓ Complete</span>
-          
+
         {% elif nutrition.status == 'scheduled' or nutrition.status == 'rescheduled' %}
           <div class="action-buttons">
-            <button class="btn-sm btn-complete" onclick="completeNutritionDose('{{ nutrition.name }}', {{ nutrition.schedule_id }}, '{{ nutrition.completed_doses }}', '{{ nutrition.total_doses }}')">
+            <button class="btn-sm btn-complete"
+              onclick="completeNutritionDose('{{ nutrition.name }}', {{ nutrition.schedule_id }}, '{{ nutrition.completed_doses }}', '{{ nutrition.total_doses }}')">
               Complete Dose
             </button>
-            <button class="btn-sm btn-reschedule" onclick="openRescheduleNutritionModal({{ nutrition.schedule_id }})">
+            <button class="btn-sm btn-reschedule"
+              onclick="openRescheduleNutritionModal({{ nutrition.schedule_id }})">
               Reschedule
             </button>
           </div>
-          
+
         {% elif nutrition.can_schedule %}
-          <!-- Child is eligible for nutrition service -->
           <button 
             class="btn-sm btn-schedule btn-available-today" 
             onclick="scheduleNutritionServiceWithAge('{{ nutrition.name }}', '{{ nutrition.eligibility_reason }}')"
             title="{{ nutrition.age_description }}">
             Schedule
           </button>
-          
+
         {% elif nutrition.next_eligible_age %}
-          <!-- Child is not eligible yet -->
           <button 
             class="btn-sm btn-disabled-future" 
             disabled
             title="{{ nutrition.eligibility_reason }}">
             Available at {{ nutrition.next_eligible_age }} months
           </button>
-          
+
         {% else %}
-          <!-- Default: pending service -->
           <button class="btn-sm btn-disabled-future" disabled title="Waiting to schedule">
             Pending
           </button>
@@ -3555,6 +3560,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
+
 
 
 
