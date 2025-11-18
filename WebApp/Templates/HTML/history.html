@@ -1104,57 +1104,68 @@
     });
 
     function filterLogs() {
-      const searchValue = document.getElementById('search-input').value.toLowerCase();
-      const dateValue = document.getElementById('date-input').value;
-      const parentRows = document.querySelectorAll("#parent-log-body tr");
+  const searchValue = document.getElementById('search-input').value.toLowerCase();
+  const dateValue = document.getElementById('date-input').value;
+  const parentRows = document.querySelectorAll("#parent-log-body tr");
+  const preschoolerRows = document.querySelectorAll("#preschooler-log-body tr");
 
-      function filterRow(row) {
-        const cols = row.querySelectorAll("td");
-        if (cols.length === 0) return;
+  function filterRow(row, isParent) {
+    const cols = row.querySelectorAll("td");
+    if (cols.length === 0) return;
 
-        const name = cols[0].innerText.toLowerCase();
-        const activity = cols[1].innerText.toLowerCase();
-        const dateText = cols[cols.length - 1].innerText;
+    const name = cols[0].innerText.toLowerCase();
+    const activity = cols[1].innerText.toLowerCase();
+    const dateText = cols[cols.length - 1].innerText;
 
-        const matchesSearch = name.includes(searchValue) || activity.includes(searchValue);
-        const matchesDate = !dateValue || dateText.includes(new Date(dateValue).toLocaleDateString('en-US', {
-          month: 'long',
-          day: '2-digit',
-          year: 'numeric'
-        }));
+    const matchesSearch = name.includes(searchValue) || activity.includes(searchValue);
+    const matchesDate = !dateValue || dateText.includes(new Date(dateValue).toLocaleDateString('en-US', {
+      month: 'long',
+      day: '2-digit',
+      year: 'numeric'
+    }));
 
-        row.style.display = matchesSearch && matchesDate ? '' : 'none';
-      }
+    row.style.display = matchesSearch && matchesDate ? '' : 'none';
+  }
 
-      function checkEmptyState(rows, tableId, colspan, message) {
-        const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
-        const tableBody = document.getElementById(tableId);
-        const existingNoData = tableBody.querySelector('.no-data');
-
-        if (visibleRows.length === 0 && !existingNoData) {
-          const row = document.createElement('tr');
-          row.innerHTML = `<td colspan="${colspan}" class="no-data">${message}</td>`;
-          tableBody.appendChild(row);
-        } else if (visibleRows.length > 0 && existingNoData) {
-          existingNoData.parentElement.remove();
-        }
-      }
-
-      parentRows.forEach(row => filterRow(row));
-      checkEmptyState(parentRows, 'parent-log-body', 3, 'No parent activity yet.');
+  function checkEmptyState(rows, tableId, colspan, message) {
+    const tableBody = document.getElementById(tableId);
+    
+    // Remove any existing "no data" row first
+    const existingNoData = tableBody.querySelector('.no-data')?.parentElement;
+    if (existingNoData) {
+      existingNoData.remove();
     }
 
-    // Enter key search functionality
-    document.getElementById('search-input').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        filterLogs();
-      }
-    });
+    // Count visible rows
+    const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
 
-    document.getElementById('date-input').addEventListener('change', function() {
-      filterLogs();
-    });
+    // Add "no data" row only if no results
+    if (visibleRows.length === 0) {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td colspan="${colspan}" class="no-data">${message}</td>`;
+      tableBody.appendChild(row);
+    }
+  }
+
+  parentRows.forEach(row => filterRow(row, true));
+  preschoolerRows.forEach(row => filterRow(row, false));
+
+  checkEmptyState(parentRows, 'parent-log-body', 3, 'No parent activity yet.');
+  checkEmptyState(preschoolerRows, 'preschooler-log-body', 4, 'No preschooler activity yet.');
+}
+
+// Enter key search functionality
+document.getElementById('search-input').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    filterLogs();
+  }
+});
+
+document.getElementById('date-input').addEventListener('change', function() {
+  filterLogs();
+});
   </script>
 
 </body>
 </html>
+
