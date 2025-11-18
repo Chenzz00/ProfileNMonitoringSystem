@@ -71,7 +71,6 @@
       margin: 0;
     }
 
-    /* Profile Section in Sidebar */
     .sidebar-profile {
       padding: 20px 15px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -160,7 +159,6 @@
       opacity: 1;
     }
 
-    /* Logout at bottom of navigation */
     .logout-nav-item {
       border-top: 1px solid rgba(255, 255, 255, 0.1);
       margin-top: auto;
@@ -175,7 +173,6 @@
       color: #ff6b6b;
     }
 
-    /* Main Content Area */
     .main-content {
       margin-left: 280px;
       min-height: 100vh;
@@ -237,7 +234,6 @@
       100% { rotate: 10deg }
     }
 
-    /* Mobile Hamburger */
     .mobile-toggle {
       display: none;
       background: none;
@@ -248,7 +244,6 @@
       padding: 5px;
     }
 
-    /* Notification Dropdown */
     .notif-dropdown {
       position: relative;
       display: inline-block;
@@ -298,7 +293,6 @@
       border: 2px solid #1e1e2f;
     }
 
-    /* Sidebar overlay for mobile */
     .sidebar-overlay {
       display: none;
       position: fixed;
@@ -367,7 +361,6 @@
       box-shadow: 0 0 0 3px rgba(91, 218, 179, 0.15);
     }
 
-    /* Enhanced table container with horizontal scrolling */
     .table-container {
       overflow-x: auto;
       margin-bottom: 20px;
@@ -378,7 +371,6 @@
       scrollbar-color: #5bdab3 #f0f0f0;
     }
 
-    /* Custom scrollbar for webkit browsers */
     .table-container::-webkit-scrollbar {
       height: 8px;
     }
@@ -459,11 +451,11 @@
     }
 
     .pagination-section {
-      text-align: center;
-      margin-top: 20px;
-      color: #333;
-      font-size: 14px;
-      font-weight: 400;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 30px;
       font-family: 'Poppins', sans-serif;
       background: rgba(255, 255, 255, 0.9);
       padding: 20px;
@@ -471,15 +463,80 @@
       backdrop-filter: blur(10px);
     }
 
-    .pagination-section span {
-      margin: 0 15px;
-      color: #666;
+    .pagination-section .btn {
+      background: #5bdab3;
+      color: #1e1e2f;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(91, 218, 179, 0.3);
     }
 
-    .pagination-section .btn {
-      margin: 0 5px;
-      padding: 12px 20px;
+    .pagination-section .btn:hover:not(.disabled) {
+      background: #1565c0;
+      color: white;
+      border-color: transparent;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    }
+
+    .pagination-section .btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: #f5f5f5;
+      border-color: #e0e0e0;
+      color: #999;
+      box-shadow: none;
+    }
+
+    .pagination-section .page-number {
+      background: white;
+      color: #666;
+      padding: 10px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
       font-size: 14px;
+      transition: all 0.3s ease;
+      border: 2px solid #e0e0e0;
+      cursor: pointer;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .pagination-section .page-number:hover {
+      background: #f8f9fa;
+      border-color: #5bdab3;
+      color: #5bdab3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(91, 218, 179, 0.2);
+    }
+
+    .pagination-section .page-number.active {
+      background: #5bdab3;
+      color: white;
+      border-color: transparent;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(91, 218, 179, 0.4);
+      cursor: default;
+    }
+
+    .pagination-section .page-number.active:hover {
+      transform: none;
     }
 
     .modal {
@@ -550,28 +607,6 @@
       to {opacity: 1;}
     }
 
-    /* Mobile Responsive */
-    @media (max-width: 1200px) {
-      .content-wrapper {
-        padding: 25px;
-      }
-    }
-
-    @media (max-width: 1024px) {
-      .sidebar {
-        width: 260px;
-      }
-      
-      .main-content {
-        margin-left: 260px;
-        width: calc(100% - 260px);
-      }
-      
-      .content-wrapper {
-        padding: 25px;
-      }
-    }
-
     @media (max-width: 768px) {
       .sidebar {
         transform: translateX(-100%);
@@ -585,7 +620,6 @@
       .main-content {
         margin-left: 0;
         width: 100%;
-        max-width: 100%;
       }
 
       .mobile-toggle {
@@ -606,12 +640,6 @@
 
       .table-wrapper {
         padding: 20px;
-        margin: 0;
-      }
-
-      .table-header h2 {
-        font-size: 16px;
-        margin-bottom: 20px;
       }
 
       .search-section {
@@ -624,157 +652,38 @@
       }
 
       .pagination-section {
-        font-size: 13px;
         padding: 15px;
+        gap: 6px;
       }
 
-      .pagination-section span {
-        font-size: 13px;
-        margin: 0 10px;
+      .pagination-section .btn {
+        font-size: 12px;
+        padding: 8px 12px;
+        min-width: 35px;
+        height: 35px;
       }
 
-      .modal-content {
-        width: 95%;
-        margin: 10% auto;
-        padding: 20px;
-      }
-
-      .preschooler-cards {
-        gap: 15px;
-      }
-
-      .card {
-        width: 100%;
-        min-width: unset;
-      }
-
-      table th,
-      table td {
-        padding: 10px 12px;
+      .pagination-section .page-number {
+        min-width: 35px;
+        height: 35px;
         font-size: 13px;
       }
 
       table {
         min-width: 700px;
       }
-
-      /* Notification dropdown adjustments */
-      #notifMenu {
-        right: -20px;
-        left: auto;
-        min-width: 280px;
-        max-width: calc(100vw - 40px);
-        margin-right: 10px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .content-wrapper {
-        padding: 15px 10px;
-      }
-
-      .table-wrapper {
-        padding: 15px;
-      }
-
-      .greeting {
-        font-size: 14px;
-      }
-
-      .btn {
-        font-size: 12px;
-        padding: 8px 12px;
-      }
-
-      .modal-content {
-        padding: 15px;
-      }
-
-      .close-btn {
-        top: 15px;
-        right: 20px;
-        font-size: 20px;
-      }
-
-      table th,
-      table td {
-        padding: 8px 10px;
-        font-size: 12px;
-      }
-
-      table {
-        min-width: 600px;
-      }
-    }
-
-    @media (max-width: 375px) {
-      .table-wrapper {
-        padding: 12px;
-      }
-
-      table th,
-      table td {
-        padding: 6px 8px;
-        font-size: 11px;
-      }
-
-      table {
-        min-width: 550px;
-      }
-      
-      .sidebar-title {
-        font-size: 16px;
-      }
-      
-      .nav-link {
-        padding: 14px 20px;
-        font-size: 13px;
-      }
-    }
-
-    @media (max-width: 360px) {
-      .content-wrapper {
-        padding: 10px 8px;
-      }
-
-      .greeting {
-        font-size: 14px;
-      }
-    }
-
-    @media (max-width: 768px) and (orientation: landscape) {
-      .topbar {
-        padding: 10px 15px;
-      }
-
-      .greeting {
-        font-size: 14px;
-      }
-
-      .content-wrapper {
-        padding: 15px;
-      }
-
-      .table-wrapper {
-        padding: 15px;
-      }
     }
   </style>
 </head>
 <body>
-  <!-- Background Image -->
   <div class="background-image"></div>
-
-  <!-- Sidebar Overlay for Mobile -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-  <!-- Left Sidebar Navigation -->
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <h1 class="sidebar-title">PPMS {{ account.barangay.name }}</h1>
     </div>
     
-    <!-- Profile Section in Sidebar -->
     <div class="sidebar-profile" onclick="location.href='{% url 'profile' %}'">
       {% if account.profile_photo and account.profile_photo.image %}
         <img src="{{ account.profile_photo.image.url }}" alt="Profile" class="profile-image">
@@ -852,7 +761,6 @@
         </button>
       </div>
       
-      <!-- Logout at bottom of navigation -->
       <div class="nav-item logout-nav-item">
         <button class="nav-link" id="logoutLink">
           <svg class="nav-icon" fill="currentColor" viewBox="0 0 20 20">
@@ -864,42 +772,24 @@
     </nav>
   </div>
 
-  <!-- Main Content Area -->
   <div class="main-content">
-    <!-- Top Bar -->
     <div class="topbar">
       <div style="display: flex; align-items: center; gap: 15px;">
         <button class="mobile-toggle" id="mobileToggle">☰</button>
         <div class="greeting">PPMS CLUSTER 4 IMUS CITY</div>
       </div>
       <div class="top-icons">
-        <!-- Notification -->
         <div class="notif-dropdown">
           <button class="icon-btn" id="notifBtn" style="position: relative;">
             <img src="{% static 'media/notification.png' %}" alt="Notifications" style="width: 2.5rem; height: 2.5rem;">
             <span id="notifDot"></span>
           </button>
-
-          <div class="dropdown" id="notifMenu" style="max-height: 400px; overflow-y: auto; width: 320px; min-width: 280px;">
+          <div class="dropdown" id="notifMenu">
             {% if notifications %}
               {% for notif in notifications %}
-                {% if notif.type == 'account' %}
-                  <a href="{% url 'register_preschooler' %}" class="dropdown-item notif-item" data-id="{{ notif.id }}" data-type="account" style="display: flex; flex-direction: column; gap: 2px;">
-                    <div style="display: flex; align-items: center;">
-                      <img src="{% static 'media/default-profile.jpg' %}" alt="Default" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover; margin-right: 10px;">
-                      <span class="notif-text">
-                        New Registered
-                        {% if notif.user_role|lower == "parent" %}
-                          <strong>Parent</strong>
-                        {% else %}
-                          <strong>{{ notif.user_role }}</strong>
-                        {% endif %}
-                        account named <strong>{{ notif.full_name }}</strong>.
-                      </span>
-                    </div>
-                    <small style="margin-left: 40px; color: gray;">{{ notif.timestamp|timesince }} ago</small>
-                  </a>
-                {% endif %}
+                <a href="{% url 'register_preschooler' %}" class="dropdown-item">
+                  <span>New {{ notif.user_role }} account named <strong>{{ notif.full_name }}</strong>.</span>
+                </a>
               {% endfor %}
             {% else %}
               <div class="dropdown-item">No notifications available.</div>
@@ -909,27 +799,18 @@
       </div>
     </div>
 
-    <!-- Content Wrapper -->
     <div class="content-wrapper">
-      <!-- Main Table Section -->
       <div class="table-wrapper">
         <div class="table-header">
           <h2>Registered Parents</h2>
         </div>
 
         <div class="search-section">
-          <label for="search-input"><strong>Search by Name (All Pages):</strong></label>
-          <input 
-            type="text" 
-            id="search-input" 
-            class="search-input" 
-            placeholder="Search by name..." 
-            value="{{ search_query }}"
-          >
+          <label for="search-input"><strong>Search by Name:</strong></label>
+          <input type="text" id="search-input" class="search-input" placeholder="Search by name..." value="{{ search_query }}">
           <button id="search-btn" class="btn">Search</button>
         </div>
         
-        <!-- Enhanced Responsive Table Container -->
         <div class="table-container">
           <table>
             <thead>
@@ -963,18 +844,68 @@
 
     <div class="pagination-section">
       {% if is_searching %}
-        <!-- Hide pagination when searching, show nothing -->
+        <!-- Hide pagination when searching -->
       {% else %}
-        {% if parents.has_previous %}
-          <a href="?page={{ parents.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="btn">Previous</a>
-        {% endif %}
-        
-        <span>
-          Page {{ parents.number }} of {{ parents.paginator.num_pages }}
-        </span>
-        
-        {% if parents.has_next %}
-          <a href="?page={{ parents.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="btn">Next</a>
+        {% if parents %}
+          <!-- First page button (<<) -->
+          {% if parents.number > 1 %}
+            <a href="?page=1{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&lt;&lt;</a>
+          {% else %}
+            <span class="btn disabled">&lt;&lt;</span>
+          {% endif %}
+
+          <!-- Previous button -->
+          {% if parents.has_previous %}
+            <a href="?page={{ parents.previous_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&lt;</a>
+          {% else %}
+            <span class="btn disabled">&lt;</span>
+          {% endif %}
+
+          <!-- Page numbers logic -->
+          {% if parents.paginator.num_pages > 1 %}
+            {% for num in parents.paginator.page_range %}
+              {% comment %}
+                Show page if:
+                1. It's within first 10 pages AND current page <= 6
+                2. OR it's within sliding window when current page > 6
+              {% endcomment %}
+              {% if parents.number <= 6 %}
+                {% comment %}Show pages 1-10 when on early pages{% endcomment %}
+                {% if num <= 10 %}
+                  {% if num == parents.number %}
+                    <span class="page-number active">{{ num }}</span>
+                  {% else %}
+                    <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
+                  {% endif %}
+                {% endif %}
+              {% else %}
+                {% comment %}Sliding window: show 10 pages centered around current{% endcomment %}
+                {% with start=parents.number|add:'-5' end=parents.number|add:'4' %}
+                  {% if num >= start and num <= end %}
+                    {% if num == parents.number %}
+                      <span class="page-number active">{{ num }}</span>
+                    {% else %}
+                      <a href="?page={{ num }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="page-number">{{ num }}</a>
+                    {% endif %}
+                  {% endif %}
+                {% endwith %}
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+
+          <!-- Next button -->
+          {% if parents.has_next %}
+            <a href="?page={{ parents.next_page_number }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&gt;</a>
+          {% else %}
+            <span class="btn disabled">&gt;</span>
+          {% endif %}
+
+          <!-- Last page button (>>) -->
+          {% if parents.number < parents.paginator.num_pages %}
+            <a href="?page={{ parents.paginator.num_pages }}{% if search_query %}&search={{ search_query|urlencode }}{% endif %}" class="btn">&gt;&gt;</a>
+          {% else %}
+            <span class="btn disabled">&gt;&gt;</span>
+          {% endif %}
         {% endif %}
       {% endif %}
     </div>
@@ -1019,17 +950,9 @@
   </div>
   {% endfor %}
 
-  <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- Django Messages -->
   {% if messages %}
-    <ul id="django-messages" style="display: none;">
-      {% for message in messages %}
-        <li data-message="{{ message }}" data-tag="{{ message.tags }}"></li>
-      {% endfor %}
-    </ul>
-    
     <script>
       {% for message in messages %}
         Swal.fire({
@@ -1044,7 +967,6 @@
   {% endif %}
 
   <script>
-    // Initialize everything when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
       initializeNotifications();
       initializeEventListeners();
@@ -1052,7 +974,6 @@
       initializeTableFunctionality();
     });
 
-    // Mobile sidebar toggle
     function initializeMobileToggle() {
       const mobileToggle = document.getElementById("mobileToggle");
       const sidebar = document.getElementById("sidebar");
@@ -1071,7 +992,6 @@
       }
     }
 
-    // Initialize Notifications
     function initializeNotifications() {
       const notifBtn = document.getElementById("notifBtn");
       const notifMenu = document.getElementById("notifMenu");
@@ -1104,9 +1024,7 @@
       }
     }
 
-    // Initialize Event Listeners
     function initializeEventListeners() {
-      // Logout confirmation - now from sidebar
       document.getElementById("logoutLink")?.addEventListener("click", function(e) {
         e.preventDefault();
         Swal.fire({
@@ -1124,7 +1042,6 @@
         });
       });
 
-      // Nutrition Report from sidebar
       document.getElementById("nutritionReportBtn")?.addEventListener("click", function(e) {
         e.preventDefault();
         Swal.fire({
@@ -1142,7 +1059,6 @@
           }
         }).then((result) => {
           if (result.isConfirmed) {
-            // Show loading message
             Swal.fire({
               title: 'Generating Report...',
               text: 'Please wait while we prepare your Excel file.',
@@ -1156,7 +1072,6 @@
 
             const downloadUrl = "/generate-nutrition-excel/?month=" + result.value;
             
-            // Create download link and trigger download
             const link = document.createElement('a');
             link.href = downloadUrl;
             link.download = 'nutrition-report.xlsx';
@@ -1164,7 +1079,6 @@
             link.click();
             document.body.removeChild(link);
 
-            // Close loading and show success after short delay
             setTimeout(() => {
               Swal.fire({
                 title: 'Download Started!',
@@ -1178,7 +1092,6 @@
         });
       });
 
-      // Immunization Report from sidebar
       document.getElementById("immunizationReportBtn")?.addEventListener("click", function(e) {
         e.preventDefault();
         Swal.fire({
@@ -1203,9 +1116,7 @@
       });
     }
 
-    // Initialize Table Functionality
     function initializeTableFunctionality() {
-      // Clickable rows for table
       document.querySelectorAll(".parent-row").forEach(row => {
         row.addEventListener("click", () => {
           const parentId = row.getAttribute("data-id");
@@ -1214,105 +1125,38 @@
         });
       });
 
-      // Search functionality
       document.getElementById("search-btn").addEventListener("click", () => {
-        const input = document.getElementById("search-input").value.toLowerCase();
-        
-        // Search table rows
-        const rows = document.querySelectorAll("#parent-table .parent-row");
-        rows.forEach(row => {
-          const name = row.cells[0].textContent.toLowerCase();
-          row.style.display = name.includes(input) ? "" : "none";
-        });
+        const searchTerm = document.getElementById("search-input").value.trim();
+        if (searchTerm === "") {
+          window.location.href = window.location.pathname;
+          return;
+        }
+        window.location.href = `${window.location.pathname}?search=${encodeURIComponent(searchTerm)}`;
       });
 
-      // Enter key search
       document.getElementById("search-input").addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
           document.getElementById("search-btn").click();
         }
       });
 
-      // Add scroll hint visibility control for mobile
-      function handleScrollHint() {
-        const tableContainer = document.querySelector('.table-container');
-        const scrollHint = document.querySelector('.scroll-hint');
-        
-        if (window.innerWidth <= 768 && scrollHint) {
-          const isScrollable = tableContainer.scrollWidth > tableContainer.clientWidth;
-          scrollHint.style.display = isScrollable ? 'block' : 'none';
-          
-          // Hide hint after user scrolls
-          let hasScrolled = false;
-          tableContainer.addEventListener('scroll', function() {
-            if (!hasScrolled) {
-              hasScrolled = true;
-              scrollHint.style.opacity = '0.3';
-              setTimeout(() => {
-                scrollHint.style.display = 'none';
-              }, 2000);
-            }
-          });
+      document.getElementById("search-input").addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          document.getElementById("search-input").value = "";
+          window.location.href = window.location.pathname;
         }
-      }
-
-      // Call on load and resize
-      handleScrollHint();
-      window.addEventListener('resize', handleScrollHint);
+      });
     }
 
     function closeModal(id) {
       document.getElementById(`modal-${id}`).style.display = 'none';
     }
 
-    // Close modal if clicking outside
     window.onclick = function(event) {
       document.querySelectorAll('.modal').forEach(modal => {
         if (event.target === modal) modal.style.display = 'none';
       });
     };
-
-    const ONESIGNAL_CONFIG = {
-      APP_ID: '4849b31f-2680-43a1-b2f3-9d365d92a73e',
-      REST_API_KEY: 'os_v2_app_jbe3ghzgqbb2dmxttu3f673rxqhl6nn2xlfvgqtmng5ctneiapely3a72yzweqb6opblocgnxoyi2irfxia',
-      API_URL: 'https://onesignal.com/api/v1/notifications'
-    };
   </script>
-
-
-<script>
-// Global Search Functionality
-document.getElementById("search-btn").addEventListener("click", () => {
-  const searchTerm = document.getElementById("search-input").value.trim();
-
-  // If input is empty, go back to default (all parents)
-  if (searchTerm === "") {
-    window.location.href = window.location.pathname;
-    return;
-  }
-
-  // Otherwise perform global search across all data (backend search)
-  window.location.href = `${window.location.pathname}?search=${encodeURIComponent(searchTerm)}`;
-});
-
-// Enter key performs search
-document.getElementById("search-input").addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
-    document.getElementById("search-btn").click();
-  }
-});
-
-// Optional: Clear search functionality
-document.getElementById("search-input").addEventListener("keydown", (e) => {
-  // Press Escape to clear search and go back to all parents
-  if (e.key === "Escape") {
-    document.getElementById("search-input").value = "";
-    window.location.href = window.location.pathname;
-  }
-});
-</script>
-
 </body>
-</html>/
-
-
+</html>
