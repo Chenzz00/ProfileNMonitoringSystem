@@ -557,6 +557,13 @@
     }
 
     /* Pagination - Simple text with Next button */
+    .pagination-section span {
+      color: #666;
+      font-size: 14px;
+      font-weight: 400;
+    }
+    
+/* Pagination - Enhanced styled buttons */
     .pagination-section {
       display: flex;
       justify-content: center;
@@ -566,37 +573,31 @@
       font-family: 'Poppins', sans-serif;
     }
 
-    .pagination-section span {
-      color: #666;
-      font-size: 14px;
-      font-weight: 400;
-    }
-
     .pagination-section .btn {
-      background: white;
-      color: #5bdab3;
+      background: #3cb4ac;
+      color: white;
       padding: 10px 16px;
       text-decoration: none;
       border-radius: 8px;
       font-weight: 600;
       font-size: 14px;
       transition: all 0.3s ease;
-      border: 2px solid #5bdab3;
+      border: none;
       cursor: pointer;
       min-width: 40px;
       height: 40px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 4px rgba(91, 218, 179, 0.15);
+      box-shadow: 0 2px 4px rgba(60, 180, 172, 0.3);
     }
 
     .pagination-section .btn:hover:not(.disabled) {
-      background: linear-gradient(135deg, #5bdab3 0%, #1565c0 100%);
+      background: #2d9388;
       color: white;
-      border-color: #1565c0;
+      border-color: transparent;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+      box-shadow: 0 4px 12px rgba(45, 147, 136, 0.4);
     }
 
     .pagination-section .btn.disabled {
@@ -607,6 +608,7 @@
       color: #999;
       box-shadow: none;
     }
+
     .pagination-section .page-number {
       background: white;
       color: #666;
@@ -625,20 +627,21 @@
       justify-content: center;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
+
     .pagination-section .page-number:hover {
       background: #f8f9fa;
-      border-color: #5bdab3;
-      color: #5bdab3;
+      border-color: #3cb4ac;
+      color: #3cb4ac;
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(91, 218, 179, 0.2);
+      box-shadow: 0 4px 8px rgba(60, 180, 172, 0.2);
     }
 
     .pagination-section .page-number.active {
-      background: linear-gradient(135deg, #5bdab3 0%, #1565c0 100%);
+      background: #3cb4ac;
       color: white;
       border-color: transparent;
       font-weight: 700;
-      box-shadow: 0 4px 12px rgba(91, 218, 179, 0.4);
+      box-shadow: 0 4px 12px rgba(60, 180, 172, 0.4);
       cursor: default;
     }
 
