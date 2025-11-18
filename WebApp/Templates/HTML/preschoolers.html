@@ -2544,36 +2544,56 @@ function initializeContextMenu() {
 
   rows.forEach(row => {
     row.addEventListener('click', function(e) {
+      // Don't open if mobile device
+      if (isMobileDevice()) return;
+      
       e.preventDefault();
       e.stopPropagation();
 
-      // Get row position relative to viewport
-      const rect = this.getBoundingClientRect();
-      
-      // Position menu right below the clicked row
-      let top = rect.bottom + 5; // 5px below the row
-      let left = rect.left;
+      // Get exact click position
+      let clickX = e.clientX;
+      let clickY = e.clientY;
 
-      // Adjust if menu goes off-screen (right side)
-      const menuWidth = 220; // approximate width of custom menu
-      if (left + menuWidth > window.innerWidth) {
-        left = window.innerWidth - menuWidth - 10;
-      }
-
-      // Adjust if menu goes off-screen (bottom)
-      const menuHeight = 180; // approximate height of custom menu
-      if (top + menuHeight > window.innerHeight) {
-        top = rect.top - menuHeight - 5; // Show above instead
-      }
-
-      // Apply positioning
-      customMenu.style.position = 'fixed';
-      customMenu.style.top = top + 'px';
-      customMenu.style.left = left + 'px';
+      // Get menu dimensions
       customMenu.style.display = 'block';
-      customMenu.style.zIndex = '1000';
+      customMenu.style.opacity = '0';
+      const menuWidth = customMenu.offsetWidth;
+      const menuHeight = customMenu.offsetHeight;
+      customMenu.style.display = 'none';
+      customMenu.style.opacity = '1';
 
-      console.log('Menu positioned at:', { top, left, rowTop: rect.top, rowBottom: rect.bottom });
+      // Adjust position if menu would go off-screen
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      // Adjust horizontal position
+      if (clickX + menuWidth > viewportWidth - 10) {
+        clickX = viewportWidth - menuWidth - 10;
+      }
+      
+      // Adjust vertical position
+      if (clickY + menuHeight > viewportHeight - 10) {
+        clickY = viewportHeight - menuHeight - 10;
+      }
+      
+      // Make sure menu doesn't go above viewport
+      if (clickY < 10) {
+        clickY = 10;
+      }
+      
+      // Make sure menu doesn't go left of viewport
+      if (clickX < 10) {
+        clickX = 10;
+      }
+
+      // Position menu exactly at click point
+      customMenu.style.position = 'fixed';
+      customMenu.style.top = clickY + 'px';
+      customMenu.style.left = clickX + 'px';
+      customMenu.style.display = 'block';
+      customMenu.classList.add('show');
+
+      console.log('Menu positioned at click:', { x: clickX, y: clickY });
     });
   });
 
@@ -2581,13 +2601,21 @@ function initializeContextMenu() {
   document.addEventListener('click', function(e) {
     if (!customMenu.contains(e.target) && !e.target.closest('.preschooler-row')) {
       customMenu.style.display = 'none';
+      customMenu.classList.remove('show');
     }
   });
 
   // Close menu on scroll
   window.addEventListener('scroll', function() {
     customMenu.style.display = 'none';
+    customMenu.classList.remove('show');
   }, true);
+  
+  // Close menu on window resize
+  window.addEventListener('resize', function() {
+    customMenu.style.display = 'none';
+    customMenu.classList.remove('show');
+  });
 }
 
 // Call this after DOM loads
