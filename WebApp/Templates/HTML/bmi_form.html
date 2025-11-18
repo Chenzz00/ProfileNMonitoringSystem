@@ -1029,17 +1029,34 @@
 
         // Debug: Log when script loads
         console.log('Dynamic Multi-Device BMI Form script loaded');
-    </script>
-
     <script>
-        document.getElementById('temperature').addEventListener('input', function(e) {
-            let value = e.target.value;
-            // Allow only numbers and one decimal point
-            if (value.includes('.')) {
-                let parts = value.split('.');
-                e.target.value = parts[0] + '.' + parts[1].substring(0, 1);
+    // Function to round to 1 decimal place
+    function roundToOneDecimal(value) {
+        if (!value || isNaN(value)) return '';
+        return Math.round(value * 10) / 10;
+    }
+
+    document.getElementById('temperature').addEventListener('input', function(e) {
+        let value = e.target.value;
+        
+        if (value) {
+            // Round to 1 decimal place
+            let rounded = roundToOneDecimal(parseFloat(value));
+            e.target.value = rounded;
+        }
+    });
+
+    // Round ESP32 temperature data when received
+    const originalCheckForESP32Data = window.checkForESP32Data;
+    window.checkForESP32Data = function() {
+        return originalCheckForESP32Data.call(this).then(() => {
+            const tempInput = document.getElementById('temperature');
+            if (tempInput.value) {
+                tempInput.value = roundToOneDecimal(parseFloat(tempInput.value));
             }
         });
-    </script>
+    };
+</script>
 </body>
 </html>
+
