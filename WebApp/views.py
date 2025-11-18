@@ -5267,15 +5267,12 @@ def preschoolers(request):
     user_email = request.session.get('email')
     raw_role = (request.session.get('user_role') or '').strip().lower()
 
-   
     account = get_object_or_404(Account, email=user_email)
 
-   
     auto_archived_count = auto_archive_aged_preschoolers()
     if auto_archived_count > 0:
         print(f"AUTO-ARCHIVED: {auto_archived_count} preschoolers aged out (60+ months)")
 
-   
     if raw_role == 'admin':
         preschoolers_qs = Preschooler.objects.filter(is_archived=False)
         barangay_name = "All Barangays"
@@ -5290,11 +5287,12 @@ def preschoolers(request):
         .prefetch_related(
             Prefetch('bmi_set', queryset=BMI.objects.order_by('-date_recorded'), to_attr='bmi_records'),
             Prefetch('temperature_set', queryset=Temperature.objects.order_by('-date_recorded'), to_attr='temp_records')
-        )
+        ) \
+        .order_by('first_name', 'last_name')
 
     today = date.today()
 
-   
+    # --- Compute nutritional status and delivery class ---
     for p in preschoolers_qs:
         
         if not p.middle_name:
@@ -5320,9 +5318,9 @@ def preschoolers(request):
                 p.nutritional_status = classify_bmi_for_age(z)
             except Exception as e:
                 print(f"Error computing BMI classification for {p.first_name}: {e}")
-                p.nutritional_status = "Error"
+                p.nutritional_status = "N/A"
         else:
-            p.nutritional_status = None
+            p.nutritional_status = "N/A"
 
         # Delivery place color coding
         delivery_place = getattr(p, 'place_of_delivery', None)
@@ -5369,6 +5367,14 @@ def preschoolers(request):
     else:
         template_user_role = raw_role
 
+    # Get notifications for admin badge
+    notifications = []
+    if raw_role == 'admin':
+        try:
+            notifications = Notification.objects.filter(is_read=False).order_by('-timestamp')[:5]
+        except:
+            pass
+
     context = {
         'account': account, 
         'preschoolers': page_obj,
@@ -5378,11 +5384,11 @@ def preschoolers(request):
         'barangay_name': barangay_name,
         'filter_status': filter_status,  
         'search_query': search_query,     
-        'is_searching': is_searching,     
+        'is_searching': is_searching,
+        'notifications': notifications,
     }
 
     return render(request, 'HTML/preschoolers.html', context)
-
 
 @login_required
 def profile(request):
@@ -11176,6 +11182,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
