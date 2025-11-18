@@ -920,7 +920,8 @@
             document.getElementById('temp-source').style.display = 'none';
         }
 
-        // Clear ESP32 data when leaving the page
+
+    
         window.addEventListener('beforeunload', function(e) {
             if (selectedDeviceId) {
                 console.log(`BEFOREUNLOAD: Clearing ESP32 data for ${selectedDeviceId}...`);
@@ -1085,5 +1086,6 @@
 </script>
 </body>
 </html>
+
 
 
