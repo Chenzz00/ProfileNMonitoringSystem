@@ -729,7 +729,6 @@
           <button id="search-btn" class="search-btn">Search</button>
         </div>
 
-
        <!-- Table Container -->
         <div class="table-container">
           <table>
@@ -766,11 +765,18 @@
           </table>
         </div>
 
-        <!-- Updated Pagination with Page Numbers -->
+        <!-- Updated Pagination with Page Numbers (Limited to 10) -->
         <div class="pagination-section">
           {% if is_searching %}
             <!-- Hide pagination when searching -->
           {% else %}
+            <!-- First page button (<<) -->
+            {% if preschoolers.number > 1 %}
+              <a href="?page=1{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">&lt;&lt;</a>
+            {% else %}
+              <span class="btn disabled">&lt;&lt;</span>
+            {% endif %}
+
             <!-- Previous button -->
             {% if preschoolers.has_previous %}
               <a href="?page={{ preschoolers.previous_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">&lt;</a>
@@ -778,19 +784,25 @@
               <span class="btn disabled">&lt;</span>
             {% endif %}
 
-            <!-- Page numbers -->
+            <!-- Page numbers (Show max 10 pages) -->
             {% if preschoolers.paginator.num_pages > 1 %}
-              {% for num in preschoolers.paginator.page_range %}
-                {% if num == preschoolers.number %}
-                  <span class="page-number active">{{ num }}</span>
-                {% elif num > preschoolers.number|add:'-3' and num < preschoolers.number|add:'3' %}
-                  <a href="?page={{ num }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="page-number">{{ num }}</a>
-                {% elif num == 1 or num == preschoolers.paginator.num_pages %}
-                  <a href="?page={{ num }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="page-number">{{ num }}</a>
-                {% elif num == preschoolers.number|add:'-3' or num == preschoolers.number|add:'3' %}
-                  <span class="page-number" style="border: none; cursor: default;">...</span>
-                {% endif %}
-              {% endfor %}
+              {% with ''|center:preschoolers.number as current %}
+              {% with preschoolers.number|add:'-5' as start_page %}
+              {% with preschoolers.number|add:'4' as end_page %}
+                {% for num in preschoolers.paginator.page_range %}
+                  {% if num >= start_page and num <= end_page and num > 0 and num <= preschoolers.paginator.num_pages %}
+                    {% if forloop.counter0 < 10 %}
+                      {% if num == preschoolers.number %}
+                        <span class="page-number active">{{ num }}</span>
+                      {% else %}
+                        <a href="?page={{ num }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="page-number">{{ num }}</a>
+                      {% endif %}
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+              {% endwith %}
+              {% endwith %}
+              {% endwith %}
             {% endif %}
 
             <!-- Next button -->
@@ -801,9 +813,9 @@
             {% endif %}
 
             <!-- Last page button (>>) -->
-            {% if preschoolers.paginator.num_pages > 1 and preschoolers.number != preschoolers.paginator.num_pages %}
+            {% if preschoolers.number < preschoolers.paginator.num_pages %}
               <a href="?page={{ preschoolers.paginator.num_pages }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">&gt;&gt;</a>
-            {% elif preschoolers.paginator.num_pages > 1 %}
+            {% else %}
               <span class="btn disabled">&gt;&gt;</span>
             {% endif %}
           {% endif %}
@@ -1055,4 +1067,3 @@ document.addEventListener("DOMContentLoaded", function() {
   
 </body>
 </html>
-
