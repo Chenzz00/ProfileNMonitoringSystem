@@ -7,7 +7,7 @@
     <title>Input BMI - Multi Device</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
@@ -425,8 +425,17 @@
 
         /* Mobile Responsive */
         @media (max-width: 768px) {
-            body {
-                padding: 15px;
+                .button-container {
+                    flex-wrap: wrap;
+                    gap: 10px;
+                }
+
+
+                .button-container button {
+                    flex: 1;
+                    min-width: 100px;
+                    padding: 12px 20px;
+                }
             }
 
             .topbar {
@@ -645,22 +654,16 @@
                 </div>
 
                 <div class="button-container">
-
-    <div class="top-button-row">
-        <button type="button" id="refresh-data" class="refresh-btn button1" disabled>
-            Check for ESP32 Data
-        </button>
-    </div>
-
-    <div class="bottom-button-row">
-        <button type="button" id="clear-esp32-data" class="clear-btn button1" disabled>
-            Clear ESP32 Data
-        </button>
-
-        <button type="submit" class="button1" disabled>
-            Submit BMI & Temperature
-        </button>
-    </div>
+    <button type="button" id="refresh-data" class="refresh-btn button1" disabled>
+        Check for ESP32 Data
+    </button>
+    <button type="button" id="clear-esp32-data" class="clear-btn button1" disabled>
+        Clear ESP32 Data
+    </button>
+    <button type="submit" class="button1" disabled>
+        Submit BMI & Temperature
+    </button>
+</div>
 
 </div>
 
@@ -1083,4 +1086,3 @@
 </script>
 </body>
 </html>
-
