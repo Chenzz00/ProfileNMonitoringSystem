@@ -7,7 +7,7 @@
     <title>Input BMI - Multi Device</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-   
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
@@ -423,20 +423,55 @@
             animation: spin 1s linear infinite;
         }
 
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-                .button-container {
-                    flex-wrap: wrap;
-                    gap: 10px;
-                }
+        
+.button-container {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    width: 100%;
+    margin: 0 auto;
+}
 
+.button-container button {
+    flex: 1;
+    width: 100%;
+    max-width: 350px;
+    height: 60px;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-                .button-container button {
-                    flex: 1;
-                    min-width: 100px;
-                    padding: 12px 20px;
-                }
-            }
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .button-container {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    /* Mobile responsive */
+@media (max-width: 768px) {
+    .button-container {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .button-container button {
+        width: 100%;
+        max-width: none;
+        height: 60px;
+        padding: 10px;
+        font-size: 16px;
+    }
+}
+
+   
 
             .topbar {
                 height: 70px;
@@ -565,6 +600,7 @@
         padding-left: 50px;
     }
 
+    /* Hamburger lines */
     .form-group:last-of-type button::before {
     content: '';
     position: absolute;
@@ -920,8 +956,7 @@
             document.getElementById('temp-source').style.display = 'none';
         }
 
-
-    
+        // Clear ESP32 data when leaving the page
         window.addEventListener('beforeunload', function(e) {
             if (selectedDeviceId) {
                 console.log(`BEFOREUNLOAD: Clearing ESP32 data for ${selectedDeviceId}...`);
@@ -1086,6 +1121,3 @@
 </script>
 </body>
 </html>
-
-
-
