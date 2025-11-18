@@ -756,7 +756,7 @@
               {% for p in preschoolers %}
               <tr class="preschooler-row {{ p.delivery_class|default:'delivery-na' }}">
                 <td>{{ p.first_name }} {{ p.last_name }}</td>
-                <td>{{ p.age_in_months|default:"N/A" }}</td>
+                <td>{{ p.age_in_months|default_if_none:"N/A" }}</td>
                 <td>{{ p.parent_id.full_name }}</td>
                 {% with p.bmi_records.0 as bmi %}
                   <td>{{ bmi.height|floatformat:2|default:"N/A" }}</td>
@@ -1125,3 +1125,4 @@ document.addEventListener("DOMContentLoaded", function() {
 
 </body>
 </html>
+
