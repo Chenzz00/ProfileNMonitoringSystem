@@ -192,30 +192,30 @@
     .search-input:focus,
     .search-select:focus {
       outline: none;
-      border-color: #5bdab3;
-      box-shadow: 0 0 0 3px rgba(91, 218, 179, 0.15);
+      border-color: #3cb4ac;
+      box-shadow: 0 0 0 3px rgba(60, 180, 172, 0.15);
       background-color: white;
     }
 
     .search-btn {
-      background-color: #5bdab3;
-      color: #1e1e2f;
+      background-color: #3cb4ac;
+      color: white;
       border-radius: 8px;
       font-weight: 500;
       font-size: 14px;
       padding: 10px 20px;
       transition: all 0.3s ease;
       border: none;
-      box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
+      box-shadow: 0 2px 6px rgba(60, 180, 172, 0.3);
       cursor: pointer;
       height: fit-content;
     }
 
     .search-btn:hover {
-      background-color: #1565c0;
+      background-color: #2d9388;
       color: white;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+      box-shadow: 0 4px 12px rgba(45, 147, 136, 0.4);
     }
 
     /* Table Container - Now responsive */
@@ -226,7 +226,7 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
       -webkit-overflow-scrolling: touch;
       scrollbar-width: thin;
-      scrollbar-color: #5bdab3 #f1f1f1;
+      scrollbar-color: #3cb4ac #f1f1f1;
     }
 
     .table-container::-webkit-scrollbar {
@@ -239,12 +239,12 @@
     }
 
     .table-container::-webkit-scrollbar-thumb {
-      background: #5bdab3;
+      background: #3cb4ac;
       border-radius: 4px;
     }
 
     .table-container::-webkit-scrollbar-thumb:hover {
-      background: #4ac9a2;
+      background: #2d9388;
     }
 
     table {
@@ -327,46 +327,90 @@
       background-color: rgba(158, 158, 158, 0.3) !important;
     }
 
-    /* Pagination */
+    /* Pagination - Enhanced styled buttons */
     .pagination-section {
-      text-align: center;
-      margin-top: 20px;
-      color: #333;
-      font-size: 14px;
-      font-weight: 400;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 30px;
       font-family: 'Poppins', sans-serif;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 20px;
-      border-radius: 10px;
-      backdrop-filter: blur(10px);
-    }
-
-    .pagination-section span {
-      margin: 0 15px;
-      color: #666;
     }
 
     .pagination-section .btn {
-      background-color: #5bdab3;
-      color: #1e1e2f;
-      padding: 12px 20px;
+      background: #3cb4ac;
+      color: white;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(60, 180, 172, 0.3);
+    }
+
+    .pagination-section .btn:hover:not(.disabled) {
+      background: #2d9388;
+      color: white;
+      border-color: transparent;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(45, 147, 136, 0.4);
+    }
+
+    .pagination-section .btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: #f5f5f5;
+      border-color: #e0e0e0;
+      color: #999;
+      box-shadow: none;
+    }
+
+    .pagination-section .page-number {
+      background: white;
+      color: #666;
+      padding: 10px;
       text-decoration: none;
       border-radius: 8px;
       font-weight: 500;
       font-size: 14px;
       transition: all 0.3s ease;
-      border: none;
+      border: 2px solid #e0e0e0;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
-      display: inline-block;
-      margin: 0 5px;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .pagination-section .btn:hover {
-      background-color: #1565c0;
-      color: white;
+    .pagination-section .page-number:hover {
+      background: #f8f9fa;
+      border-color: #3cb4ac;
+      color: #3cb4ac;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+      box-shadow: 0 4px 8px rgba(60, 180, 172, 0.2);
+    }
+
+    .pagination-section .page-number.active {
+      background: #3cb4ac;
+      color: white;
+      border-color: transparent;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(60, 180, 172, 0.4);
+      cursor: default;
+    }
+
+    .pagination-section .page-number.active:hover {
+      transform: none;
     }
 
     /* Mobile adjustments */
@@ -420,14 +464,17 @@
         font-size: 12px;
       }
 
-      .pagination-section {
-        font-size: 13px;
-        padding: 15px;
+      .pagination-section .btn {
+        font-size: 12px;
+        padding: 8px 12px;
+        min-width: 35px;
+        height: 35px;
       }
 
-      .pagination-section span {
+      .pagination-section .page-number {
+        min-width: 35px;
+        height: 35px;
         font-size: 13px;
-        margin: 0 10px;
       }
     }
 
@@ -718,21 +765,45 @@
           </table>
         </div>
 
-        <!-- Pagination Section -->
+        <!-- Updated Pagination with Page Numbers -->
         <div class="pagination-section">
           {% if is_searching %}
-            <!-- Hide pagination when searching, show nothing -->
+            <!-- Hide pagination when searching -->
           {% else %}
+            <!-- Previous button -->
             {% if preschoolers.has_previous %}
-              <a href="?page={{ preschoolers.previous_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">Previous</a>
+              <a href="?page={{ preschoolers.previous_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">&lt;</a>
+            {% else %}
+              <span class="btn disabled">&lt;</span>
             {% endif %}
 
-            <span>
-              Page {{ preschoolers.number }} of {{ preschoolers.paginator.num_pages }}
-            </span>
+            <!-- Page numbers -->
+            {% if preschoolers.paginator.num_pages > 1 %}
+              {% for num in preschoolers.paginator.page_range %}
+                {% if num == preschoolers.number %}
+                  <span class="page-number active">{{ num }}</span>
+                {% elif num > preschoolers.number|add:'-3' and num < preschoolers.number|add:'3' %}
+                  <a href="?page={{ num }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="page-number">{{ num }}</a>
+                {% elif num == 1 or num == preschoolers.paginator.num_pages %}
+                  <a href="?page={{ num }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="page-number">{{ num }}</a>
+                {% elif num == preschoolers.number|add:'-3' or num == preschoolers.number|add:'3' %}
+                  <span class="page-number" style="border: none; cursor: default;">...</span>
+                {% endif %}
+              {% endfor %}
+            {% endif %}
 
+            <!-- Next button -->
             {% if preschoolers.has_next %}
-              <a href="?page={{ preschoolers.next_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">Next</a>
+              <a href="?page={{ preschoolers.next_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">&gt;</a>
+            {% else %}
+              <span class="btn disabled">&gt;</span>
+            {% endif %}
+
+            <!-- Last page button (>>) -->
+            {% if preschoolers.paginator.num_pages > 1 and preschoolers.number != preschoolers.paginator.num_pages %}
+              <a href="?page={{ preschoolers.paginator.num_pages }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">&gt;&gt;</a>
+            {% elif preschoolers.paginator.num_pages > 1 %}
+              <span class="btn disabled">&gt;&gt;</span>
             {% endif %}
           {% endif %}
         </div>
@@ -983,7 +1054,3 @@ document.addEventListener("DOMContentLoaded", function() {
   
 </body>
 </html>
-
-
-
-
