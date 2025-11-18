@@ -370,7 +370,7 @@
       display: inline-block;
     }
 
-    .legend-home { 
+    .legend-center { 
       background-color: rgba(33, 150, 243, 0.5) !important; 
       border: none !important; 
     }
@@ -512,12 +512,12 @@
     }
 
     /* DELIVERY PLACE ROW COLORS */
-    tbody .delivery-home,
-    tbody .delivery-home td {
+    tbody .delivery-center,
+    tbody .delivery-center td {
       background-color: rgba(33, 150, 243, 0.3) !important;
     }
-    tbody .delivery-home:hover,
-    tbody .delivery-home:hover td {
+    tbody .delivery-center:hover,
+    tbody .delivery-center:hover td {
       background-color: rgba(33, 150, 243, 0.4) !important;
     }
     
@@ -558,7 +558,7 @@
     }
 
     /* BNS row styling - blends with delivery colors */
-    .bns-row.delivery-home {
+    .bns-row.delivery-center {
       background: linear-gradient(135deg, rgba(240, 248, 255, 0.6), rgba(33, 150, 243, 0.4)) !important;
     }
     .bns-row.delivery-lying-in {
@@ -597,27 +597,116 @@
     }
 
     .pagination-section {
-      text-align: center;
-      margin-top: 20px;
-      color: #333;
-      font-size: 14px;
-      font-weight: 400;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 5px;
+      margin-bottom: 10px;
       font-family: 'Poppins', sans-serif;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 20px;
-      border-radius: 10px;
-      backdrop-filter: blur(10px);
-    }
-
-    .pagination-section span {
-      margin: 0 15px;
-      color: #666;
+      background: transparent;
+      padding: 0;
+      flex-wrap: wrap;
     }
 
     .pagination-section .btn {
-      margin: 0 5px;
-      padding: 12px 20px;
+      background: #5bdab3;
+      color: #1e1e2f;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
       font-size: 14px;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(91, 218, 179, 0.3);
+    }
+
+    .pagination-section .btn:hover:not(.disabled) {
+      background: #1565c0;
+      color: white;
+      border-color: transparent;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+
+        .pagination-section span {
+          margin: 0 15px;
+          color: #666;
+        }
+
+    .pagination-section .btn.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: #f5f5f5;
+      border-color: #e0e0e0;
+      color: #999;
+      box-shadow: none;
+    }
+
+    .pagination-section .page-number {
+      background: white;
+      color: #666;
+      padding: 10px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      border: 2px solid #e0e0e0;
+      cursor: pointer;
+      min-width: 40px;
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .pagination-section .page-number:hover {
+      background: #f8f9fa;
+      border-color: #5bdab3;
+      color: #5bdab3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(91, 218, 179, 0.2);
+    }
+
+    .pagination-section .page-number.active {
+      background: #5bdab3;
+      color: white;
+      border-color: transparent;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(91, 218, 179, 0.4);
+      cursor: default;
+    }
+
+    .pagination-section .page-number.active:hover {
+      transform: none;
+    }
+
+    /* Hide page numbers on mobile - controlled by JS */
+    @media (max-width: 768px) {
+      .pagination-section .page-number.hide-mobile {
+        display: none !important;
+      }
+      
+      .pagination-section .btn {
+        font-size: 12px;
+        padding: 8px 12px;
+        min-width: 35px;
+        height: 35px;
+      }
+
+      .pagination-section .page-number {
+        min-width: 35px;
+        height: 35px;
+        font-size: 13px;
+      }
     }
 
     /* IMPROVED CUSTOM MENU STYLES */
@@ -1480,8 +1569,8 @@
         <!-- Color Legend -->
         <div class="legend">
           <div class="legend-item">
-            <span class="legend-color legend-home"></span>
-            <span>Home Birth</span>
+            <span class="legend-color legend-center"></span>
+            <span>Center to Center</span>
           </div>
           <div class="legend-item">
             <span class="legend-color legend-lying-in"></span>
@@ -1505,19 +1594,20 @@
         {% endif %}
 
         <div class="search-section">
-          <label for="status-select"><strong>Filter by Nutritional Status:</strong></label>
-          <select id="status-select" class="search-input">
-            <option value="All">All</option>
-            <option value="Severely Wasted">Severely Wasted</option>
-            <option value="Wasted">Wasted</option>
-            <option value="Normal">Normal</option>
-            <option value="Risk of Overweight">Risk of Overweight</option>
-            <option value="Overweight">Overweight</option>
-            <option value="Obese">Obese</option>
-          </select>
-          <input type="text" id="search-input" class="search-input" placeholder="Search by name...">
-          <button id="search-btn" class="btn">Search</button>
-        </div>
+  <label for="status-select"><strong>Filter by Nutritional Status:</strong></label>
+  <select id="status-select" class="search-input">
+    <option value="All" {% if not filter_status or filter_status == 'All' %}selected{% endif %}>All</option>
+    <option value="Severely Wasted" {% if filter_status == 'Severely Wasted' %}selected{% endif %}>Severely Wasted</option>
+    <option value="Wasted" {% if filter_status == 'Wasted' %}selected{% endif %}>Wasted</option>
+    <option value="Normal" {% if filter_status == 'Normal' %}selected{% endif %}>Normal</option>
+    <option value="Risk of Overweight" {% if filter_status == 'Risk of Overweight' %}selected{% endif %}>Risk of Overweight</option>
+    <option value="Overweight" {% if filter_status == 'Overweight' %}selected{% endif %}>Overweight</option>
+    <option value="Obese" {% if filter_status == 'Obese' %}selected{% endif %}>Obese</option>
+  </select>
+  <label for="search-input"><strong>Search by Name (All Pages):</strong></label>
+  <input type="text" id="search-input" class="search-input" placeholder="Search by name..." value="{{ search_query }}">
+  <button id="search-btn" class="btn">Search</button>
+</div>
         
         <!-- Enhanced Responsive Table -->
         <div class="table-responsive">
@@ -1545,7 +1635,7 @@
                 <td style="position: relative;">
                   {{ p.first_name }} {{ p.last_name }}
                 </td>
-                <td>{{ p.age_in_months|default_if_none:"N/A" }}</td>
+                <td>{{ p.age_display|default_if_none:"N/A" }}</td>
                 <td>{{ p.parent_id.full_name }}</td>
                 {% with p.bmi_records.0 as bmi %}
                 <td>{{ bmi.height|floatformat:2|default:"N/A" }}</td>
@@ -1565,17 +1655,72 @@
         </div>
       </div>
 
+      <!-- Fixed Pagination Section with 1-10 pages initially, then sliding window -->
       <div class="pagination-section">
-        {% if preschoolers.has_previous %}
-          <a href="?page={{ preschoolers.previous_page_number }}" class="btn">Previous</a>
-        {% endif %}
+        {% if is_searching %}
+          <!-- Hide pagination when searching -->
+        {% else %}
+          {% if preschoolers %}
+            <!-- First page button (<<) -->
+            {% if preschoolers.number > 1 %}
+              <a href="?page=1{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">&lt;&lt;</a>
+            {% else %}
+              <span class="btn disabled">&lt;&lt;</span>
+            {% endif %}
 
-        <span>
-          Page {{ preschoolers.number }} of {{ preschoolers.paginator.num_pages }}
-        </span>
+            <!-- Previous button -->
+            {% if preschoolers.has_previous %}
+              <a href="?page={{ preschoolers.previous_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">&lt;</a>
+            {% else %}
+              <span class="btn disabled">&lt;</span>
+            {% endif %}
 
-        {% if preschoolers.has_next %}
-          <a href="?page={{ preschoolers.next_page_number }}" class="btn">Next</a>
+            <!-- Page numbers logic -->
+            {% if preschoolers.paginator.num_pages > 1 %}
+              {% for num in preschoolers.paginator.page_range %}
+                {% comment %}
+                  Show page if:
+                  1. It's within first 10 pages AND current page <= 6
+                  2. OR it's within sliding window when current page > 6
+                {% endcomment %}
+                {% if preschoolers.number <= 6 %}
+                  {% comment %}Show pages 1-10 when on early pages{% endcomment %}
+                  {% if num <= 10 %}
+                    {% if num == preschoolers.number %}
+                      <span class="page-number active">{{ num }}</span>
+                    {% else %}
+                      <a href="?page={{ num }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="page-number">{{ num }}</a>
+                    {% endif %}
+                  {% endif %}
+                {% else %}
+                  {% comment %}Sliding window: show 10 pages centered around current{% endcomment %}
+                  {% with start=preschoolers.number|add:'-5' end=preschoolers.number|add:'4' %}
+                    {% if num >= start and num <= end %}
+                      {% if num == preschoolers.number %}
+                        <span class="page-number active">{{ num }}</span>
+                      {% else %}
+                        <a href="?page={{ num }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="page-number">{{ num }}</a>
+                      {% endif %}
+                    {% endif %}
+                  {% endwith %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+
+            <!-- Next button -->
+            {% if preschoolers.has_next %}
+              <a href="?page={{ preschoolers.next_page_number }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">&gt;</a>
+            {% else %}
+              <span class="btn disabled">&gt;</span>
+            {% endif %}
+
+            <!-- Last page button (>>) -->
+            {% if preschoolers.number < preschoolers.paginator.num_pages %}
+              <a href="?page={{ preschoolers.paginator.num_pages }}{% if filter_status and filter_status != 'All' %}&status={{ filter_status }}{% endif %}" class="btn">&gt;&gt;</a>
+            {% else %}
+              <span class="btn disabled">&gt;&gt;</span>
+            {% endif %}
+          {% endif %}
         {% endif %}
       </div>
     </div>
@@ -1923,8 +2068,8 @@
           mobileArchivePreschooler.style.display = 'none';
           mobileArchivePreschooler.classList.add('hidden');
         }
-      } else if (originalRole === 'bhw' || originalRole === 'midwife') {
-        console.log('BHW/MIDWIFE ROLE DETECTED - Configuring menu');
+      } else if (originalRole === 'nurse' || originalRole === 'midwife') {
+        console.log('NURSE/MIDWIFE ROLE DETECTED - Configuring menu');
         if (inputBMI) {
           inputBMI.style.display = 'none';
           inputBMI.classList.add('hidden');
@@ -2478,6 +2623,103 @@ document.addEventListener("DOMContentLoaded", function() {
   rows.forEach(row => tbody.appendChild(row));
 });
 </script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const statusSelect = document.getElementById("status-select");
+  const searchInput = document.getElementById("search-input");
+  const searchBtn = document.getElementById("search-btn");
+  const tableBody = document.getElementById("preschooler-table");
+  const rows = tableBody.getElementsByTagName("tr");
+
+  // 🟢 Real-time filter by nutritional status
+  statusSelect.addEventListener("change", () => {
+    const selectedStatus = statusSelect.value.toLowerCase();
+
+    for (let i = 0; i < rows.length; i++) {
+      const cells = rows[i].getElementsByTagName("td");
+      if (cells.length === 0) continue; // skip "No data" row
+
+      const status = cells[6].textContent.toLowerCase();
+      const matchesStatus = selectedStatus === "all" || status === selectedStatus;
+
+      rows[i].style.display = matchesStatus ? "" : "none";
+    }
+  });
+
+  // 🔵 Search only when button is clicked
+  searchBtn.addEventListener("click", () => {
+    const searchText = searchInput.value.toLowerCase();
+    const selectedStatus = statusSelect.value.toLowerCase();
+
+    for (let i = 0; i < rows.length; i++) {
+      const cells = rows[i].getElementsByTagName("td");
+      if (cells.length === 0) continue;
+
+      const name = cells[0].textContent.toLowerCase();
+      const status = cells[6].textContent.toLowerCase();
+
+      const matchesSearch = name.includes(searchText);
+      const matchesStatus = selectedStatus === "all" || status === selectedStatus;
+
+      rows[i].style.display = matchesStatus && matchesSearch ? "" : "none";
+    }
+  });
+});
+</script>
+<script>
+// Search functionality with global search (backend + local filtering)
+document.getElementById("search-btn").addEventListener("click", () => {
+  const searchTerm = document.getElementById("search-input").value.trim();
+  const filterStatus = document.getElementById("status-select").value;
+
+  // If input is empty, go back to default (all preschoolers)
+  if (searchTerm === "") {
+    if (filterStatus === "All") {
+      window.location.href = window.location.pathname;
+    } else {
+      window.location.href = `${window.location.pathname}?status=${encodeURIComponent(filterStatus)}`;
+    }
+    return;
+  }
+
+  // Otherwise perform search across all data (backend search)
+  if (filterStatus === "All") {
+    window.location.href = `${window.location.pathname}?search=${encodeURIComponent(searchTerm)}`;
+  } else {
+    window.location.href = `${window.location.pathname}?search=${encodeURIComponent(searchTerm)}&status=${encodeURIComponent(filterStatus)}`;
+  }
+});
+
+// Enter key performs search
+document.getElementById("search-input").addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    document.getElementById("search-btn").click();
+  }
+});
+
+// Status filter (backend filtering)
+document.getElementById("status-select").addEventListener("change", function() {
+  const selectedStatus = this.value;
+  const currentSearch = "{{ search_query }}";
+
+  if (selectedStatus === "All") {
+    if (currentSearch) {
+      window.location.href = `${window.location.pathname}?search=${encodeURIComponent(currentSearch)}`;
+    } else {
+      window.location.href = window.location.pathname;
+    }
+  } else {
+    if (currentSearch) {
+      window.location.href = `${window.location.pathname}?search=${encodeURIComponent(currentSearch)}&status=${encodeURIComponent(selectedStatus)}`;
+    } else {
+      window.location.href = `${window.location.pathname}?status=${encodeURIComponent(selectedStatus)}`;
+    }
+  }
+});
+</script>
+
 
   <!-- Mobile Bottom Sheet Menu -->
 <div class="mobile-menu-overlay" id="mobileMenuOverlay">
