@@ -2411,7 +2411,7 @@ function scheduleNutritionService(serviceType) {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowString = tomorrow.toISOString().split('T')[0];
-  const serviceEmoji = serviceType === "Vitamin A" ? "💊" : "🪱";
+  const serviceEmoji = serviceType === "Vitamin A" ? "" : "";
   
   Swal.fire({
     title: `${serviceEmoji} Schedule ${serviceType}`,
@@ -2485,7 +2485,7 @@ function scheduleNutritionServiceWithAge(serviceType, eligibilityReason) {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowString = tomorrow.toISOString().split('T')[0];
-  const serviceEmoji = serviceType === "Vitamin A" ? "💊" : "🪱";
+  const serviceEmoji = serviceType === "Vitamin A" ? "" : "";
   
   Swal.fire({
     title: `${serviceEmoji} Schedule ${serviceType}`,
@@ -3560,6 +3560,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
+
 
 
 
