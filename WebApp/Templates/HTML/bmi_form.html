@@ -853,7 +853,9 @@
                             document.getElementById('height-source').style.display = 'block';
                         }
                         if (data.data.temperature && !tempInput.value) {
-                            tempInput.value = data.data.temperature;
+                            // Round temperature to 1 decimal place
+                            const roundedTemp = Math.round(data.data.temperature * 10) / 10;
+                            tempInput.value = roundedTemp;
                             tempInput.classList.add('esp32-data');
                             document.getElementById('temp-source').style.display = 'block';
                         }
@@ -1108,16 +1110,16 @@
         console.log('Dynamic Multi-Device BMI Form script loaded');
     </script>
 
-
 <script>
     document.getElementById('temperature').addEventListener('input', function(e) {
-    let value = e.target.value;
-    // Allow only numbers and one decimal point
-    if (value.includes('.')) {
-        let parts = value.split('.');
-        e.target.value = parts[0] + '.' + parts[1].substring(0, 1);
-    }
-});
+        let value = e.target.value;
+        // Allow only numbers and one decimal point
+        if (value.includes('.')) {
+            let parts = value.split('.');
+            e.target.value = parts[0] + '.' + parts[1].substring(0, 1);
+        }
+    });
 </script>
+
 </body>
 </html>
