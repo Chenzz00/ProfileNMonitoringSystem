@@ -754,136 +754,157 @@
 
     /* Modal Styles */
     .modal {
-      display: none;  /* Base: hidden */
-      position: fixed;
-      z-index: 999999;
-      left: 0;
-      top: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(2px);
-      opacity: 0;  /* Start invisible for transition */
-      transition: opacity 0.3s ease;  /* Smooth fade in/out */
-    }
+    display: none;
+    position: fixed;
+    z-index: 999999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    overflow: auto;
+    /* Ensure modal takes full viewport */
+    margin: 0;
+    padding: 0;
+  }
 
     .modal.show {
-      display: flex !important;  /* Override base display: none */
-      justify-content: center;
-      align-items: center;
-      opacity: 1;  /* Fade in when shown */
-    }
+    display: flex !important;
+    justify-content: center;
+    align-items: flex-start;
+    opacity: 1;
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
 
     .modal-content {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      width: 600px;
-      max-width: 90vw;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-      transform: scale(0.9);  /* Optional: Start slightly scaled for open animation */
-      transition: transform 0.3s ease;
-    }
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 600px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    /* Ensure content is not stretched */
+    flex-shrink: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
     .modal.show .modal-content {
-      transform: scale(1);  /* Full size when shown */
-    }
+    transform: scale(1);
+  }
+
 
     .modal-content h3 {
-      font-size: 16px;
-      font-weight: 400;
-      color: #333;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 20px;
-      text-align: center;
-    }
+    font-size: 16px;
+    font-weight: 400;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
 
     .form-group {
-      margin-bottom: 20px;
-    }
+    margin-bottom: 20px;
+  }
 
-    .form-group label {
-      display: block;
-      font-weight: 400;
-      margin-bottom: 8px;
-      color: #333;
-      font-size: 14px;
-    }
+  .form-group label {
+    display: block;
+    font-weight: 400;
+    margin-bottom: 8px;
+    color: #333;
+    font-size: 14px;
+  }
 
-    .form-group input,
-    .form-group select {
-      width: 100%;
-      padding: 12px 15px;
-      border-radius: 8px;
-      border: 1px solid #e6e6e6;
-      font-size: 14px;
-      font-family: 'Poppins', sans-serif;
-      background-color: white;
-      color: #333;
-      font-weight: 400;
-    }
-
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid #e6e6e6;
+    font-size: 14px;
+    font-family: 'Poppins', sans-serif;
+    background-color: white;
+    color: #333;
+    font-weight: 400;
+    box-sizing: border-box;
+  }
     .form-group input:focus,
-    .form-group select:focus {
-      outline: none;
-      border-color: #5bdab3;
-      box-shadow: 0 0 0 3px rgba(91, 218, 179, 0.15);
-    }
+  .form-group select:focus {
+    outline: none;
+    border-color: #5bdab3;
+    box-shadow: 0 0 0 3px rgba(91, 218, 179, 0.15);
+  }
 
-    .form-row {
-      display: flex;
-      gap: 15px;
-    }
+  .form-row {
+    display: flex;
+    gap: 15px;
+  }
 
-    .form-row .form-group {
-      flex: 1;
-    }
+  .form-row .form-group {
+    flex: 1;
+  }
 
-    .close-button {
-      float: right;
-      font-weight: bold;
-      font-size: 20px;
-      cursor: pointer;
-      color: #333;
-      transition: color 0.2s ease;
-    }
+  .close-button {
+    float: right;
+    font-weight: bold;
+    font-size: 20px;
+    cursor: pointer;
+    color: #333;
+    transition: color 0.2s ease;
+    background: none;
+    border: none;
+    padding: 0;
+    line-height: 1;
+  }
 
-    .close-button:hover {
-      color: #666;
-    }
+   .close-button:hover {
+    color: #666;
+  }
 
     .birth-info-section {
-      border-top: 2px solid #f0f0f0;
-      padding-top: 20px;
-      margin-top: 20px;
-    }
+    border-top: 2px solid #f0f0f0;
+    padding-top: 20px;
+    margin-top: 20px;
+  }
 
-    .section-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #5bdab3;
-      margin-bottom: 15px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
+  .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #5bdab3;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
 
-    .age-notice {
-      background: rgba(91, 218, 179, 0.1);
-      border: 1px solid #5bdab3;
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 15px;
-      font-size: 13px;
-      color: #333;
-    }
+  .age-notice {
+    background: rgba(91, 218, 179, 0.1);
+    border: 1px solid #5bdab3;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 15px;
+    font-size: 13px;
+    color: #333;
+  }
 
     .age-notice .notice-title {
-      font-weight: 600;
-      color: #5bdab3;
-      margin-bottom: 5px;
-    }
+    font-weight: 600;
+    color: #5bdab3;
+    margin-bottom: 5px;
+  }
+
+  /* Prevent body scroll when modal is open */
+  body.modal-open {
+    overflow: hidden;
+  }
+
 
     /* Mobile Responsive */
     @media (max-width: 1024px) {
