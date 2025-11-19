@@ -4049,8 +4049,6 @@ def preschooler_detail(request, preschooler_id):
 
     # === Auto-archive preschoolers aged 60+ months ===
     auto_archived_count = auto_archive_aged_preschoolers()
-    if auto_archived_count > 0:
-        print(f"AUTO-ARCHIVED: {auto_archived_count} preschoolers during detail view")
 
     # === Get preschooler (non-archived only) ===
     preschooler = get_object_or_404(Preschooler, preschooler_id=preschooler_id)
@@ -4058,18 +4056,12 @@ def preschooler_detail(request, preschooler_id):
     # === Check if archived ===
     is_archived = preschooler.is_archived
 
-    # Auto-archive if age >= 60 months
+    # Auto-archive if age >= 60 months (silently, no message)
     if preschooler.age_in_months and preschooler.age_in_months >= 60:
         preschooler.is_archived = True
         preschooler.save()
         is_archived = True
-        messages.warning(
-            request,
-            f"{preschooler.first_name} {preschooler.last_name} has been automatically archived as they have exceeded 60 months."
-        )
-        if request.GET.get('from') == 'archived':
-            return redirect('archived_preschoolers')
-        return redirect('preschoolers')
+        # Allow viewing of archived preschoolers - don't redirect
 
     # === Calculate Age ===
     today = timezone.now().date()
@@ -11323,6 +11315,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
