@@ -2954,7 +2954,7 @@ def send_nutrition_notifications_async(parents, preschooler, service_type, dose_
                 account = Account.objects.filter(email=parent.email).first()
                 if account and account.fcm_token:
 
-                    service_emoji = "🍎" if service_type == "Vitamin A" else "💊"
+                    service_emoji = "" if service_type == "Vitamin A" else ""
                     title = f"{service_emoji} Nutrition Service Scheduled for {preschooler.first_name}"
                     body = f"{service_type} (Dose {dose_number}/{total_doses}) scheduled for {service_date}"
 
@@ -3174,7 +3174,7 @@ def update_nutrition_status(request, schedule_id):
                         try:
                             account = Account.objects.filter(email=parent.email).first()
                             if account and account.fcm_token:
-                                service_emoji = "🍎" if schedule.service_type == "Vitamin A" else "💊"
+                                service_emoji = "" if schedule.service_type == "Vitamin A" else ""
                                 
                                 if fully_completed:
                                     notification_title = f"🏆 {schedule.service_type} Treatment Complete!"
@@ -3361,7 +3361,7 @@ def reschedule_nutrition_service(request, schedule_id):
                             logger.warning(f"[DEBUG] No FCM token for {parent.email}")
                             continue
 
-                        service_emoji = "🍎" if schedule.service_type == "Vitamin A" else "💊"
+                        service_emoji = "" if schedule.service_type == "Vitamin A" else ""
 
                         push_result = PushNotificationService.send_push_notification(
                             token=account.fcm_token,
@@ -3511,7 +3511,7 @@ def add_nutrition_service(request, preschooler_id):
             try:
                 account = Account.objects.filter(email=parent.email).first()
                 if account and account.fcm_token:
-                    nutrition_icon = "✅🍎" if service_type == "Vitamin A" else "✅💊"
+                    nutrition_icon = "✅" if service_type == "Vitamin A" else "✅"
 
                     # Completion notification
                     notification_title = f"{nutrition_icon} Nutrition Service Completed"
@@ -4584,7 +4584,7 @@ def add_nutrition_service(request, preschooler_id):
                 
                 # Send email notification if parent has email
                 if parent.user.email:
-                    service_emoji = "💊" if service_type == "Vitamin A" else "🪱"
+                    service_emoji = "" if service_type == "Vitamin A" else ""
                     send_mail(
                         subject=f"{service_emoji} {service_type} Service Completed - {preschooler.first_name}",
                         message=f"""
@@ -11315,6 +11315,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
