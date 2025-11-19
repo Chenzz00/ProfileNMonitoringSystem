@@ -1929,39 +1929,43 @@ def archived_details(request):
     return render(request, 'HTML/archived_details.html')
 
 def dashboard(request):
-    # ✅ Redirect to login if not authenticated
     if not request.user.is_authenticated:
         return redirect('login')
 
-    # ✅ Get the current user's account (with profile photo)
     account = get_object_or_404(
         Account.objects.select_related('profile_photo'),
         email=request.user.email
     )
 
-    # ✅ Active preschoolers (barangay-specific)
-    preschoolers = Preschooler.objects.filter(
+    # ✅ ACTIVE PRESCHOOLERS ONLY - for the "Registered Preschoolers" box
+    active_preschoolers = Preschooler.objects.filter(
         is_archived=False,
         barangay=account.barangay
     ).prefetch_related('bmi_set')
 
-    preschooler_count = preschoolers.count()
+    preschooler_count = active_preschoolers.count()
 
-    # ✅ Archived preschoolers (barangay-specific)
+    # ✅ ARCHIVED PRESCHOOLERS - for the "Archived Preschoolers" box
     archived_preschooler_count = Preschooler.objects.filter(
         is_archived=True,
         barangay=account.barangay
     ).count()
 
-    # ✅ Parents (barangay-specific)
+    # ✅ PARENTS
     parent_accounts = Parent.objects.filter(
         barangay=account.barangay
     ).distinct().order_by('-created_at')
 
     parent_count = parent_accounts.count()
-    print("DEBUG Dashboard ({account.barangay}): Parent count = {parent_count}")
 
-    # ✅ Nutritional Summary via WHO BMI-for-age Z-scores
+    # ✅ NUTRITIONAL SUMMARY - ACTIVE PRESCHOOLERS ONLY WITH BMI DATA
+    # Changed: Added is_archived=False to exclude archived preschoolers
+    all_preschoolers = Preschooler.objects.filter(
+        barangay=account.barangay,
+        is_archived=False,  # ✅ ADDED THIS LINE
+        bmi__isnull=False
+    ).prefetch_related('bmi_set').distinct()
+
     nutritional_summary = {
         'severely_wasted': 0,
         'wasted': 0,
@@ -1974,11 +1978,10 @@ def dashboard(request):
     preschoolers_with_bmi = 0
     today = date.today()
 
-    for p in preschoolers:
+    for p in all_preschoolers:
         latest_bmi = p.bmi_set.order_by('-date_recorded').first()
         if latest_bmi:
             try:
-                # --- Compute age in months ---
                 birth_date = p.birth_date
                 age_years = today.year - birth_date.year
                 age_months = today.month - birth_date.month
@@ -1989,7 +1992,6 @@ def dashboard(request):
                     age_months += 12
                 total_age_months = age_years * 12 + age_months
 
-                # --- Compute BMI and classify ---
                 bmi_value = calculate_bmi(latest_bmi.weight, latest_bmi.height)
                 z = bmi_zscore(p.sex, total_age_months, bmi_value)
                 category = classify_bmi_for_age(z)
@@ -2009,9 +2011,9 @@ def dashboard(request):
                     nutritional_summary['obese'] += 1
 
             except Exception as e:
-                print("⚠️ BMI classification error for preschooler {p.id}: {e}")
+                print(f"⚠️ BMI classification error for preschooler {p.id}: {e}")
 
-    # ✅ Calculate percentages
+    # Calculate percentages
     nutritional_percentages = {}
     if preschoolers_with_bmi > 0:
         for key, value in nutritional_summary.items():
@@ -2020,7 +2022,7 @@ def dashboard(request):
     else:
         nutritional_percentages = {key: 0 for key in nutritional_summary.keys()}
 
-    # ✅ Prepare pie chart data (matching WHO categories)
+    # Prepare pie chart data
     pie_chart_data = {
         'labels': [
             'Severely Wasted',
@@ -2049,7 +2051,7 @@ def dashboard(request):
         'colors': ['#e74c3c', '#f39c12', '#27ae60', '#f1c40f', '#e67e22', '#c0392b']
     }
 
-    # ✅ Recent parent account notifications (barangay-specific)
+    # Recent parent account notifications
     notifications = []
     seen_ids = set()
 
@@ -2067,7 +2069,7 @@ def dashboard(request):
     notifications.sort(key=lambda x: x['timestamp'], reverse=True)
     latest_notif_timestamp = notifications[0]['timestamp'] if notifications else None
 
-    # ✅ Fetch active announcements (global)
+    # Fetch active announcements
     try:
         announcements = Announcement.objects.filter(
             is_active=True
@@ -11321,6 +11323,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
