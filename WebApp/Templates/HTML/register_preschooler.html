@@ -1233,6 +1233,164 @@
       font-size: 11px;
     }
   }
+
+
+  /* SEARCH SECTION - VERTICAL LAYOUT */
+  .search-section-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .search-input-vertical {
+    border-color: #e6e6e6;
+    font-size: 14px;
+    padding: 10px 12px;
+    font-family: 'Poppins', sans-serif;
+    border-radius: 8px;
+    border: 1px solid #e6e6e6;
+    background-color: white;
+    color: #333;
+    transition: all 0.3s ease;
+  }
+
+  .search-input-vertical:focus {
+    outline: none;
+    border-color: #5bdab3;
+    box-shadow: 0 0 0 3px rgba(91, 218, 179, 0.15);
+  }
+
+  .search-btn-vertical {
+    background-color: #5bdab3;
+    border-color: #5bdab3;
+    color: #1e1e2f;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 2px 6px rgba(91, 218, 179, 0.3);
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 10px 20px;
+  }
+
+  .search-btn-vertical:hover {
+    background-color: #1565c0;
+    border-color: #1565c0;
+    color: white;
+    box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+    transform: translateY(-2px);
+  }
+
+  /* Desktop - Keep side-by-side layout */
+  @media (min-width: 1200px) {
+    .search-section-vertical {
+      flex-direction: row;
+      gap: 10px;
+      width: auto;
+    }
+
+    .search-input-vertical {
+      width: 300px;
+      min-width: 250px;
+    }
+
+    .search-btn-vertical {
+      width: auto;
+      white-space: nowrap;
+      margin-top: 0;
+    }
+  }
+
+  /* Tablet - Button below input */
+  @media (max-width: 1199px) and (min-width: 768px) {
+    .search-section-vertical {
+      flex-direction: column;
+      width: 100%;
+      max-width: 350px;
+    }
+
+    .search-input-vertical {
+      width: 100%;
+    }
+
+    .search-btn-vertical {
+      width: 100%;
+    }
+  }
+
+  /* Mobile - Full width button below input */
+  @media (max-width: 767px) {
+    .search-section-vertical {
+      flex-direction: column;
+      width: 100%;
+      gap: 10px;
+    }
+
+    .search-input-vertical {
+      width: 100%;
+      padding: 12px 12px;
+      font-size: 14px;
+    }
+
+    .search-btn-vertical {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+  }
+
+  /* Small mobile devices */
+  @media (max-width: 480px) {
+    .search-input-vertical {
+      padding: 10px 10px;
+      font-size: 13px;
+    }
+
+    .search-btn-vertical {
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+  }
+
+  /* Extra small devices */
+  @media (max-width: 360px) {
+    .search-input-vertical {
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    .search-btn-vertical {
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+  }
+
+  /* Adjust header bar for mobile */
+  @media (max-width: 767px) {
+    .header-bar,
+    .row.align-items-center.mb-3 {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 15px;
+    }
+
+    .row.align-items-center.mb-3 .col-12 {
+      width: 100%;
+    }
+
+    .row.align-items-center.mb-3 h2 {
+      margin-bottom: 0;
+    }
+
+    .row.align-items-center.mb-3 .col-md-auto.ms-md-auto {
+      width: 100%;
+      margin-left: 0 !important;
+    }
+  }
   </style>
 </head>
 <body>
@@ -1387,28 +1545,28 @@
     <div class="page-content">
 
         <div class="row align-items-center mb-3">
-          <div class="col-12 col-md-auto">
-            <h2>Register Preschooler</h2>
-          </div>
-          <div class="col-12 col-md-auto ms-md-auto">
-            <!-- 🔍 SEARCH SECTION ON RIGHT -->
-            <div class="search-section d-flex gap-2 align-items-center">
-              <input 
-                type="text" 
-                id="search-input" 
-                class="form-control" 
-                placeholder="Search by parent name..."
-                style="width: 300px; padding: 10px 12px; font-size: 14px;">
-              <button 
-                id="search-btn" 
-                class="btn btn-primary"
-                style="padding: 10px 20px; font-size: 14px; white-space: nowrap;">
-                Search
-              </button>
-            </div>
-            <!-- END SEARCH SECTION -->
-          </div>
-        </div>
+  <div class="col-12 col-md-auto">
+    <h2>Register Preschooler</h2>
+  </div>
+  <div class="col-12 col-md-auto ms-md-auto">
+    <!-- 🔍 SEARCH SECTION ON RIGHT -->
+    <div class="search-section-vertical">
+      <input 
+        type="text" 
+        id="search-input" 
+        class="form-control search-input-vertical" 
+        placeholder="Search by parent name..."
+        style="width: 100%; padding: 10px 12px; font-size: 14px;">
+      <button 
+        id="search-btn" 
+        class="btn btn-primary search-btn-vertical"
+        style="width: 100%; padding: 10px 20px; font-size: 14px; margin-top: 8px;">
+        Search
+      </button>
+    </div>
+    <!-- END SEARCH SECTION -->
+  </div>
+</div>
 
 
         <!-- Table Container -->
