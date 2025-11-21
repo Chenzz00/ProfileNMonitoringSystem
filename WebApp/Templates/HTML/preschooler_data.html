@@ -964,6 +964,60 @@ textarea[readonly].archived-input {
   display: inline-block;
 }
 
+/* Collapsible Tables */
+
+.collapsible-header {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  transition: all 0.3s ease;
+  gap: 10px;
+}
+
+.collapsible-header:hover {
+  opacity: 0.8;
+}
+
+.collapsible-header::before {
+  content: '▼';
+  display: inline-block;
+  transition: transform 0.3s ease;
+  font-size: 20px;
+  color: #333;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.collapsible-header.active::before {
+  transform: rotate(180deg);
+}
+
+.collapsible-header h4 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+.collapsible-content {
+  display: none;
+  margin-top: 20px;
+}
+
+.collapsible-content.active {
+  display: block;
+}
+
+
+
   </style>
 </head>
 
@@ -1089,268 +1143,317 @@ textarea[readonly].archived-input {
       </div>
     </div>
 
-    <!-- Content Section -->
-    <div class="content-section">
-      <!-- Enhanced Immunization Schedule with Age-Based Scheduling -->
-      <div class="section-header">
-        <h4>Immunization Schedule</h4>
-      </div>
-      
-      <div class="table-container">
-        <table class="info-table">
-          <tr>
-            <th>Vaccine Name</th>
-            <th>Given / Required Doses</th>
-            <th>Immunization Date</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
+    <!-- Collapsible Immunization Schedule -->
+<button class="collapsible-header" onclick="toggleImmunizationTable()">
+  <h4 style="margin: 0;">Immunization Schedule</h4>
+</button>
 
-          <!-- Enhanced vaccine rows with age-based logic -->
-          {% for vaccine in vaccine_statuses %}
-          <tr>
-            <td>{{ vaccine.name }}</td>
-            <td>{{ vaccine.completed_doses }}/{{ vaccine.total_doses }}</td>
-            <td>{{ vaccine.immunization_date|default:"N/A" }}</td>
-            <td>
-              {% if vaccine.status == 'completed' %}
-                <span class="status-badge status-completed">COMPLETE</span>
-              {% elif vaccine.status == 'scheduled' %}
-                <span class="status-badge status-scheduled">SCHEDULED</span>
-              {% elif vaccine.status == 'rescheduled' %}
-                <span class="status-badge status-rescheduled">RESCHEDULED</span>
-              {% elif vaccine.status == 'missed' %}
-                <span class="status-badge status-missed">MISSED</span>
-              {% else %}
-                <span class="status-badge status-pending">PENDING</span>
-              {% endif %}
-            </td>
-            <td>
-              {% if vaccine.status == 'completed' and vaccine.completed_doses == vaccine.total_doses %}
-                <span class="text-success"> Complete</span>
-                
-              {% elif vaccine.status == 'scheduled' or vaccine.status == 'rescheduled' %}
-                <div class="action-buttons">
-                  <button 
-                    class="btn-sm btn-complete"
-                    onclick="completeCurrentDose('{{ vaccine.name }}', {{ vaccine.schedule_id }}, '{{ vaccine.completed_doses }}', '{{ vaccine.total_doses }}')"
-                    data-scheduled-date="{{ vaccine.scheduled_date|default:'' }}"
-                    data-vaccine-name="{{ vaccine.name }}">
-                    Complete
-                  </button>
-                  <button class="btn-sm btn-reschedule" onclick="openRescheduleModal({{ vaccine.schedule_id }})">
-                    Reschedule
-                  </button>
-                </div>
-                
-              {% elif vaccine.can_schedule %}
-                <!-- Child is old enough for next dose -->
-                <button 
-                  class="btn-sm btn-schedule btn-available-today" 
-                  onclick="scheduleVaccineWithAge('{{ vaccine.name }}', '{{ vaccine.total_doses }}', '{{ vaccine.eligible_dose.dose }}', '{{ vaccine.eligible_dose.description }}')"
-                  title="{{ vaccine.next_dose_info }}">
-                  Schedule Dose {{ vaccine.eligible_dose.dose }}
-                </button>
-                
-              {% elif vaccine.future_dose %}
-                <!-- Child is not old enough yet -->
-                <button 
-                  class="btn-sm btn-disabled-future" 
-                  disabled
-                  title="{{ vaccine.future_dose.reason }}">
-                  Available in {{ vaccine.future_dose.age_months|floatformat:1 }} months
-                </button>
-                
-              {% else %}
-                <span class="text-success">Complete</span>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </table>
-      </div>
+<div id="immunizationContent" class="collapsible-content">
+  <div class="table-container">
+    <table class="info-table">
+      <tr>
+        <th>Vaccine Name</th>
+        <th>Given / Required Doses</th>
+        <th>Immunization Date</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
 
-      <!-- Immunization History -->
-      <div class="section-header">
-        <h4>Immunization History</h4>
-        <button class="add-schedule-btn" onclick="openAddVaccineModal()">+ Add Completed Vaccine</button>
-      </div>
-      
-      <div class="table-container">
-        <table class="info-table">
-          <tr>
-            <th>Vaccine Name</th>
-            <th>Dose</th>
-            <th>Immunization Date</th>
-            <th>Status</th>
-          </tr>
-          {% for h in immunization_history %}
-          <tr>
-            <td>{{ h.vaccine_name }}</td>
-            <td>{{ h.doses|default:1 }}</td>
-            <td>{{ h.scheduled_date|date:"m/d/Y" }}</td>
-            <td>
-              <span class="status-badge status-{{ h.status }}">
-                {{ h.get_status_display }}
-              </span>
-            </td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="4">No immunization history found.</td></tr>
-          {% endfor %}
-        </table>
-      </div>
+      {% for vaccine in vaccine_statuses %}
+      <tr>
+        <td>{{ vaccine.name }}</td>
 
-      <!-- Nutrition Services -->
-<div class="section-header">
-  <h4>Nutrition Services Schedule</h4>
-  <button class="add-schedule-btn" onclick="openAddCompletedNutritionModal()">+ Add Completed Service</button>
+        <td>{{ vaccine.completed_doses }}/{{ vaccine.total_doses }}</td>
+
+        <td>{{ vaccine.immunization_date|default:"N/A" }}</td>
+
+        <td>
+          {% if vaccine.status == 'completed' %}
+            <span class="status-badge status-completed">COMPLETE</span>
+          {% elif vaccine.status == 'scheduled' %}
+            <span class="status-badge status-scheduled">SCHEDULED</span>
+          {% elif vaccine.status == 'rescheduled' %}
+            <span class="status-badge status-rescheduled">RESCHEDULED</span>
+          {% elif vaccine.status == 'missed' %}
+            <span class="status-badge status-missed">MISSED</span>
+          {% else %}
+            <span class="status-badge status-pending">PENDING</span>
+          {% endif %}
+        </td>
+
+        <td>
+          {% if vaccine.status == 'completed' and vaccine.completed_doses == vaccine.total_doses %}
+            <span class="text-success">Complete</span>
+
+          {% elif vaccine.status == 'scheduled' or vaccine.status == 'rescheduled' %}
+            <div class="action-buttons">
+              <button 
+                class="btn-sm btn-complete"
+                onclick="completeCurrentDose('{{ vaccine.name }}', {{ vaccine.schedule_id }}, '{{ vaccine.completed_doses }}', '{{ vaccine.total_doses }}')"
+                data-scheduled-date="{{ vaccine.scheduled_date|default:'' }}"
+                data-vaccine-name="{{ vaccine.name }}">
+                Complete
+              </button>
+              <button class="btn-sm btn-reschedule" onclick="openRescheduleModal({{ vaccine.schedule_id }})">
+                Reschedule
+              </button>
+            </div>
+
+          {% elif vaccine.can_schedule %}
+            <button 
+              class="btn-sm btn-schedule btn-available-today" 
+              onclick="scheduleVaccineWithAge('{{ vaccine.name }}', '{{ vaccine.total_doses }}', '{{ vaccine.eligible_dose.dose }}', '{{ vaccine.eligible_dose.description }}')"
+              title="{{ vaccine.next_dose_info }}">
+              Schedule Dose {{ vaccine.eligible_dose.dose }}
+            </button>
+
+          {% elif vaccine.future_dose %}
+            <button 
+              class="btn-sm btn-disabled-future" 
+              disabled
+              title="{{ vaccine.future_dose.reason }}">
+              Available in {{ vaccine.future_dose.age_months|floatformat:1 }} months
+            </button>
+
+          {% else %}
+            <span class="text-success">Complete</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
 </div>
 
-<div class="table-container">
-  <table class="info-table">
-    <tr>
-      <th>Service Type</th>
-      <th>Given / Required Doses</th>
-      <th>Nutrition Date</th>
-      <th>Status</th>
-      <th>Actions</th>
-    </tr>
 
-    {% for nutrition in nutrition_statuses %}
-    <tr>
-      <td>{{ nutrition.name }}</td>
-      <td>{{ nutrition.completed_doses }}/{{ nutrition.total_doses }}</td>
-      <!-- FIX: Show N/A if no date, otherwise format date -->
-      <td>
-        {% if nutrition.service_date %}
-          {{ nutrition.service_date|date:"m/d/Y" }}
-        {% else %}
-          N/A
-        {% endif %}
-      </td>
 
-      <td>
-        {% if nutrition.completed_doses >= nutrition.total_doses %}
-          <span class="status-badge status-completed">COMPLETE</span>
-        {% elif nutrition.status == 'scheduled' %}
-          <span class="status-badge status-scheduled">SCHEDULED</span>
-        {% elif nutrition.status == 'rescheduled' %}
-          <span class="status-badge status-rescheduled">RESCHEDULED</span>
-        {% elif nutrition.status == 'missed' %}
-          <span class="status-badge status-missed">MISSED</span>
-        {% else %}
-          <span class="status-badge status-pending">PENDING</span>
-        {% endif %}
-      </td>
-      <td>
-        {% if nutrition.completed_doses >= nutrition.total_doses %}
-          <span class="text-success">✓ Complete</span>
 
-        {% elif nutrition.status == 'scheduled' or nutrition.status == 'rescheduled' %}
-          <div class="action-buttons">
-            <button class="btn-sm btn-complete"
-              onclick="completeNutritionDose('{{ nutrition.name }}', {{ nutrition.schedule_id }}, '{{ nutrition.completed_doses }}', '{{ nutrition.total_doses }}')">
-              Complete Dose
-            </button>
-            <button class="btn-sm btn-reschedule"
-              onclick="openRescheduleNutritionModal({{ nutrition.schedule_id }})">
-              Reschedule
-            </button>
-          </div>
+     <!-- Immunization History (Collapsible Version) -->
+<button class="collapsible-header" onclick="toggleImmunizationHistory()">
+  <h4 style="margin: 0;">Immunization History</h4>
+</button>
 
-        {% elif nutrition.can_schedule %}
-          <button 
-            class="btn-sm btn-schedule btn-available-today" 
-            onclick="scheduleNutritionServiceWithAge('{{ nutrition.name }}', '{{ nutrition.eligibility_reason }}')"
-            title="{{ nutrition.age_description }}">
-            Schedule
-          </button>
+<div id="immunizationHistoryContent" class="collapsible-content">
 
-        {% elif nutrition.next_eligible_age %}
-          <button 
-            class="btn-sm btn-disabled-future" 
-            disabled
-            title="{{ nutrition.eligibility_reason }}">
-            Available at {{ nutrition.next_eligible_age }} months
-          </button>
+  <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+    <button class="add-schedule-btn" onclick="openAddVaccineModal()">+ Add Completed Vaccine</button>
+  </div>
 
-        {% else %}
-          <button class="btn-sm btn-disabled-future" disabled title="Waiting to schedule">
-            Pending
-          </button>
-        {% endif %}
-      </td>
-    </tr>
-    {% empty %}
-    <!-- Default rows when no nutrition data exists -->
-    <tr>
-      <td>Vitamin A</td>
-      <td>0/10</td>
-      <td>N/A</td>
-      <td><span class="status-badge status-pending">PENDING</span></td>
-      <td>
-        <button 
-          class="btn-sm btn-disabled-future" 
-          disabled
-          title="Age-based scheduling - available every 6 months starting at 6 months">
-          Age-based scheduling
-        </button>
-      </td>
-    </tr>
-    <tr>
-      <td>Deworming</td>
-      <td>0/10</td>
-      <td>N/A</td>
-      <td><span class="status-badge status-pending">PENDING</span></td>
-      <td>
-        <button 
-          class="btn-sm btn-disabled-future" 
-          disabled
-          title="Age-based scheduling - available every 6 months starting at 6 months">
-          Age-based scheduling
-        </button>
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
+  <div class="table-container">
+    <table class="info-table">
+      <tr>
+        <th>Vaccine Name</th>
+        <th>Dose</th>
+        <th>Immunization Date</th>
+        <th>Status</th>
+      </tr>
+
+      {% for h in immunization_history %}
+      <tr>
+        <td>{{ h.vaccine_name }}</td>
+        <td>{{ h.doses|default:1 }}</td>
+        <td>{{ h.scheduled_date|date:"m/d/Y" }}</td>
+        <td>
+          <span class="status-badge status-{{ h.status }}">
+            {{ h.get_status_display }}
+          </span>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4">No immunization history found.</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
 </div>
-      <!-- Nutritional Status History -->
-      <div class="section-header">
-        <h4>Nutritional Status History</h4>
-      </div>
-      
-      <div class="table-container">
-        <table class="info-table">
+
+
+     <!-- Nutrition Services Schedule (Collapsible Version) -->
+<button class="collapsible-header" onclick="toggleNutritionSchedule()">
+  <h4 style="margin: 0;">Nutrition Services Schedule</h4>
+</button>
+
+<div id="nutritionScheduleContent" class="collapsible-content">
+
+  <!-- Add Completed Service Button -->
+  <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+    <button class="add-schedule-btn" onclick="openAddCompletedNutritionModal()">+ Add Completed Service</button>
+  </div>
+
+  <div class="table-container">
+    <table class="info-table">
+      <tr>
+        <th>Service Type</th>
+        <th>Given / Required Doses</th>
+        <th>Nutrition Date</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+
+      {% for nutrition in nutrition_statuses %}
+      <tr>
+        <td>{{ nutrition.name }}</td>
+        <td>{{ nutrition.completed_doses }}/{{ nutrition.total_doses }}</td>
+
+        <!-- FIX: Show N/A or formatted date -->
+        <td>
+          {% if nutrition.service_date %}
+            {{ nutrition.service_date|date:"m/d/Y" }}
+          {% else %}
+            N/A
+          {% endif %}
+        </td>
+
+        <td>
+          {% if nutrition.completed_doses >= nutrition.total_doses %}
+            <span class="status-badge status-completed">COMPLETE</span>
+          {% elif nutrition.status == 'scheduled' %}
+            <span class="status-badge status-scheduled">SCHEDULED</span>
+          {% elif nutrition.status == 'rescheduled' %}
+            <span class="status-badge status-rescheduled">RESCHEDULED</span>
+          {% elif nutrition.status == 'missed' %}
+            <span class="status-badge status-missed">MISSED</span>
+          {% else %}
+            <span class="status-badge status-pending">PENDING</span>
+          {% endif %}
+        </td>
+
+        <td>
+          {% if nutrition.completed_doses >= nutrition.total_doses %}
+            <span class="text-success">✓ Complete</span>
+
+          {% elif nutrition.status == 'scheduled' or nutrition.status == 'rescheduled' %}
+            <div class="action-buttons">
+              <button class="btn-sm btn-complete"
+                onclick="completeNutritionDose('{{ nutrition.name }}', {{ nutrition.schedule_id }}, '{{ nutrition.completed_doses }}', '{{ nutrition.total_doses }}')">
+                Complete Dose
+              </button>
+              <button class="btn-sm btn-reschedule"
+                onclick="openRescheduleNutritionModal({{ nutrition.schedule_id }})">
+                Reschedule
+              </button>
+            </div>
+
+          {% elif nutrition.can_schedule %}
+            <button 
+              class="btn-sm btn-schedule btn-available-today"
+              onclick="scheduleNutritionServiceWithAge('{{ nutrition.name }}', '{{ nutrition.eligibility_reason }}')"
+              title="{{ nutrition.age_description }}">
+              Schedule
+            </button>
+
+          {% elif nutrition.next_eligible_age %}
+            <button 
+              class="btn-sm btn-disabled-future" 
+              disabled
+              title="{{ nutrition.eligibility_reason }}">
+              Available at {{ nutrition.next_eligible_age }} months
+            </button>
+
+          {% else %}
+            <button class="btn-sm btn-disabled-future" disabled title="Waiting to schedule">
+              Pending
+            </button>
+          {% endif %}
+        </td>
+      </tr>
+
+      {% empty %}
+        {% if total_age_months >= 6 %}
           <tr>
-            <th>Date Measured</th>
-            <th>Temperature (°C)</th>
-            <th>Height (cm)</th>
-            <th>Weight (kg)</th>
-            <th>BMI</th>
-            <th>Nutritional Status</th>
-            <th>Weight for Age</th>
-            <th>Height for Age</th>
-            <th>Weight for Height</th>
+            <td>Vitamin A</td>
+            <td>0/10</td>
+            <td>N/A</td>
+            <td><span class="status-badge status-pending">PENDING</span></td>
+            <td>
+              <button class="btn-sm btn-schedule btn-available-today"
+                onclick="scheduleNutritionServiceWithAge('Vitamin A', 'Eligible from 6 months')">
+                Schedule
+              </button>
+            </td>
           </tr>
-          {% for record in bmi_with_temps %}
           <tr>
-            <td>{{ record.date_recorded|date:"M d, Y" }}</td>
-            <td>{% if record.temperature %}{{ record.temperature|floatformat:1 }}{% else %}N/A{% endif %}</td>
-            <td>{{ record.height|floatformat:1 }}</td>
-            <td>{{ record.weight|floatformat:1 }}</td>
-            <td>{{ record.bmi_value|floatformat:2 }}</td>
-            <td>{{ nutritional_status }}</td>
-            <td>{{ record.weight_for_age_status }}</td>
-            <td>{{ record.height_for_age_status }}</td>
-            <td>{{ record.weight_for_height_status }}</td>
+            <td>Deworming</td>
+            <td>0/10</td>
+            <td>N/A</td>
+            <td><span class="status-badge status-pending">PENDING</span></td>
+            <td>
+              <button class="btn-sm btn-schedule btn-available-today"
+                onclick="scheduleNutritionServiceWithAge('Deworming', 'Eligible from 6 months')">
+                Schedule
+              </button>
+            </td>
           </tr>
-          {% empty %}
-          <tr><td colspan="9">No records found.</td></tr>
-          {% endfor %}
-        </table>
-      </div>
-    </div>
+        {% else %}
+          <tr>
+            <td>Vitamin A</td>
+            <td>0/10</td>
+            <td>N/A</td>
+            <td><span class="status-badge status-pending">PENDING</span></td>
+            <td>
+              <button class="btn-sm btn-disabled-future" disabled
+                title="Available once child reaches 6 months">
+                Available at 6 months
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>Deworming</td>
+            <td>0/10</td>
+            <td>N/A</td>
+            <td><span class="status-badge status-pending">PENDING</span></td>
+            <td>
+              <button class="btn-sm btn-disabled-future" disabled
+                title="Available once child reaches 6 months">
+                Available at 6 months
+              </button>
+            </td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </table>
+  </div>
+
+</div>
+
+
+    <!-- Nutritional Status History -->
+<button class="collapsible-header" onclick="toggleNutritionalStatusHistory()">
+  <h4 style="margin: 0;">Nutritional Status History</h4>
+</button>
+
+<div id="nutritionalStatusHistoryContent" class="collapsible-content">
+  <div class="table-container">
+    <table class="info-table">
+      <tr>
+        <th>Date Measured</th>
+        <th>Temperature (°C)</th>
+        <th>Height (cm)</th>
+        <th>Weight (kg)</th>
+        <th>BMI</th>
+        <th>Nutritional Status</th>
+        <th>Weight for Age</th>
+        <th>Height for Age</th>
+        <th>Weight for Height</th>
+      </tr>
+      {% for record in bmi_with_temps %}
+      <tr>
+        <td>{{ record.date_recorded|date:"M d, Y" }}</td>
+        <td>{% if record.temperature %}{{ record.temperature|floatformat:1 }}{% else %}N/A{% endif %}</td>
+        <td>{{ record.height|floatformat:1 }}</td>
+        <td>{{ record.weight|floatformat:1 }}</td>
+        <td>{{ record.bmi_value|floatformat:2 }}</td>
+        <td>{{ nutritional_status }}</td>
+        <td>{{ record.weight_for_age_status }}</td>
+        <td>{{ record.height_for_age_status }}</td>
+        <td>{{ record.weight_for_height_status }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9">No records found.</td></tr>
+      {% endfor %}
+    </table>
   </div>
 </div>
 
@@ -1538,12 +1641,10 @@ textarea[readonly].archived-input {
       {% csrf_token %}
       
       <div class="form-group">
-        <label for="serviceTypeCompleted">Service Type:</label>
-        <select id="serviceTypeCompleted" name="service_type" required>
-          <option value="">Select Service</option>
-          <option value="Vitamin A">Vitamin A</option>
-          <option value="Deworming">Deworming</option>
-        </select>
+          <label for="serviceTypeCompleted">Service Type:</label>
+          <select id="serviceTypeCompleted" name="service_type" required>
+              <option value="">Select Service</option>
+          </select>
       </div>
 
       <div class="form-group">
@@ -1796,104 +1897,155 @@ function closeAddScheduleModal() {
   document.getElementById('addScheduleModal').style.display = 'none';
 }
 
-// SMART ADD VACCINE MODAL FUNCTIONS
+
+
+// SMART ADD VACCINE MODAL - DYNAMIC ELIGIBILITY CHECK (dose-aware)
 function populateSmartVaccineDropdown() {
   const select = document.getElementById('vaccineNameCompleted');
   const ageInfo = document.getElementById('vaccineAgeInfo');
-  const childAgeMonths = {{ total_age_months }};
-  
+
+  // Get age in decimal months directly from Django property
+  let childAgeMonths = parseFloat({{ preschooler.age_in_months|default:0 }});
+  if (isNaN(childAgeMonths)) childAgeMonths = 0;
+
+  console.log(`Child age in months: ${childAgeMonths} (type: ${typeof childAgeMonths})`);
+
   // Clear existing options except the first one
   while (select.children.length > 1) {
     select.removeChild(select.lastChild);
   }
-  
-  // Define vaccines with age requirements and completion status
-  const vaccines = [
-    {
-      name: 'BCG Vaccine',
-      doses: 1,
-      minAgeMonths: 0,
-      maxAgeMonths: 60,
-      completed: {% for v in vaccine_statuses %}{% if v.name == "BCG Vaccine" %}{{ v.completed_doses|default:0 }} >= {{ v.total_doses|default:1 }}{% endif %}{% empty %}false{% endfor %}
-    },
-    {
-      name: 'Hepatitis B Vaccine',
-      doses: 1,
-      minAgeMonths: 0,
-      maxAgeMonths: 60,
-      completed: {% for v in vaccine_statuses %}{% if v.name == "Hepatitis B Vaccine" %}{{ v.completed_doses|default:0 }} >= {{ v.total_doses|default:1 }}{% endif %}{% empty %}false{% endfor %}
-    },
-    {
-      name: 'Pentavalent Vaccine',
-      doses: 3,
-      minAgeMonths: 1.5,
-      maxAgeMonths: 60,
-      completed: {% for v in vaccine_statuses %}{% if v.name == "Pentavalent Vaccine" %}{{ v.completed_doses|default:0 }} >= {{ v.total_doses|default:3 }}{% endif %}{% empty %}false{% endfor %}
-    },
-    {
-      name: 'Oral Polio Vaccine',
-      doses: 3,
-      minAgeMonths: 1.5,
-      maxAgeMonths: 60,
-      completed: {% for v in vaccine_statuses %}{% if v.name == "Oral Polio Vaccine" %}{{ v.completed_doses|default:0 }} >= {{ v.total_doses|default:3 }}{% endif %}{% empty %}false{% endfor %}
-    },
-    {
-      name: 'Inactivated Polio Vaccine',
-      doses: 2,
-      minAgeMonths: 3.5,
-      maxAgeMonths: 60,
-      completed: {% for v in vaccine_statuses %}{% if v.name == "Inactivated Polio Vaccine" %}{{ v.completed_doses|default:0 }} >= {{ v.total_doses|default:2 }}{% endif %}{% empty %}false{% endfor %}
-    },
-    {
-      name: 'Pneumococcal Conjugate Vaccine',
-      doses: 3,
-      minAgeMonths: 1.5,
-      maxAgeMonths: 60,
-      completed: {% for v in vaccine_statuses %}{% if v.name == "Pneumococcal Conjugate Vaccine" %}{{ v.completed_doses|default:0 }} >= {{ v.total_doses|default:3 }}{% endif %}{% empty %}false{% endfor %}
-    },
-    {
-      name: 'Measles, Mumps, and Rubella',
-      doses: 2,
-      minAgeMonths: 9,
-      maxAgeMonths: 60,
-      completed: {% for v in vaccine_statuses %}{% if v.name == "Measles, Mumps, and Rubella" %}{{ v.completed_doses|default:0 }} >= {{ v.total_doses|default:2 }}{% endif %}{% empty %}false{% endfor %}
-    }
-  ];
-  
+
+  // Map from server: completed and total doses for each vaccine
+  const vaccineStatus = {};
+  {% for v in vaccine_statuses %}
+    vaccineStatus["{{ v.name|escapejs }}"] = {
+      completed: {{ v.completed_doses|default:0 }},
+      total: {{ v.total_doses|default:0 }}
+    };
+  {% endfor %}
+
+  // Vaccine schedule reference (corrected PCV third dose -> 3.5 months)
+  const VACCINE_SCHEDULE = {
+    'BCG Vaccine': [
+      { dose: 1, age_months: 0, description: 'At birth' }
+    ],
+    'Hepatitis B Vaccine': [
+      { dose: 1, age_months: 0, description: 'At birth' }
+    ],
+    'Pentavalent Vaccine': [
+      { dose: 1, age_months: 1.5, description: '1½ months' },
+      { dose: 2, age_months: 2.5, description: '2½ months' },
+      { dose: 3, age_months: 3.5, description: '3½ months' }
+    ],
+    'Oral Polio Vaccine': [
+      { dose: 1, age_months: 1.5, description: '1½ months' },
+      { dose: 2, age_months: 2.5, description: '2½ months' },
+      { dose: 3, age_months: 3.5, description: '3½ months' }
+    ],
+    'Inactivated Polio Vaccine': [
+      { dose: 1, age_months: 3.5, description: '3½ months' },
+      { dose: 2, age_months: 9,   description: '9 months' }
+    ],
+    'Pneumococcal Conjugate Vaccine': [
+      { dose: 1, age_months: 1.5, description: '1½ months' },
+      { dose: 2, age_months: 2.5, description: '2½ months' },
+      { dose: 3, age_months: 3.5, description: '3½ months' }
+    ],
+    'Measles, Mumps, and Rubella': [
+      { dose: 1, age_months: 9,  description: '9 months' },
+      { dose: 2, age_months: 12, description: '1 year' }
+    ]
+  };
+
   let availableVaccines = 0;
-  
-  vaccines.forEach(vaccine => {
-    if (vaccine.completed) {
-      console.log(`${vaccine.name} is already completed, skipping`);
-      return;
+  let notYetEligible = 0;
+  let alreadyCompleted = 0;
+
+  // Loop through vaccines
+  for (const [vaccineName, doses] of Object.entries(VACCINE_SCHEDULE)) {
+    // get completed / total from server-side map, default 0
+    const stat = vaccineStatus[vaccineName] || { completed: 0, total: doses.length };
+    const completed = Number(stat.completed) || 0;
+    const total = Number(stat.total) || doses.length;
+
+    // If all doses completed -> skip entirely
+    if (completed >= total) {
+      console.log(`${vaccineName} fully completed (${completed}/${total}) — skipping`);
+      alreadyCompleted++;
+      continue;
     }
-    
-    if (childAgeMonths >= vaccine.minAgeMonths && childAgeMonths <= vaccine.maxAgeMonths) {
+
+    // Determine the next required dose info (zero-based index = completed)
+    const nextDoseIndex = completed; // 0 => dose 1, 1 => dose 2, ...
+    const nextDoseInfo = doses[nextDoseIndex];
+
+    if (!nextDoseInfo) {
+      // Defensive: no schedule info for next dose — skip
+      console.warn(`No schedule entry for ${vaccineName} next dose index ${nextDoseIndex}`);
+      continue;
+    }
+
+    const nextRequiredAge = Number(nextDoseInfo.age_months);
+
+    // Show vaccine ONLY when child has reached the required age for the next dose
+    if (childAgeMonths >= nextRequiredAge) {
       const option = document.createElement('option');
-      option.value = vaccine.name;
-      option.setAttribute('data-doses', vaccine.doses);
-      option.textContent = vaccine.name;
+      option.value = vaccineName;
+      option.setAttribute('data-doses', doses.length);
+      option.setAttribute('data-min-age', nextRequiredAge);
+      option.setAttribute('data-next-dose', nextDoseInfo.dose);
+      option.textContent = `${vaccineName} — Dose ${nextDoseInfo.dose}`;
       select.appendChild(option);
       availableVaccines++;
+
+      console.log(`✓ ADDED ${vaccineName} for Dose ${nextDoseInfo.dose} (child ${childAgeMonths}M >= ${nextRequiredAge}M)`);
+    } else {
+      notYetEligible++;
+      const waitMonths = (nextRequiredAge - childAgeMonths).toFixed(2);
+      console.log(`✗ ${vaccineName} not yet eligible for Dose ${nextDoseInfo.dose} (available in ${waitMonths} months)`);
     }
-  });
-  
+  }
+
+  // Update UI feedback
   if (availableVaccines === 0) {
     const option = document.createElement('option');
     option.value = '';
     option.textContent = 'No vaccines available for this age/completion status';
     option.disabled = true;
     select.appendChild(option);
-    
-    ageInfo.textContent = `Child is ${childAgeMonths} months old. All age-appropriate vaccines may already be completed.`;
+
+    let message = `Child is ${childAgeMonths.toFixed(2)} months old. `;
+    if (alreadyCompleted > 0) message += `${alreadyCompleted} vaccine(s) already completed. `;
+    if (notYetEligible > 0) message += `${notYetEligible} vaccine(s) available later.`;
+
+    ageInfo.textContent = message;
     ageInfo.style.display = 'block';
     ageInfo.style.color = '#f57c00';
   } else {
     ageInfo.style.display = 'none';
   }
-  
-  console.log(`Available vaccines for ${childAgeMonths}-month-old child: ${availableVaccines}`);
+
+  console.log(`Summary: ${availableVaccines} available, ${notYetEligible} not yet eligible, ${alreadyCompleted} already completed`);
 }
+
+
+// Monitor age changes and update dropdown (for real-time updates if age changes)
+function monitorVaccineEligibility() {
+  // Re-populate when modal opens
+  const modal = document.getElementById('addVaccineModal');
+  if (modal) {
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (modal.style.display === 'flex') {
+          populateSmartVaccineDropdown();
+        }
+      });
+    });
+    
+    observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
+  }
+}
+
 
 function getCurrentVaccineDoses(vaccineName) {
   const completedDoses = {
@@ -1927,6 +2079,8 @@ function updateCompletedDoses() {
 
 function openAddVaccineModal() {
   document.getElementById('addVaccineModal').style.display = 'flex';
+  
+  // Always repopulate dropdown to ensure it's up-to-date
   populateSmartVaccineDropdown();
   
   // Set date constraints for completed vaccines
@@ -1934,7 +2088,7 @@ function openAddVaccineModal() {
   const dateInput = document.getElementById('immunizationDateCompleted');
   
   // Allow past dates and today, but NOT future dates
-  dateInput.setAttribute('max', today); // Maximum is today
+  dateInput.setAttribute('max', today);
   
   // Minimum date is child's birth date
   const birthDate = '{{ preschooler.birth_date }}';
@@ -1943,12 +2097,28 @@ function openAddVaccineModal() {
   // Clear any existing value
   dateInput.value = '';
   
-  console.log(`Date constraints set: min=${birthDate}, max=${today}`);
+  console.log(`Vaccine modal opened - Updated dropdown for age: {{ preschooler.age_in_months|default:0 }} months`);
 }
 
 function closeAddVaccineModal() {
   document.getElementById('addVaccineModal').style.display = 'none';
 }
+
+// Initialize monitoring on page load
+document.addEventListener('DOMContentLoaded', function() {
+  monitorVaccineEligibility();
+  
+  // Also refresh dropdown every time the vaccine select is focused
+  const vaccineSelect = document.getElementById('vaccineNameCompleted');
+  if (vaccineSelect) {
+    vaccineSelect.addEventListener('focus', function() {
+      populateSmartVaccineDropdown();
+    });
+  }
+  
+  console.log('Vaccine eligibility monitoring initialized');
+});
+
 
 function openAddNutritionModal() {
   document.getElementById('addNutritionModal').style.display = 'flex';
@@ -2411,7 +2581,7 @@ function scheduleNutritionService(serviceType) {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowString = tomorrow.toISOString().split('T')[0];
-  const serviceEmoji = serviceType === "Vitamin A" ? "" : "";
+  const serviceEmoji = serviceType === "Vitamin A" ? "" : "🪱";
   
   Swal.fire({
     title: `${serviceEmoji} Schedule ${serviceType}`,
@@ -3341,228 +3511,123 @@ function goBack() {
 
 
 <script>
-  // Add Completed Nutrition Service Modal Functions
 function openAddCompletedNutritionModal() {
-  document.getElementById('addCompletedNutritionModal').style.display = 'flex';
-  
-  // Set date constraints for completed nutrition services
-  const today = new Date().toISOString().split('T')[0];
-  const dateInput = document.getElementById('completionDateNutrition');
-  
-  // Allow past dates and today, but NOT future dates
-  dateInput.setAttribute('max', today); // Maximum is today
-  
-  // Minimum date is child's birth date
-  const birthDate = '{{ preschooler.birth_date }}';
-  dateInput.setAttribute('min', birthDate);
-  
-  // Clear any existing value
-  dateInput.value = '';
-  
-  console.log(`Nutrition date constraints set: min=${birthDate}, max=${today}`);
-}
+    document.getElementById('addCompletedNutritionModal').style.display = 'flex';
 
-function closeAddCompletedNutritionModal() {
-  document.getElementById('addCompletedNutritionModal').style.display = 'none';
-}
+    const select = document.getElementById('serviceTypeCompleted');
+    const ageInfo = document.getElementById('nutritionAgeInfo'); // optional display
+    let childAgeMonths = parseFloat({{ preschooler.age_in_months|default:0 }}) || 0;
 
-// Complete Nutrition Dose Function
-function completeNutritionDose(serviceName, scheduleId, currentDoses, totalDoses) {
-  const today = new Date().toISOString().split('T')[0];
-  const nextDose = parseInt(currentDoses) + 1;
-  
-  Swal.fire({
-    title: `Complete ${serviceName}?`,
-    html: `
-      <p>This will mark <strong>dose ${nextDose} of ${totalDoses}</strong> as completed.</p>
-      <div style="margin-top: 15px; padding: 10px; background: #e8f5e8; border-radius: 5px; font-size: 14px;">
-        Parents will be notified of completion
-      </div>
-    `,
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#4caf50',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Yes, complete it!'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      Swal.fire({
-        title: 'Completing Service...',
-        text: 'Updating status and notifying parents',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
-      });
+    // Clear existing options except placeholder
+    while (select.children.length > 1) select.removeChild(select.lastChild);
 
-      fetch(`/update_nutrition_status/${scheduleId}/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        },
-        body: JSON.stringify({
-          status: 'completed'
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          Swal.fire({
-            title: 'Service Completed!',
-            text: data.message,
-            icon: 'success',
-            confirmButtonColor: '#4caf50'
-          }).then(() => {
-            location.reload();
-          });
+    // Nutrition schedule (dose-aware)
+    const NUTRITION_SCHEDULE = {
+        'Vitamin A': [6, 12, 18, 24, 30, 36, 42, 48, 54],
+        'Deworming': [6, 12, 18, 24, 30, 36, 42, 48, 54]
+    };
+
+    // Completed doses from server-side
+    const completedDoses = {};
+    {% for n in nutrition_statuses %}
+        completedDoses["{{ n.name|escapejs }}"] = {{ n.completed_doses|default:0 }};
+    {% endfor %}
+
+    let anyOptionAdded = false;
+
+    Object.entries(NUTRITION_SCHEDULE).forEach(([service, ages]) => {
+        const done = completedDoses[service] || 0;
+        const total = ages.length;
+
+        // Skip if all doses completed
+        if (done >= total) return;
+
+        const nextDoseAge = ages[done];
+
+        if (childAgeMonths >= nextDoseAge) {
+            const option = document.createElement('option');
+            option.value = service;
+            option.textContent = `${service} — Dose ${done + 1}`;
+            select.appendChild(option);
+            anyOptionAdded = true;
+            console.log(`Added ${service}, Dose ${done + 1} (child ${childAgeMonths}M >= ${nextDoseAge}M)`);
         } else {
-          Swal.fire('Error!', data.message, 'error');
+            console.log(`Skipped ${service}, Dose ${done + 1} (child ${childAgeMonths}M < ${nextDoseAge}M)`);
         }
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        Swal.fire('Error!', 'Something went wrong.', 'error');
-      });
+    });
+
+    // If no options available, show placeholder
+    if (!anyOptionAdded) {
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'No services available at this age';
+        placeholder.disabled = true;
+        select.appendChild(placeholder);
     }
-  });
+
+    // Set date constraints for completed nutrition services
+    const today = new Date().toISOString().split('T')[0];
+    const birthDate = '{{ preschooler.birth_date }}';
+    const dateInput = document.getElementById('completionDateNutrition');
+    dateInput.setAttribute('max', today);
+    dateInput.setAttribute('min', birthDate);
+    dateInput.value = '';
+
+    console.log(`Nutrition modal opened — child age: ${childAgeMonths} months`);
 }
 
-// Form Validation for Completed Nutrition Services
-document.addEventListener('DOMContentLoaded', function() {
-  const form = document.getElementById('addCompletedNutritionForm');
-  
-  if (form) {
-    form.addEventListener('submit', function(e) {
-      const serviceSelect = document.getElementById('serviceTypeCompleted');
-      const dateInput = document.getElementById('completionDateNutrition');
-      
-      // Check if service is selected
-      if (!serviceSelect.value || serviceSelect.value.trim() === '') {
-        e.preventDefault();
-        Swal.fire({
-          title: 'Validation Error',
-          text: 'Please select a service type.',
-          icon: 'warning',
-          confirmButtonColor: '#ff9800'
-        });
-        return;
-      }
-      
-      // Check if date is provided
-      if (!dateInput.value || dateInput.value.trim() === '') {
-        e.preventDefault();
-        Swal.fire({
-          title: 'Validation Error',
-          text: 'Please select the date when the service was completed.',
-          icon: 'warning',
-          confirmButtonColor: '#ff9800'
-        });
-        return;
-      }
-
-      // Validate date is not in the future
-      const selectedDate = new Date(dateInput.value);
-      const today = new Date();
-      today.setHours(23, 59, 59, 999);
-      
-      if (selectedDate > today) {
-        e.preventDefault();
-        Swal.fire({
-          title: 'Invalid Date',
-          text: 'Completion date cannot be in the future. Please select today or a past date.',
-          icon: 'warning',
-          confirmButtonColor: '#ff9800'
-        });
-        return;
-      }
-
-      // Validate date is not before child's birth
-      const childBirthDate = new Date('{{ preschooler.birth_date }}');
-      if (selectedDate < childBirthDate) {
-        e.preventDefault();
-        Swal.fire({
-          title: 'Invalid Date',
-          text: 'Completion date cannot be before the child was born.',
-          icon: 'warning',
-          confirmButtonColor: '#ff9800'
-        });
-        return;
-      }
-
-      // Show loading message
-      Swal.fire({
-        title: 'Adding Completed Nutrition Service...',
-        text: 'Recording service completion',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
-      });
-
-      // Add source for tracking
-      const sourceInput = document.createElement('input');
-      sourceInput.type = 'hidden';
-      sourceInput.name = 'source';
-      sourceInput.value = 'quick_add_completed_nutrition';
-      form.appendChild(sourceInput);
-    });
-  }
-});
-
-// Set initial date constraints
-document.addEventListener('DOMContentLoaded', function() {
-  setNutritionCompletionDateConstraints();
-});
-
-function setNutritionCompletionDateConstraints() {
-  const today = new Date().toISOString().split('T')[0];
-  const birthDate = '{{ preschooler.birth_date }}';
-  
-  // For completed nutrition services - allow past dates and today
-  const completedDateInputs = document.querySelectorAll('#completionDateNutrition');
-  completedDateInputs.forEach(input => {
-    if (input) {
-      input.setAttribute('max', today);  // No future dates
-      input.setAttribute('min', birthDate); // No dates before birth
-      input.setAttribute('placeholder', 'Select completion date');
-    }
-  });
+// Close modal function
+function closeAddCompletedNutritionModal() {
+    document.getElementById('addCompletedNutritionModal').style.display = 'none';
 }
-
-// Real-time date validation
-document.addEventListener('DOMContentLoaded', function() {
-  const dateInput = document.getElementById('completionDateNutrition');
-  
-  if (dateInput) {
-    dateInput.addEventListener('change', function() {
-      const selectedDate = new Date(this.value);
-      const today = new Date();
-      const childBirthDate = new Date('{{ preschooler.birth_date }}');
-      
-      // Clear any previous validation styling
-      this.style.borderColor = '';
-      
-      if (selectedDate > today) {
-        this.style.borderColor = '#d32f2f';
-        this.title = 'Date cannot be in the future';
-      } else if (selectedDate < childBirthDate) {
-        this.style.borderColor = '#d32f2f';
-        this.title = 'Date cannot be before child was born';
-      } else {
-        this.style.borderColor = '#4caf50';
-        this.title = 'Valid completion date';
-      }
-    });
-  }
-});
 </script>
+
+<script>
+ // Collapsible Table
+
+ function toggleImmunizationTable() {
+  const header = event.currentTarget;
+  const content = document.getElementById('immunizationContent');
+  
+  header.classList.toggle('active');
+  content.classList.toggle('active');
+}
+
+
+function toggleImmunizationHistory() {
+  const header = event.currentTarget;
+  const content = document.getElementById('immunizationHistoryContent');
+  
+  header.classList.toggle('active');
+  content.classList.toggle('active');
+}
+
+
+function toggleNutritionSchedule() {
+  const header = event.currentTarget;
+  const content = document.getElementById('nutritionScheduleContent');
+  
+  header.classList.toggle('active');
+  content.classList.toggle('active');
+}
+function toggleNutritionalStatusHistory() {
+  const header = event.currentTarget;
+  const content = document.getElementById('nutritionalStatusHistoryContent');
+  
+  header.classList.toggle('active');
+  content.classList.toggle('active');
+}
+
+
+</script>
+
+
+
+
+
 
 </body>
 </html>
-
-
-
 
 
 
