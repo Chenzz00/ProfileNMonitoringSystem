@@ -2007,7 +2007,12 @@ textarea[readonly].archived-input {
             </button>
 
           {% else %}
-            <span class="text-success">Complete</span>
+            <button 
+              class="btn-sm btn-disabled-future" 
+              disabled
+              title="Waiting to schedule">
+              Pending
+            </button>
           {% endif %}
         </td>
       </tr>
@@ -4458,6 +4463,7 @@ function toggleNutritionHistory() {
 
 </body>
 </html>
+
 
 
 
