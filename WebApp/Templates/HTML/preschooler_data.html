@@ -2349,7 +2349,7 @@ textarea[readonly].archived-input {
               <td>
                 <input type="date" 
                        name="vaccine_date_{{ h.id }}" 
-                       value="{{ h.completion_date|date:'Y-m-d' }}" 
+                       value="{{ h.scheduled_date|date:'Y-m-d' }}" 
                        readonly 
                        style="pointer-events: none; background: transparent; border: none;">
               </td>
@@ -4452,6 +4452,7 @@ function toggleNutritionHistory() {
 
 </body>
 </html>
+
 
 
 
