@@ -538,13 +538,31 @@ div[style*="display: flex; justify-content: flex-end"] {
 }
 
 /* Modal Action Buttons */
-#vaccineCardModal .modal-action-buttons {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  margin-top: 20px;
-  flex-wrap: wrap;
+ #vaccineCardModal .modal-action-buttons {
+  display: flex !important;
+  gap: 10px !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  margin-top: 20px !important;
+  flex-wrap: nowrap !important;
+  margin-right: 0 !important;
+  margin-left: auto !important;
+  width: auto !important;
+  flex-direction: row !important;
 }
+
+#vaccineCardModal .modal-action-buttons .btn {
+  padding: 10px 20px !important;
+  font-size: 14px !important;
+  border-radius: 6px !important;
+  white-space: nowrap !important;
+  min-width: auto !important;
+  width: auto !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+}
+
 
 #vaccineCardModal .close-modal {
   color: #ffffff;
@@ -1104,7 +1122,7 @@ textarea[readonly].archived-input {
   .modal-overlay {
     padding: 15px;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
@@ -1147,6 +1165,80 @@ textarea[readonly].archived-input {
     font-size: 13px;
     padding: 8px;
   }
+
+   #vaccineCardModal .modal-action-buttons {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+        justify-content: flex-end !important;
+      }
+
+      #vaccineCardModal .modal-action-buttons .btn {
+        width: auto !important;
+        padding: 10px 16px !important;
+        font-size: 13px !important;
+        flex: 0 1 auto !important;
+      }
+
+      #vaccineCardModal .vaccine-table {
+    min-width: 900px;
+    font-size: 12px;
+  }
+
+  #vaccineCardModal .vaccine-table th,
+  #vaccineCardModal .vaccine-table td {
+    padding: 12px 8px;
+    white-space: nowrap;
+    min-width: 80px;
+  }
+
+  #vaccineCardModal .vaccine-table th:first-child,
+  #vaccineCardModal .vaccine-table td:first-child {
+    min-width: 150px;
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 1;
+  }
+
+  #vaccineCardModal .vaccine-table th:first-child {
+    background: #f8f9fa;
+  }
+
+  #vaccineCardModal .vaccine-table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0;
+  }
+
+
+  #vaccineCardModal .vaccine-table tbody tr {
+    background: white !important;
+  }
+
+  #vaccineCardModal .vaccine-table tbody td {
+    background: white !important;
+  }
+
+  #vaccineCardModal .vaccine-table tbody tr:nth-child(even) td {
+    background: white !important;
+  }
+
+  #vaccineCardModal .vaccine-table tbody tr:hover td {
+    background: #f9f9f9 !important;
+  }
+
+
+  #vaccineCardModal .vaccine-table thead {
+    background: linear-gradient(135deg, #f39c12, #e67e22) !important;
+  }
+
+  #vaccineCardModal .vaccine-table th {
+    background: linear-gradient(135deg, #f39c12, #e67e22) !important;
+    color: white !important;
+  }
+
 }
 
   .close-modal {
@@ -1290,7 +1382,7 @@ textarea[readonly].archived-input {
   .archived-banner::before {
     font-size: 24px;
   }
-}
+
 
 /* ============================================
    SMALL MOBILE BREAKPOINT (max-width: 480px)
@@ -1354,7 +1446,7 @@ textarea[readonly].archived-input {
   .modal-overlay {
     padding: 12px;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
@@ -1397,6 +1489,70 @@ textarea[readonly].archived-input {
     font-size: 12px;
     padding: 8px;
     border-bottom: 2px solid #ddd;
+  }
+
+  #vaccineCardModal .modal-action-buttons {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+        justify-content: flex-end !important;
+      }
+
+      #vaccineCardModal .modal-action-buttons .btn {
+        width: auto !important;
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        flex: 0 1 auto !important;
+      }
+
+
+      #vaccineCardModal .vaccine-table {
+    min-width: 800px;
+    font-size: 11px;
+  }
+
+  #vaccineCardModal .vaccine-table th,
+  #vaccineCardModal .vaccine-table td {
+    padding: 8px 6px;
+    min-width: 70px;
+  }
+
+  #vaccineCardModal .vaccine-table th:first-child,
+  #vaccineCardModal .vaccine-table td:first-child {
+    min-width: 120px;
+  }
+
+  #vaccineCardModal .vaccine-table-container {
+    margin-left: -15px;
+    margin-right: -15px;
+    width: calc(100% + 30px);
+    border-radius: 0;
+  }
+
+
+  #vaccineCardModal .vaccine-table tbody tr {
+    background: white !important;
+  }
+
+  #vaccineCardModal .vaccine-table tbody td {
+    background: white !important;
+  }
+
+  #vaccineCardModal .vaccine-table tbody tr:nth-child(even) td {
+    background: white !important;
+  }
+
+  #vaccineCardModal .vaccine-table tbody tr:hover td {
+    background: #f9f9f9 !important;
+  }
+
+  #vaccineCardModal .vaccine-table thead {
+    background: linear-gradient(135deg, #f39c12, #e67e22) !important;
+  }
+
+  #vaccineCardModal .vaccine-table th {
+    background: linear-gradient(135deg, #f39c12, #e67e22) !important;
+    color: white !important;
   }
 }
 
@@ -1581,7 +1737,7 @@ textarea[readonly].archived-input {
     top: 10px;
     right: 10px;
   }
-}
+
 
 /* ============================================
    SCROLL INDICATOR FOR TABLES
@@ -2172,65 +2328,67 @@ textarea[readonly].archived-input {
       </div>
 
       <!-- FIXED VACCINE TABLE - Only shows completed vaccinations -->
-      <table class="vaccine-table">
-        <thead>
-          <tr>
-            <th style="width: 25%;">Vaccine</th>
-            <th style="width: 15%;">Doses</th>
-            <th style="width: 15%;">Date of Vaccination<br><small style="font-weight: normal;">MM/DD/YY</small></th>
-            <th style="width: 20%;">Status</th>
-            <th style="width: 35%;">Remarks</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Only show COMPLETED immunizations, not scheduled ones -->
-          {% for h in immunization_history %}
-          {% if h.status == 'completed' %}
-          <tr>
-            <td class="vaccine-name">{{ h.vaccine_name }}</td>
-            <td><span class="dose-badge">{{ h.dose_number|default:1 }}</span> / {{ h.required_doses }}</td>
-            <td>
-              <input type="date" 
-                     name="vaccine_date_{{ h.id }}" 
-                     value="{{ h.completion_date|date:'Y-m-d' }}" 
-                     readonly 
-                     style="pointer-events: none; background: transparent; border: none;">
-            </td>
-            <td>
-              <input type="text" 
-                     name="vaccine_status_{{ h.id }}" 
-                     value="Completed" 
-                     readonly 
-                     style="pointer-events: none; background: transparent; border: none;">
-            </td>
-            <td>
-              <!-- Only show medical remarks, NOT reschedule reasons -->
-              <input type="text" 
-                     name="vaccine_remarks_{{ h.id }}" 
-                     value="{{ h.medical_remarks|default:'' }}" 
-                     readonly 
-                     style="pointer-events: none; background: transparent; border: none;">
-            </td>
-          </tr>
-          {% endif %}
-          {% empty %}
-          <tr>
-            <td colspan="5" style="text-align: center; font-style: italic; color: #666;">
-              No completed vaccinations recorded yet
-            </td>
-          </tr>
-          {% endfor %}
-          
-          <!-- If you want to show scheduled vaccinations separately, add a note -->
-          {% if pending_schedules %}
-          <tr>
-            <td colspan="5" style="background: #f0f8ff; padding: 10px; text-align: center; font-style: italic; color: #1565c0;">
-              Additional scheduled vaccinations: {{ pending_schedules|length }} appointment(s) pending
-            </td>
-          </tr>
-          {% endif %}
-        </tbody>
-      </table>
+      <div class="vaccine-table-container">
+        <table class="vaccine-table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">Vaccine</th>
+              <th style="width: 15%;">Doses</th>
+              <th style="width: 15%;">Date of Vaccination<br><small style="font-weight: normal;">MM/DD/YY</small></th>
+              <th style="width: 20%;">Status</th>
+              <th style="width: 35%;">Remarks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Only show COMPLETED immunizations, not scheduled ones -->
+            {% for h in immunization_history %}
+            {% if h.status == 'completed' %}
+            <tr>
+              <td class="vaccine-name">{{ h.vaccine_name }}</td>
+              <td><span class="dose-badge">{{ h.dose_number|default:1 }}</span> / {{ h.required_doses }}</td>
+              <td>
+                <input type="date" 
+                       name="vaccine_date_{{ h.id }}" 
+                       value="{{ h.completion_date|date:'Y-m-d' }}" 
+                       readonly 
+                       style="pointer-events: none; background: transparent; border: none;">
+              </td>
+              <td>
+                <input type="text" 
+                       name="vaccine_status_{{ h.id }}" 
+                       value="Completed" 
+                       readonly 
+                       style="pointer-events: none; background: transparent; border: none;">
+              </td>
+              <td>
+                <!-- Only show medical remarks, NOT reschedule reasons -->
+                <input type="text" 
+                       name="vaccine_remarks_{{ h.id }}" 
+                       value="{{ h.medical_remarks|default:'' }}" 
+                       readonly 
+                       style="pointer-events: none; background: transparent; border: none;">
+              </td>
+            </tr>
+            {% endif %}
+            {% empty %}
+            <tr>
+              <td colspan="5" style="text-align: center; font-style: italic; color: #666;">
+                No completed vaccinations recorded yet
+              </td>
+            </tr>
+            {% endfor %}
+            
+            <!-- If you want to show scheduled vaccinations separately, add a note -->
+            {% if pending_schedules %}
+            <tr>
+              <td colspan="5" style="background: #f0f8ff; padding: 10px; text-align: center; font-style: italic; color: #1565c0;">
+                Additional scheduled vaccinations: {{ pending_schedules|length }} appointment(s) pending
+              </td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
 
       <p class="modal-note">
         In the column,<strong>Date of Vaccination</strong>, write the date of vaccination according to how many doses has already been administered.<br>
