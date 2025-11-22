@@ -1973,8 +1973,8 @@ textarea[readonly].archived-input {
         </td>
 
         <td>
-          {% if vaccine.status == 'completed' and vaccine.completed_doses == vaccine.total_doses %}
-            <span class="text-success">Complete</span>
+          {% if vaccine.completed_doses >= vaccine.total_doses %}
+            <span class="text-success">✓ Complete</span>
 
           {% elif vaccine.status == 'scheduled' or vaccine.status == 'rescheduled' %}
             <div class="action-buttons">
@@ -2007,7 +2007,12 @@ textarea[readonly].archived-input {
             </button>
 
           {% else %}
-            <span class="text-success">Complete</span>
+            <button 
+              class="btn-sm btn-disabled-future" 
+              disabled
+              title="Waiting to schedule">
+              Pending
+            </button>
           {% endif %}
         </td>
       </tr>
@@ -4458,6 +4463,7 @@ function toggleNutritionHistory() {
 
 </body>
 </html>
+
 
 
 
