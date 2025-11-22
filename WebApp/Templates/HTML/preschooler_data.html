@@ -1950,13 +1950,7 @@ textarea[readonly].archived-input {
 
         <td>{{ vaccine.completed_doses }}/{{ vaccine.total_doses }}</td>
 
-        <td>
-          {% if vaccine.immunization_date %}
-            {{ vaccine.immunization_date|date:"m/d/Y" }}
-          {% else %}
-            N/A
-          {% endif %}
-        </td>
+        <td>{{ vaccine.immunization_date|default:"N/A" }}</td>
 
         <td>
           {% if vaccine.status == 'completed' %}
@@ -1973,8 +1967,8 @@ textarea[readonly].archived-input {
         </td>
 
         <td>
-          {% if vaccine.completed_doses >= vaccine.total_doses %}
-            <span class="text-success">✓ Complete</span>
+          {% if vaccine.status == 'completed' and vaccine.completed_doses == vaccine.total_doses %}
+            <span class="text-success">Complete</span>
 
           {% elif vaccine.status == 'scheduled' or vaccine.status == 'rescheduled' %}
             <div class="action-buttons">
@@ -2007,12 +2001,7 @@ textarea[readonly].archived-input {
             </button>
 
           {% else %}
-            <button 
-              class="btn-sm btn-disabled-future" 
-              disabled
-              title="Waiting to schedule">
-              Pending
-            </button>
+            <span class="text-success">Complete</span>
           {% endif %}
         </td>
       </tr>
@@ -2360,7 +2349,7 @@ textarea[readonly].archived-input {
               <td>
                 <input type="date" 
                        name="vaccine_date_{{ h.id }}" 
-                       value="{{ h.scheduled_date|date:'Y-m-d' }}" 
+                       value="{{ h.completion_date|date:'Y-m-d' }}" 
                        readonly 
                        style="pointer-events: none; background: transparent; border: none;">
               </td>
@@ -4463,11 +4452,6 @@ function toggleNutritionHistory() {
 
 </body>
 </html>
-
-
-
-
-
 
 
 
