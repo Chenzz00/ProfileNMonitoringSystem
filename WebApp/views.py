@@ -4166,7 +4166,7 @@ def preschooler_detail(request, preschooler_id):
     immunization_history = VaccinationSchedule.objects.filter(
         preschooler=preschooler,
         status='completed'
-    ).order_by('vaccine_name', 'completion_date')
+    ).order_by('vaccine_name', 'scheduled_date')
 
     pending_schedules = VaccinationSchedule.objects.filter(
         preschooler=preschooler,
@@ -11315,6 +11315,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
