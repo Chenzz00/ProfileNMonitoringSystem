@@ -1947,13 +1947,16 @@ textarea[readonly].archived-input {
       {% for vaccine in vaccine_statuses %}
       <tr>
         <td>{{ vaccine.name }}</td>
-
         <td>{{ vaccine.completed_doses }}/{{ vaccine.total_doses }}</td>
-
-        <td>{{ vaccine.immunization_date|default:"N/A" }}</td>
-
         <td>
-          {% if vaccine.status == 'completed' %}
+          {% if vaccine.immunization_date %}
+            {{ vaccine.immunization_date|date:"m/d/Y" }}
+          {% else %}
+            N/A
+          {% endif %}
+        </td>
+        <td>
+          {% if vaccine.completed_doses >= vaccine.total_doses %}
             <span class="status-badge status-completed">COMPLETE</span>
           {% elif vaccine.status == 'scheduled' %}
             <span class="status-badge status-scheduled">SCHEDULED</span>
@@ -1966,11 +1969,12 @@ textarea[readonly].archived-input {
           {% endif %}
         </td>
 
+        <!-- YOUR FIXED ACTIONS CODE HERE -->
         <td>
-          {% if vaccine.status == 'completed' and vaccine.completed_doses == vaccine.total_doses %}
-            <span class="text-success">Complete</span>
+          {% if vaccine.completed_doses >= vaccine.total_doses %}
+            <span class="text-success">✓ Complete</span>
 
-          {% elif vaccine.status == 'scheduled' or vaccine.status == 'rescheduled' %}
+          {% elif vaccine.schedule_id %}
             <div class="action-buttons">
               <button 
                 class="btn-sm btn-complete"
@@ -1985,12 +1989,14 @@ textarea[readonly].archived-input {
             </div>
 
           {% elif vaccine.can_schedule %}
+            {% with next_dose=vaccine.completed_doses|add:1 %}
             <button 
               class="btn-sm btn-schedule btn-available-today" 
-              onclick="scheduleVaccineWithAge('{{ vaccine.name }}', '{{ vaccine.total_doses }}', '{{ vaccine.eligible_dose.dose }}', '{{ vaccine.eligible_dose.description }}')"
-              title="{{ vaccine.next_dose_info }}">
-              Schedule Dose {{ vaccine.eligible_dose.dose }}
+              onclick="scheduleVaccineWithAge('{{ vaccine.name }}', '{{ vaccine.total_doses }}', '{{ next_dose }}', 'Next dose')"
+              title="Schedule next dose">
+              Schedule Dose {{ next_dose }}
             </button>
+            {% endwith %}
 
           {% elif vaccine.future_dose %}
             <button 
@@ -2001,7 +2007,14 @@ textarea[readonly].archived-input {
             </button>
 
           {% else %}
-            <span class="text-success">Complete</span>
+            {% with next_dose=vaccine.completed_doses|add:1 %}
+            <button 
+              class="btn-sm btn-schedule btn-available-today" 
+              onclick="scheduleVaccineWithAge('{{ vaccine.name }}', '{{ vaccine.total_doses }}', '{{ next_dose }}', 'Next dose')"
+              title="Schedule next dose">
+              Schedule Dose {{ next_dose }}
+            </button>
+            {% endwith %}
           {% endif %}
         </td>
       </tr>
