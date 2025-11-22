@@ -1950,7 +1950,13 @@ textarea[readonly].archived-input {
 
         <td>{{ vaccine.completed_doses }}/{{ vaccine.total_doses }}</td>
 
-        <td>{{ vaccine.immunization_date|default:"N/A" }}</td>
+        <td>
+          {% if vaccine.immunization_date %}
+            {{ vaccine.immunization_date|date:"m/d/Y" }}
+          {% else %}
+            N/A
+          {% endif %}
+        </td>
 
         <td>
           {% if vaccine.status == 'completed' %}
@@ -4452,6 +4458,7 @@ function toggleNutritionHistory() {
 
 </body>
 </html>
+
 
 
 
