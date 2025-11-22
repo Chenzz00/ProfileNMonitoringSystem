@@ -4252,7 +4252,60 @@ def preschooler_detail(request, preschooler_id):
     }
 
     return render(request, 'HTML/preschooler_data.html', context)
+
+def get_enhanced_vaccine_status(preschooler, vaccine_name, total_doses):
+    """Get comprehensive vaccine status including latest dose date"""
+    from django.db.models import Max
     
+    completed_records = VaccinationSchedule.objects.filter(
+        preschooler=preschooler,
+        vaccine_name=vaccine_name,
+        status='completed'
+    ).order_by('scheduled_date')
+    
+    scheduled_records = VaccinationSchedule.objects.filter(
+        preschooler=preschooler,
+        vaccine_name=vaccine_name,
+        status__in=['scheduled', 'rescheduled']
+    ).order_by('scheduled_date')
+    
+    completed_doses = completed_records.count()
+    
+    # ✅ FIX: Get the date of the LATEST completed dose
+    latest_completed = completed_records.last()
+    immunization_date = latest_completed.scheduled_date if latest_completed else None
+    
+    # Check if there's a pending schedule
+    next_schedule = scheduled_records.first()
+    
+    if next_schedule:
+        return {
+            'completed_doses': completed_doses,
+            'status': next_schedule.status,
+            'schedule_id': next_schedule.id,
+            'scheduled_date': next_schedule.scheduled_date,
+            'immunization_date': immunization_date,  # ✅ Date of latest completed dose
+        }
+    
+    # No pending schedule
+    if completed_doses >= total_doses:
+        return {
+            'completed_doses': completed_doses,
+            'status': 'completed',
+            'schedule_id': None,
+            'scheduled_date': None,
+            'immunization_date': immunization_date,  # ✅ Date of latest completed dose
+        }
+    
+    # Pending - no doses completed yet
+    return {
+        'completed_doses': completed_doses,
+        'status': 'pending',
+        'schedule_id': None,
+        'scheduled_date': None,
+        'immunization_date': immunization_date,  # ✅ Date of latest completed dose (may be None)
+    }
+
 def get_nutrition_eligibility(preschooler, service_type):
     """
     Enhanced nutrition eligibility that properly handles completed services
@@ -11315,6 +11368,7 @@ This is an automated message. Please do not reply.
             'success': False,
             'error': f'An error occurred: {str(e)}'
         }, status=500)
+
 
 
 
