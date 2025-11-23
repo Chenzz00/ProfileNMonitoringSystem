@@ -29,6 +29,8 @@
       font-size: 14px;
       font-weight: 400;
       background: #f8f9fa;
+      position: relative;
+      padding-bottom: 200px;
     }
 
     .background-image {
@@ -43,6 +45,27 @@
       background-position: center;
       background-repeat: no-repeat;
       background-attachment: fixed;
+    }
+
+    .children-decoration {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 180px;
+      background: white;
+      border-top: 3px solid #5bdab3;
+      z-index: -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      overflow: hidden;
+    }
+
+    .children-decoration img {
+      height: 150px;
+      width: auto;
+      object-fit: contain;
     }
 
     /* Sidebar Navigation */
@@ -317,6 +340,7 @@
     /* Content Wrapper */
     .content-wrapper {
       padding: 30px;
+      padding-bottom: 220px;
     }
 
     .page-content {
@@ -919,6 +943,7 @@
 
       .content-wrapper {
         padding: 25px;
+        padding-bottom: 200px;
       }
     }
 
@@ -952,6 +977,7 @@
 
       .content-wrapper {
         padding: 20px 15px;
+        padding-bottom: 200px;
       }
 
       .page-content {
@@ -1023,6 +1049,7 @@
     @media (max-width: 480px) {
       .content-wrapper {
         padding: 15px 10px;
+        padding-bottom: 200px;
       }
 
       .page-content {
@@ -1071,6 +1098,14 @@
 
       table {
         min-width: 600px;
+      }
+
+      .children-decoration {
+        height: 120px;
+      }
+
+      .children-decoration img {
+        height: 100px;
       }
     }
 
@@ -1686,6 +1721,8 @@
   {% endif %}
 </div>
 
+      </div>
+    </div>
 
   <!-- Modal -->
   <div id="registerModal" class="modal">
@@ -1787,6 +1824,9 @@
     </form>
     </div>
   </div>
+
+  <!-- Children Decoration at Bottom -->
+  <div class="children-decoration"></div>
 
   <script>
   // ==================== HELPER FUNCTIONS ====================
@@ -2254,5 +2294,3 @@
 
 </body>
 </html>
-
-
